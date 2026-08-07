@@ -1871,7 +1871,15 @@ html.theme-dark .login-totp-step__recovery-link:hover {
         display: none !important;
     }
 
+    /* Default Form Panel Background for Sign In, Forgot Password Request, & Sign Up */
     .login-left-panel {
+        background: url('/right-panel-login.svg') center/cover no-repeat !important;
+    }
+
+    /* Verification Phase Background (2FA OTP, Reset Code Verification, & New Password) */
+    .login-left-panel:has(#loginTotpStep:not([hidden])),
+    .login-left-panel:has(#resetConfirmForm:not([hidden])),
+    .login-left-panel:has(#resetPasswordForm:not([hidden])) {
         background: url('/upper%20right-panel-login.svg') center/cover no-repeat !important;
     }
 }
