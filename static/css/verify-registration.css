@@ -473,4 +473,27 @@ body {
         transform: none;
     }
 }
+@media (min-width: 769px) {
+    body {
+        background-color: #e8ece8 !important;
+        background-image: url('/login-page-bg.svg'), url('login-page-bg.svg') !important;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+        animation: none !important;
+    }
 
+    html.theme-dark body {
+        background-image: linear-gradient(rgba(15, 20, 18, 0.75), rgba(15, 20, 18, 0.75)), url('/login-page-bg.svg') !important;
+        background-color: #121614 !important;
+    }
+
+    .verify-side {
+        background: url('/left-panel-login.svg') top center / cover no-repeat !important;
+    }
+
+    .verify-side::before {
+        display: none !important;
+    }
+}
