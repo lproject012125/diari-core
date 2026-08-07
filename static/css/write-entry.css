@@ -1496,6 +1496,7 @@ html.theme-dark .entry-img-spinner__bytes {
     body.page-write-entry .journal-input-section {
         flex: 1 1 0;
         min-width: 0;
+        min-height: 460px;
         display: flex;
         flex-direction: column;
         margin: 0;
