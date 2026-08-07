@@ -1845,3 +1845,18 @@ html.theme-dark .login-totp-step__recovery-link {
 html.theme-dark .login-totp-step__recovery-link:hover {
     color: #d4e5dc;
 }
+
+/* PC Platform Only: login-page-bg.svg background for login and sign up page modals */
+@media (min-width: 769px) {
+    body {
+        background-image: url('../img/login-page-bg.svg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+    }
+
+    .login-right-panel {
+        background: linear-gradient(135deg, rgba(75, 103, 91, 0.72) 0%, rgba(100, 132, 117, 0.76) 100%), url('../img/login-page-bg.svg') center/cover no-repeat !important;
+    }
+}
