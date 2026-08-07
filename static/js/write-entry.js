@@ -531,6 +531,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             toolbar.hidden = isWriteEntryMobileLayout() ? false : count !== 1;
         }
         if (stickyAdd) stickyAdd.hidden = !(count > 0 && count < MAX_IMAGE_WARN);
+        const stickyContainer = (stickyAdd || toolbar)?.closest('.entry-gallery-pane__sticky');
+        if (stickyContainer) {
+            const hasVisibleChild = Array.from(stickyContainer.children).some(child => 
+                !child.hidden && getComputedStyle(child).display !== 'none'
+            );
+            stickyContainer.hidden = !hasVisibleChild;
+        }
         updatePhotoBadge();
         if (!count) {
             gallery.className = 'entry-gallery diari-scrollbar is-empty';

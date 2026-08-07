@@ -388,6 +388,7 @@ html.theme-dark body.page-write-entry .tag-btn.selected .tag-btn__icon-svg {
     min-height: 0;
     overflow: hidden;
     border-radius: 12px;
+    background: var(--background-soft);
 }
 
 .entry-gallery-scroll {
@@ -447,6 +448,15 @@ html.theme-dark body.page-write-entry .tag-btn.selected .tag-btn__icon-svg {
     border-top: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
     border-radius: 0 0 12px 12px;
     background: linear-gradient(to top, var(--card-background, #fff) 72%, rgba(255, 255, 255, 0.92));
+}
+
+.entry-gallery-pane__sticky[hidden],
+.entry-gallery-pane__sticky:not(:has(> :not([hidden]):not([style*="display: none"]))) {
+    display: none !important;
+}
+
+.entry-gallery-pane__stack:not(:has(.entry-gallery-pane__sticky:not([hidden]):not([style*="display: none"]))) .entry-gallery-scroll {
+    border-radius: 12px;
 }
 
 html.theme-dark .entry-gallery-pane__sticky {
