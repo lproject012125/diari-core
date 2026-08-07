@@ -2,7 +2,7 @@
  * DiariCore PWA service worker — offline app shell + cached static assets.
  * API routes are never cached (session/auth stay fresh).
  */
-const CACHE_NAME = 'diaricore-pwa-v102';
+const CACHE_NAME = 'diaricore-pwa-v103';
 const PWA_PUSH_NOTIF_ICON = '/diariclogo-pwa-notif-192.png';
 const PWA_PUSH_NOTIF_BADGE = '/diariclogo.png';
 const PWA_CACHE_PREFIX = 'diaricore-pwa-';
@@ -303,10 +303,30 @@ self.addEventListener('fetch', (event) => {
     if (!isStaticAsset(url)) return;
 
     const path = url.pathname;
-    const networkFirstJs = path.endsWith('.js') || path.endsWith('.css');
+    const networkFirst = path.endsWith('.js') || path.endsWith('.css');
 
     event.respondWith(
         (async () => {
+            /* ── Network-first (JS + CSS): always fetch fresh when online ── */
+            if (networkFirst) {
+                try {
+                    const res = await fetch(request);
+                    if (res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((c) => c.put(path, copy));
+                    }
+                    return res;
+                } catch {
+                    /* Offline: look for any cached copy as fallback */
+                    const offlineFallback =
+                        (await caches.match(path)) ||
+                        (await caches.match(request)) ||
+                        (await caches.match('/' + path.split('/').pop()));
+                    return offlineFallback || Response.error();
+                }
+            }
+
+            /* ── Cache-first (images, fonts, other static) ── */
             let cached = await caches.match(request);
             if (!cached && PRECACHE_URL_SET.has(path)) {
                 cached = await caches.match(path);
@@ -314,20 +334,6 @@ self.addEventListener('fetch', (event) => {
             if (!cached) {
                 const base = path.split('/').pop();
                 if (base) cached = await caches.match('/' + base);
-            }
-
-            if (networkFirstJs) {
-                try {
-                    const res = await fetch(request);
-                    if (res.ok) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then((c) => c.put(request, copy));
-                    }
-                    return res;
-                } catch {
-                    if (cached) return cached;
-                    return (await caches.match('/write-entry.html')) || Response.error();
-                }
             }
 
             if (cached) return cached;
