@@ -1335,6 +1335,26 @@ body {
         transform: translateY(0) scale(0.99);
         box-shadow: 0 6px 18px rgba(111, 143, 127, 0.14);
     }
+
+    /* Desktop-only: larger streak panel for PC users without changing mobile sizing */
+    .floating-streak-panel {
+        min-width: 280px;
+        max-width: 320px;
+        padding: 0.65rem 0.8rem 0.75rem;
+    }
+
+    .floating-streak-panel__num {
+        font-size: 1.35rem;
+    }
+
+    .floating-streak-panel__hint {
+        font-size: 0.72rem;
+    }
+
+    .floating-streak-panel__dow {
+        max-width: 24px;
+        font-size: 0.56rem;
+    }
 }
 
 .recent-entry-card {
