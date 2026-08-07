@@ -2767,6 +2767,10 @@ def static_files(filename):
             return send_from_directory(TEMPLATES_DIR, safe)
         abort(404)
 
+    full_static = os.path.join(STATIC_DIR, safe)
+    if os.path.abspath(full_static).startswith(os.path.abspath(STATIC_DIR)) and os.path.isfile(full_static):
+        return send_from_directory(STATIC_DIR, safe)
+
     subdir = static_dir_map.get(ext)
     if subdir:
         full = os.path.join(STATIC_DIR, subdir, safe)
