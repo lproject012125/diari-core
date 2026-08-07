@@ -1707,17 +1707,29 @@ body {
     }
 
     .floating-streak-panel {
-        max-width: min(220px, calc(100vw - 1.25rem));
-        padding: 0.4rem 0.5rem 0.45rem;
+        max-width: min(260px, calc(100vw - 1.25rem));
+        padding: 0.65rem 0.75rem 0.7rem;
+    }
+
+    .floating-streak-panel__label {
+        font-size: 0.64rem;
     }
 
     .floating-streak-panel__num {
-        font-size: 1.1rem;
+        font-size: 1.35rem;
+    }
+
+    .floating-streak-panel__days {
+        font-size: 0.82rem;
+    }
+
+    .floating-streak-panel__hint {
+        font-size: 0.7rem;
     }
 
     .floating-streak-panel__dow {
-        max-width: 19px;
-        font-size: 0.48rem;
+        max-width: 26px;
+        font-size: 0.55rem;
     }
     
     /* Compact stat row: icon badge (left) + stacked copy (right), reference-style */
