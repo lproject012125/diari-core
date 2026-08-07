@@ -994,6 +994,7 @@ document.addEventListener('DOMContentLoaded', function() {
         pendingTwoFactorToken = null;
         loginTotpVerifyInProgress = false;
         loginRecoveryVerifyInProgress = false;
+        clearAuthPhaseState();
         resetLoginRecoveryUi();
         if (loginTotpAutoVerifyTimeout) {
             clearTimeout(loginTotpAutoVerifyTimeout);
@@ -1015,6 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showLoginTotpStep(challengeToken) {
         pendingTwoFactorToken = challengeToken;
+        saveAuthPhaseState('2fa_verify', { pendingTwoFactorToken: challengeToken });
         resetLoginRecoveryUi();
         if (signinMainFlow) signinMainFlow.hidden = true;
         if (loginTotpStep) loginTotpStep.hidden = false;
@@ -1651,6 +1653,28 @@ document.addEventListener('DOMContentLoaded', function() {
         verifyResetCodeBtn.textContent = 'Verify Code';
     }
 
+    function saveAuthPhaseState(phase, extra = {}) {
+        try {
+            if (!phase || phase === 'signin') {
+                sessionStorage.removeItem('auth_modal_phase_state');
+            } else {
+                sessionStorage.setItem('auth_modal_phase_state', JSON.stringify({
+                    phase,
+                    resetIdentifier: resetIdentifier || extra.resetIdentifier || '',
+                    verifiedResetCode: verifiedResetCode || extra.verifiedResetCode || '',
+                    pendingTwoFactorToken: pendingTwoFactorToken || extra.pendingTwoFactorToken || '',
+                    timestamp: Date.now()
+                }));
+            }
+        } catch (e) {}
+    }
+
+    function clearAuthPhaseState() {
+        try {
+            sessionStorage.removeItem('auth_modal_phase_state');
+        } catch (e) {}
+    }
+
     function submitResetCodeVerification() {
         if (resetVerifyInProgress) return;
         const code = getResetOtpCode();
@@ -1674,6 +1698,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 verifiedResetCode = code;
+                saveAuthPhaseState('reset_password', { resetIdentifier, verifiedResetCode: code });
                 if (resetConfirmForm) resetConfirmForm.hidden = true;
                 if (resetPasswordForm) showResetStep(resetPasswordForm);
                 if (resetTitle) resetTitle.textContent = 'Reset Password';
@@ -1759,6 +1784,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openResetModal() {
         if (!loginPasswordResetStep) return;
+        saveAuthPhaseState('forgot_password');
         destroyResetPasswordLive();
         if (confirmResetBtn) confirmResetBtn.disabled = true;
         if (signinMainFlow) signinMainFlow.hidden = true;
@@ -1797,6 +1823,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function closeResetModal() {
         if (!loginPasswordResetStep) return;
+        clearAuthPhaseState();
         destroyResetPasswordLive();
         loginPasswordResetStep.hidden = true;
         if (signinMainFlow) signinMainFlow.hidden = false;
@@ -1813,10 +1840,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetCloseBtn) resetCloseBtn.addEventListener('click', closeResetModal);
 
     if (resetRequestForm) {
-        const validateResetIdentifierField = () => {
+        const validateResetIdentifierField = (isSubmit = false) => {
             if (!resetIdentifierInput) return false;
             const value = (resetIdentifierInput.value || '').trim();
             if (!value) {
+                if (!isSubmit) {
+                    clearValidation(resetIdentifierInput);
+                    return false;
+                }
                 showError(resetIdentifierInput, 'Email address is required.');
                 return false;
             }
@@ -1830,14 +1861,28 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         if (resetIdentifierInput) {
-            resetIdentifierInput.addEventListener('input', validateResetIdentifierField);
-            resetIdentifierInput.addEventListener('blur', validateResetIdentifierField);
+            resetIdentifierInput.addEventListener('input', () => {
+                const val = (resetIdentifierInput.value || '').trim();
+                if (!val) {
+                    clearValidation(resetIdentifierInput);
+                } else {
+                    validateResetIdentifierField(false);
+                }
+            });
+            resetIdentifierInput.addEventListener('blur', () => {
+                const val = (resetIdentifierInput.value || '').trim();
+                if (!val) {
+                    clearValidation(resetIdentifierInput);
+                } else {
+                    validateResetIdentifierField(false);
+                }
+            });
         }
 
         resetRequestForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const identifier = (resetIdentifierInput?.value || '').trim();
-            if (!validateResetIdentifierField()) {
+            if (!validateResetIdentifierField(true)) {
                 return;
             }
             clearResetAlert();
@@ -1868,6 +1913,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         clearValidation(resetIdentifierInput);
                     }
                     resetIdentifier = identifier;
+                    saveAuthPhaseState('forgot_verify', { resetIdentifier: identifier });
                     if (resetRequestForm) resetRequestForm.hidden = true;
                     if (resetConfirmForm) showResetStep(resetConfirmForm);
                     if (resetTitle) resetTitle.textContent = 'Verification';
@@ -1890,6 +1936,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetVerifyBackBtn) {
         resetVerifyBackBtn.addEventListener('click', function () {
             clearResetAlert();
+            saveAuthPhaseState('forgot_password');
             destroyResetPasswordLive();
             if (resetConfirmForm) resetConfirmForm.hidden = true;
             if (resetRequestForm) showResetStep(resetRequestForm);
@@ -1906,6 +1953,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetPasswordBackBtn) {
         resetPasswordBackBtn.addEventListener('click', function () {
             clearResetAlert();
+            saveAuthPhaseState('forgot_verify', { resetIdentifier });
             destroyResetPasswordLive();
             if (resetPasswordForm) resetPasswordForm.hidden = true;
             if (resetConfirmForm) showResetStep(resetConfirmForm);
@@ -2249,8 +2297,52 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initFloatingLabels();
 
+    function restoreAuthPhaseState() {
+        try {
+            const raw = sessionStorage.getItem('auth_modal_phase_state');
+            if (!raw) return;
+            const state = JSON.parse(raw);
+            if (!state || !state.phase) return;
+
+            if (state.phase === 'forgot_password') {
+                openResetModal();
+            } else if (state.phase === 'forgot_verify') {
+                resetIdentifier = state.resetIdentifier || '';
+                if (loginPasswordResetStep) loginPasswordResetStep.hidden = false;
+                if (signinMainFlow) signinMainFlow.hidden = true;
+                if (signinMainFormHeader) signinMainFormHeader.hidden = true;
+                if (resetRequestForm) resetRequestForm.hidden = true;
+                if (resetPasswordForm) resetPasswordForm.hidden = true;
+                if (resetConfirmForm) showResetStep(resetConfirmForm);
+                if (resetTitle) resetTitle.textContent = 'Verification';
+                if (resetSubtitle) resetSubtitle.textContent = 'Thank you for verifying. Kindly check your email for the code.';
+                startResetResendCooldown(60);
+            } else if (state.phase === 'reset_password') {
+                resetIdentifier = state.resetIdentifier || '';
+                verifiedResetCode = state.verifiedResetCode || '';
+                if (loginPasswordResetStep) loginPasswordResetStep.hidden = false;
+                if (signinMainFlow) signinMainFlow.hidden = true;
+                if (signinMainFormHeader) signinMainFormHeader.hidden = true;
+                if (resetRequestForm) resetRequestForm.hidden = true;
+                if (resetConfirmForm) resetConfirmForm.hidden = true;
+                if (resetPasswordForm) showResetStep(resetPasswordForm);
+                if (resetTitle) resetTitle.textContent = 'Reset Password';
+                if (resetSubtitle) resetSubtitle.textContent = 'Please choose a new password that is different from your old one.';
+                initResetPasswordLive();
+            } else if (state.phase === '2fa_verify') {
+                if (state.pendingTwoFactorToken) {
+                    showLoginTotpStep(state.pendingTwoFactorToken);
+                }
+            }
+        } catch (e) {
+            console.error('Error restoring auth phase state:', e);
+        }
+    }
+
     if (initialMode === 'signup' && signupSection && signupWelcome) {
         // Ensure the correct view when coming back from verification page
         switchToSignUp();
+    } else {
+        restoreAuthPhaseState();
     }
 });
