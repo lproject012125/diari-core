@@ -1601,10 +1601,15 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-pane__stack {
-        min-height: 200px;
+        min-height: 320px;
         border: 1px solid var(--border-color);
         border-radius: 12px;
         overflow: hidden;
+    }
+
+    /* Force gallery scroll to always render at full height on desktop — empty or not */
+    body.page-write-entry .write-entry-photos-panel .entry-gallery-scroll {
+        min-height: 260px !important;
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-toolbar[hidden] {
