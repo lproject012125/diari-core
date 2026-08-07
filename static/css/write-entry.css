@@ -1608,6 +1608,7 @@ html.theme-dark .entry-img-spinner__bytes {
         overflow: hidden;
     }
 
+    body.page-write-entry .write-entry-photos-panel .entry-gallery-toolbar,
     body.page-write-entry .write-entry-photos-panel .entry-gallery-toolbar[hidden] {
         display: none !important;
     }
