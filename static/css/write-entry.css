@@ -1486,7 +1486,7 @@ html.theme-dark .entry-img-spinner__bytes {
     body.page-write-entry .write-entry-unified {
         display: flex;
         flex-direction: row;
-        align-items: stretch;
+        align-items: flex-start;
         gap: 1.25rem;
         margin-bottom: 2.5rem;
         width: 100%;
