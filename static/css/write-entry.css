@@ -1486,7 +1486,7 @@ html.theme-dark .entry-img-spinner__bytes {
     body.page-write-entry .write-entry-unified {
         display: flex;
         flex-direction: row;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 1.25rem;
         margin-bottom: 2.5rem;
         width: 100%;
@@ -1569,7 +1569,8 @@ html.theme-dark .entry-img-spinner__bytes {
     body.page-write-entry .write-entry-photos-section {
         flex: 0 0 clamp(200px, 38%, 420px);
         width: clamp(200px, 38%, 420px);
-        display: block !important;
+        display: flex !important;
+        flex-direction: column;
         visibility: visible !important;
         margin: 0;
         padding: 0;
@@ -1581,6 +1582,7 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 
     body.page-write-entry .write-entry-photos-section > .section-title {
+        flex-shrink: 0;
         display: block;
         margin: 0;
         padding: 1.1rem 1.4rem 0.45rem;
@@ -1591,7 +1593,10 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 
     body.page-write-entry .write-entry-photos-panel {
-        display: block !important;
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex !important;
+        flex-direction: column;
         visibility: visible !important;
         max-width: none;
         width: 100%;
@@ -1599,18 +1604,25 @@ html.theme-dark .entry-img-spinner__bytes {
         padding: 0.5rem 1.2rem 1.2rem;
         border: none;
         background: transparent;
+        box-sizing: border-box;
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-pane__stack {
-        min-height: 320px;
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         border: 1px solid var(--border-color);
         border-radius: 12px;
         overflow: hidden;
     }
 
-    /* Force gallery scroll to always render at full height on desktop — empty or not */
+    /* Gallery scroll grows to fill stretched card height — eliminates whitespace */
     body.page-write-entry .write-entry-photos-panel .entry-gallery-scroll {
-        min-height: 260px !important;
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        max-height: none !important;
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-toolbar[hidden] {
