@@ -1551,8 +1551,7 @@ html.theme-dark .entry-img-spinner__bytes {
     body.page-write-entry .write-entry-photos-section {
         flex: 0 0 clamp(200px, 38%, 420px);
         width: clamp(200px, 38%, 420px);
-        display: flex !important;
-        flex-direction: column;
+        display: block !important;
         visibility: visible !important;
         margin: 0;
         padding: 0;
@@ -1585,6 +1584,7 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-pane__stack {
+        min-height: 200px;
         border: 1px solid var(--border-color);
         border-radius: 12px;
         overflow: hidden;
