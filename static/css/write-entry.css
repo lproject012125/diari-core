@@ -1487,7 +1487,7 @@ html.theme-dark .entry-img-spinner__bytes {
     body.page-write-entry .write-entry-unified {
         display: flex;
         flex-direction: row;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 1.25rem;
         margin-bottom: 2.5rem;
         width: 100%;
@@ -1511,6 +1511,8 @@ html.theme-dark .entry-img-spinner__bytes {
         display: block;
         margin: 0;
         padding: 0.85rem 0.95rem 0.35rem;
+        font-size: 1.15rem;
+        font-weight: 600;
     }
 
     body.page-write-entry .write-entry-compose {
@@ -1538,7 +1540,7 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 
     body.page-write-entry .write-entry-stack .entry-main-pane .journal-textarea {
-        min-height: 150px;
+        min-height: 80px;
     }
 
     body.page-write-entry .write-entry-stack .journal-footer {
@@ -1564,8 +1566,8 @@ html.theme-dark .entry-img-spinner__bytes {
         display: block;
         margin: 0;
         padding: 0.85rem 0.95rem 0.35rem;
-        font-size: inherit;
-        font-weight: inherit;
+        font-size: 1.15rem;
+        font-weight: 600;
         opacity: 1;
         text-transform: none;
     }
