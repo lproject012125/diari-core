@@ -1465,12 +1465,11 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-toolbar {
-        display: flex !important;
+        display: none !important;
     }
 
     body.page-write-entry .write-entry-photos-panel .entry-gallery-toolbar[hidden] {
-        display: flex !important;
-        visibility: visible !important;
+        display: none !important;
     }
 
     body.page-write-entry .main-content {
