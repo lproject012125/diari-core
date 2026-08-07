@@ -1,5 +1,10 @@
 /* DiariCore Login Page Styles - Sliding Panel Version */
 
+html.auth-phase-restoring #signinMainFlow,
+html.auth-phase-restoring #signinMainFormHeader {
+    display: none !important;
+}
+
 :root {
     --primary-color: #6F8F7F;
     --primary-hover: #5F7F6F;

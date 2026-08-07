@@ -2336,6 +2336,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (e) {
             console.error('Error restoring auth phase state:', e);
+        } finally {
+            document.documentElement.classList.remove('auth-phase-restoring');
         }
     }
 
