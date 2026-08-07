@@ -1482,82 +1482,115 @@ html.theme-dark .entry-img-spinner__bytes {
     }
 }
 
-/* Desktop: journal + gallery in one unified card */
+/* Desktop: journal card + separate photos card side by side */
 @media (min-width: 769px) {
     body.page-write-entry .write-entry-unified {
-        display: grid;
-        grid-template-columns: 1fr minmax(200px, 42%);
-        grid-template-rows: auto auto 1fr auto;
-        grid-template-areas:
-            "we-thoughts we-thoughts"
-            "we-header we-header"
-            "we-main we-gallery"
-            "we-footer we-footer";
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 1.25rem;
+        margin-bottom: 2.5rem;
+        width: 100%;
+    }
+
+    /* ── Left card: "Your Thoughts" ── */
+    body.page-write-entry .journal-input-section {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
         background-color: var(--card-background);
         border: 2px solid var(--border-color);
         border-radius: 12px;
         overflow: hidden;
         box-shadow: var(--box-shadow);
-        margin-bottom: 2.5rem;
-    }
-
-    body.page-write-entry .journal-input-section {
-        display: contents;
-        margin: 0;
-        padding: 0;
     }
 
     body.page-write-entry .journal-input-section > .section-title {
-        grid-area: we-thoughts;
         margin: 0;
         padding: 0.85rem 0.95rem 0.35rem;
     }
 
     body.page-write-entry .write-entry-compose {
-        display: contents;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     body.page-write-entry .write-entry-stack {
-        display: contents;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     body.page-write-entry .write-entry-stack .journal-container {
-        display: contents;
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
         border: none;
         box-shadow: none;
         background: transparent;
+        min-height: 0;
     }
 
     body.page-write-entry .write-entry-stack .journal-header {
-        grid-area: we-header;
+        flex-shrink: 0;
     }
 
     body.page-write-entry .write-entry-stack .entry-main-pane {
-        grid-area: we-main;
-        padding: 0 0 0 0.9rem;
+        flex: 1 1 0;
+        min-height: 0;
+        padding: 0 0.9rem 0 0.9rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body.page-write-entry .write-entry-stack .entry-main-pane .journal-textarea {
+        flex: 1 1 0;
+        min-height: 120px;
     }
 
     body.page-write-entry .write-entry-stack .journal-footer {
-        grid-area: we-footer;
+        flex-shrink: 0;
     }
 
+    /* ── Right card: "Photos" ── */
     body.page-write-entry .write-entry-photos-section {
-        display: contents;
+        flex: 0 0 minmax(200px, 38%);
+        width: clamp(200px, 38%, 420px);
+        display: flex !important;
+        flex-direction: column;
         margin: 0;
         padding: 0;
+        background-color: var(--card-background);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--box-shadow);
     }
 
     body.page-write-entry .write-entry-photos-section > .section-title {
-        display: none;
+        display: block;
+        margin: 0;
+        padding: 0.85rem 0.95rem 0.35rem;
+        font-size: inherit;
+        font-weight: inherit;
+        opacity: 1;
+        text-transform: none;
     }
 
     body.page-write-entry .write-entry-photos-panel {
-        grid-area: we-gallery;
-        align-self: stretch;
+        flex: 1 1 0;
+        display: block !important;
+        visibility: visible !important;
         max-width: none;
-        width: auto;
+        width: 100%;
         margin: 0;
-        padding: 0.9rem 0.95rem 0.55rem 0;
+        padding: 0 0.95rem 0.95rem;
         border: none;
         background: transparent;
     }
