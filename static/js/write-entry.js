@@ -477,7 +477,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (isWriteEntryMobileLayout()) {
                 minPx = Math.max(200, Math.min(420, Math.round(window.innerHeight * 0.32)));
             } else {
-                minPx = Math.max(96, gal.offsetHeight - titleH);
+                // Desktop: cards are side-by-side separately — use a compact fixed min-height
+                minPx = 160;
             }
             jt.style.minHeight = `${Math.round(minPx)}px`;
         }

@@ -1540,6 +1540,8 @@ html.theme-dark .entry-img-spinner__bytes {
 
     body.page-write-entry .write-entry-stack .entry-main-pane .journal-textarea {
         min-height: 80px;
+        max-height: 220px !important;
+        overflow-y: auto !important;
     }
 
     body.page-write-entry .write-entry-stack .journal-footer {
