@@ -1864,7 +1864,11 @@ html.theme-dark .login-totp-step__recovery-link:hover {
     }
 
     .login-right-panel {
-        background: linear-gradient(135deg, #6F8F7F 0%, #8FAF9F 100%) !important;
+        background: url('/left-panel-login.svg') center/cover no-repeat !important;
+    }
+
+    .login-right-panel::before {
+        display: none !important;
     }
 
     .login-left-panel {
