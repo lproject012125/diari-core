@@ -1890,4 +1890,12 @@ html.theme-dark .login-totp-step__recovery-link:hover {
         background: url('/upper%20right-panel-login.svg') top center / cover no-repeat !important;
         background-attachment: local !important;
     }
+
+    /* Password indicator error box width based on text content (PC Platform only) */
+    .form-group--pwd-full .custom-error,
+    #signUpPassword-common-error,
+    #resetPassword-common-error {
+        width: fit-content !important;
+        max-width: 100% !important;
+    }
 }
