@@ -497,6 +497,12 @@ body {
         display: none !important;
     }
 
+    /* Right panel (Account Verification form) background (PC Platform only) */
+    .card {
+        background: url('/img/account-verification.svg') top center / cover no-repeat !important;
+        background-attachment: local !important;
+    }
+
     /* Hide floating dark mode toggle button at bottom right (PC Platform only) */
     .theme-toggle-fab,
     #diariThemeToggleFab {
