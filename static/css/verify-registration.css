@@ -497,8 +497,13 @@ body {
         display: none !important;
     }
 
-    /* Right panel (Account Verification form) background (PC Platform only) */
+    /* Right panel (Account Verification form) — stretch to fill full grid cell + SVG bg (PC Platform only) */
     .card {
+        align-self: stretch !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
         background: url('/img/account-verification.svg') top center / cover no-repeat !important;
         background-attachment: local !important;
     }
