@@ -983,7 +983,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (fieldId === 'confirmPassword') {
             const pass = document.getElementById('signUpPassword').value;
             if (!value) return showError(field, 'Password confirmation is required.'), false;
-            if (value !== pass) return showError(field, 'Passwords do not match.'), false;
+            if (value !== pass) return clearValidation(field), false;
             showSuccess(field); return true;
         }
 
@@ -1419,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showError(document.getElementById('confirmPassword'), 'Password confirmation is required.');
                 isValid = false;
             } else if (confirmPassword !== password) {
-                showError(document.getElementById('confirmPassword'), 'Passwords do not match.');
+                clearValidation(document.getElementById('confirmPassword'));
                 isValid = false;
             } else {
                 showSuccess(document.getElementById('confirmPassword'));

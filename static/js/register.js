@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
             if (value !== pass) {
-                showError(field, 'Passwords do not match.');
+                clearValidation(field);
                 return false;
             }
             showSuccess(field);
