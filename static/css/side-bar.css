@@ -10,7 +10,8 @@
     --primary-light: #8FAF9F;
     
     /* Backgrounds */
-    --background-color: #F5F7F6;
+    --background-color: #F3F6F3;
+    --sidebar-background: #FBFCFA;
     --background-soft: #EEF2F0;
     --card-background: #FFFFFF;
     
@@ -30,7 +31,7 @@
 /* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-width);
-    background-color: var(--card-background);
+    background-color: var(--sidebar-background, #FBFCFA);
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
