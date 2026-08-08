@@ -496,4 +496,10 @@ body {
     .verify-side::before {
         display: none !important;
     }
+
+    /* Hide floating dark mode toggle button at bottom right (PC Platform only) */
+    .theme-toggle-fab,
+    #diariThemeToggleFab {
+        display: none !important;
+    }
 }

@@ -1904,4 +1904,10 @@ html.theme-dark .login-totp-step__recovery-link:hover {
         width: fit-content !important;
         max-width: 100% !important;
     }
+
+    /* Hide floating dark mode toggle button at bottom right (PC Platform only) */
+    .theme-toggle-fab,
+    #diariThemeToggleFab {
+        display: none !important;
+    }
 }
