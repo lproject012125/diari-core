@@ -829,6 +829,15 @@ body {
         margin: 0 10px 10px 10px;
         box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
     }
+
+    /* Reset Password & Verification Phase Background (Mobile/PWA Platform only) */
+    html.auth-phase-upper-bg .login-left-panel,
+    .login-left-panel:has(#loginTotpStep:not([hidden])),
+    .login-left-panel:has(#resetConfirmForm:not([hidden])),
+    .login-left-panel:has(#resetPasswordForm:not([hidden])) {
+        background: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg') top center / cover no-repeat !important;
+        background-attachment: local !important;
+    }
     
     .login-logo {
         width: 60px;
