@@ -473,6 +473,7 @@ body {
         background: transparent !important;
         box-shadow: none !important;
         border-radius: 0 !important;
+        opacity: 1 !important;
         transform: none !important;
         animation: none !important;
     }
