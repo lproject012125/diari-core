@@ -814,23 +814,20 @@ body {
     
     .login-right-panel {
         order: 1;
-        min-height: 46vh;
-        background: transparent;
-        padding: 2.75rem 2rem 2.25rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        min-height: 40vh;
+        background: url('/mobile-green-panel-login.svg') top center / cover no-repeat !important;
+        padding: 2rem;
     }
     
     .login-left-panel {
         order: 2;
-        min-height: 58vh;
-        background: white;
+        min-height: 60vh;
+        background: url('/mobile=white-panel-login.svg') top center / cover no-repeat !important;
+        background-attachment: local !important;
         border-radius: 30px 30px 0 0;
-        padding: 2.25rem 2rem 2rem;
-        margin: 0;
-        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.12);
+        padding: 2rem;
+        margin: 0 10px 10px 10px;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
     }
     
     .login-logo {
@@ -839,44 +836,41 @@ body {
     }
 
     .auth-welcome-brand {
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        justify-content: center;
-        gap: 0.75rem;
-        text-align: center;
+        justify-content: flex-start;
+        gap: 1rem;
     }
 
     .auth-welcome-brand .logo-section {
-        margin-bottom: 0.25rem;
+        margin-bottom: 0;
         flex-shrink: 0;
     }
 
     .auth-welcome-brand .login-logo {
-        width: 100px;
-        height: 100px;
+        width: 88px;
+        height: 88px;
     }
 
     .auth-welcome-brand .welcome-content {
         flex: 1;
         min-width: 0;
-        text-align: center;
+        text-align: left;
     }
 
     .auth-welcome-brand .welcome-title,
     .auth-welcome-brand .welcome-text {
-        text-align: center;
+        text-align: left;
     }
     
     .welcome-title {
-        font-size: 38px;
+        font-size: 42px;
         color: white;
-        text-align: center;
     }
     
     .welcome-text {
-        font-size: 15px;
+        font-size: 14.5px;
         color: rgba(255, 255, 255, 0.9);
-        text-align: center;
     }
     
     .btn-switch {
@@ -892,15 +886,15 @@ body {
     }
     
     .form-title {
-        font-size: 28px;
+        font-size: 26px;
         text-align: left;
         margin-bottom: 0.5rem;
     }
     
     .form-subtitle {
-        font-size: 14.5px;
+        font-size: 14px;
         text-align: left;
-        margin-bottom: 1.75rem;
+        margin-bottom: 2rem;
         color: var(--text-secondary);
     }
     
@@ -1066,14 +1060,14 @@ body {
     }
     
     .login-right-panel {
-        min-height: 44vh;
-        padding: 2.5rem 1.5rem 2rem;
+        min-height: 35vh;
+        padding: 1.5rem;
     }
     
     .login-left-panel {
-        min-height: 58vh;
-        padding: 2rem 1.5rem;
-        margin: 0;
+        min-height: 65vh;
+        padding: 1.5rem;
+        margin: 0 5px 5px 5px;
     }
     
     .login-logo {
@@ -1082,12 +1076,12 @@ body {
     }
 
     .auth-welcome-brand .login-logo {
-        width: 92px;
-        height: 92px;
+        width: 80px;
+        height: 80px;
     }
     
     .welcome-title {
-        font-size: 36px;
+        font-size: 42px;
     }
     
     .form-title {
@@ -1099,14 +1093,14 @@ body {
     }
     
     .form-input {
-        padding: 14px 44px 14px 16px;
-        font-size: 15px;
+        padding: 12px 40px 12px 14px;
+        font-size: 14px;
     }
     
     .btn-signin,
     .btn-google {
-        padding: 14px;
-        font-size: 15px;
+        padding: 12px;
+        font-size: 14px;
     }
     
     .btn-switch {
