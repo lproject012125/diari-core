@@ -29,8 +29,9 @@
         <main class="admin-main diari-shell-main">
             <section class="card">
                 <h2>System Settings</h2>
-                <p class="muted">Configure Brevo email settings used for OTP verification emails.</p>
+                <p class="muted">Configure Brevo email OTP settings and Hugging Face Voice AI model credentials.</p>
 
+                <h3 style="font-size: 16px; margin-top: 18px; margin-bottom: 4px; color: var(--primary-color);">Email Service (Brevo)</h3>
                 <label for="brevoApiKey">Brevo API Key</label>
                 <input id="brevoApiKey" type="password" placeholder="Enter new API key to update">
                 <p class="muted" id="apiKeyHint">No API key configured.</p>
@@ -51,7 +52,15 @@
                     Enable Email Notifications
                 </label>
 
-                <button id="saveSettingsBtn" class="save-btn"><i class="bi bi-floppy"></i> Save Settings</button>
+                <hr style="margin: 24px 0 16px; border: 0; border-top: 1px solid var(--border-color);">
+
+                <h3 style="font-size: 16px; margin-top: 8px; margin-bottom: 4px; color: var(--primary-color);">Voice AI Speech Recognition (Whisper)</h3>
+                <p class="muted">Powers fast server voice journaling transcription (Whisper Large V3 Turbo).</p>
+                <label for="hfApiToken">Hugging Face API Token</label>
+                <input id="hfApiToken" type="password" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                <p class="muted" id="hfTokenHint">No Hugging Face token configured.</p>
+
+                <button id="saveSettingsBtn" class="save-btn" style="margin-top: 24px;"><i class="bi bi-floppy"></i> Save Settings</button>
             </section>
         </main>
     </div>

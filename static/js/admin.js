@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const apiKeyInput = document.getElementById('brevoApiKey');
+    const hfTokenInput = document.getElementById('hfApiToken');
     const senderEmailInput = document.getElementById('senderEmail');
     const senderNameInput = document.getElementById('senderName');
     const enableEmailInput = document.getElementById('enableEmailNotifications');
     const saveBtn = document.getElementById('saveSettingsBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const apiKeyHint = document.getElementById('apiKeyHint');
+    const hfTokenHint = document.getElementById('hfTokenHint');
 
     function notify(message) {
         window.alert(message);
@@ -25,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 senderNameInput.value = s.senderName || '';
                 enableEmailInput.checked = !!s.enableEmailNotifications;
                 apiKeyHint.textContent = s.hasApiKey ? `Current key: ${s.maskedApiKey}` : 'No API key configured.';
+                if (hfTokenHint) {
+                    hfTokenHint.textContent = s.hasHfToken ? `Current token: ${s.maskedHfToken}` : 'No Hugging Face token configured.';
+                }
             })
             .catch(() => {
                 notify('Could not load settings.');
@@ -38,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                apiKey: apiKeyInput.value.trim(),
+                apiKey: apiKeyInput ? apiKeyInput.value.trim() : '',
+                hfToken: hfTokenInput ? hfTokenInput.value.trim() : '',
                 senderEmail: senderEmailInput.value.trim(),
                 senderName: senderNameInput.value.trim(),
                 enableEmailNotifications: enableEmailInput.checked
@@ -50,7 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     notify(data.error || 'Failed to save settings.');
                     return;
                 }
-                apiKeyInput.value = '';
+                if (apiKeyInput) apiKeyInput.value = '';
+                if (hfTokenInput) hfTokenInput.value = '';
                 notify(data.message || 'Settings saved successfully.');
                 loadSettings();
             })

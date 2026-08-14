@@ -552,6 +552,10 @@
                 if (!forceAi && currentText.length >= 10) return;
 
                 setTranscriptHint('⚡ Transcribing audio with AI (Whisper)…');
+                if (aiTranscribeBtn) {
+                    aiTranscribeBtn.disabled = true;
+                    aiTranscribeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Transcribing…';
+                }
 
                 try {
                     const formData = new FormData();
@@ -563,8 +567,17 @@
                             : 'en';
                     formData.append('language', voiceLang);
 
+                    const headers = {};
+                    try {
+                        const user = JSON.parse(localStorage.getItem('diariCoreUser') || '{}');
+                        if (user && user.csrfToken) {
+                            headers['X-CSRFToken'] = user.csrfToken;
+                        }
+                    } catch (_) {}
+
                     const res = await fetch('/api/voice/transcribe', {
                         method: 'POST',
+                        headers: headers,
                         body: formData,
                     });
 
@@ -578,7 +591,7 @@
                         return;
                     }
 
-                    const err = data.error || 'Server transcription unavailable';
+                    const err = data.error || (res.status === 401 ? 'Please log in to use AI transcription.' : 'Server transcription unavailable');
                     console.warn('Server transcription note:', err);
 
                     // Fallback to client-side transcription if supported
@@ -593,10 +606,15 @@
                         }
                     }
 
-                    setTranscriptHint(clientTranscribeFailureHint(null));
+                    setTranscriptHint(err || clientTranscribeFailureHint(null));
                 } catch (e) {
                     console.error('AI transcription request failed:', e);
                     setTranscriptHint(clientTranscribeFailureHint(e));
+                } finally {
+                    if (aiTranscribeBtn) {
+                        aiTranscribeBtn.disabled = false;
+                        aiTranscribeBtn.innerHTML = '<i class="bi bi-lightning-charge-fill text-warning"></i> AI Transcribe';
+                    }
                 }
             }
 

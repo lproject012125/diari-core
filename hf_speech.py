@@ -11,7 +11,6 @@ import os
 import time
 from typing import Any, List, Optional, Tuple
 
-HF_API_TOKEN = os.environ.get("HF_API_TOKEN", "").strip() or os.environ.get("HF_TOKEN", "").strip()
 HF_SPEECH_MODEL = os.environ.get("HF_SPEECH_MODEL", "openai/whisper-large-v3-turbo").strip()
 
 # Providers that commonly host Whisper for InferenceClient.
@@ -33,9 +32,24 @@ for p in _ASR_PROVIDERS:
     ASR_PROVIDER_CHAIN.append(p)
 
 
+def get_hf_token() -> str:
+    """Retrieve HF Token from environment or system_settings database table."""
+    token = os.environ.get("HF_API_TOKEN", "").strip() or os.environ.get("HF_TOKEN", "").strip()
+    if token:
+        return token
+    try:
+        import db
+        val = db.get_system_setting("hf_api_token", "")
+        if val and isinstance(val, str) and val.strip():
+            return val.strip()
+    except Exception:
+        pass
+    return ""
+
+
 def is_configured() -> bool:
-    """Server transcription is ready."""
-    return True
+    """Return True if HF API token is configured."""
+    return bool(get_hf_token())
 
 
 def _extract_text(out: Any) -> str:
@@ -69,9 +83,16 @@ def transcribe_upload_bytes(data: bytes, content_type: str, language: Optional[s
     Returns (transcript_text, error_message). On success error_message is None.
     """
     if not data:
-        return None, "Empty audio."
+        return None, "Empty audio recording."
     if len(data) < 200:
-        return None, "Recording was too short. Try speaking for at least 2–3 seconds."
+        return None, "Recording was too short. Please speak for at least 2–3 seconds."
+
+    token = get_hf_token()
+    if not token:
+        return (
+            None,
+            "Hugging Face API token is not configured yet. Set HF_API_TOKEN in Railway or Admin Settings.",
+        )
 
     try:
         from huggingface_hub import InferenceClient
@@ -86,36 +107,32 @@ def transcribe_upload_bytes(data: bytes, content_type: str, language: Optional[s
     model_id = HF_SPEECH_MODEL or "openai/whisper-large-v3-turbo"
     last_err: Optional[str] = None
 
-    token_options = [HF_API_TOKEN] if HF_API_TOKEN else [None]
-
-    for token_val in token_options:
-        for provider in ASR_PROVIDER_CHAIN:
-            for attempt in range(2):
-                try:
-                    kwargs = {}
-                    if token_val:
-                        kwargs["token"] = token_val
-                    if provider:
-                        kwargs["provider"] = provider
-                    client = InferenceClient(**kwargs)
-                    out = client.automatic_speech_recognition(audio=data, model=model_id)
-                    text = _extract_text(out)
-                    if text:
-                        return text, None
-                    last_err = "Transcription returned no text."
-                    break
-                except HfHubHTTPError as exc:
-                    status = getattr(getattr(exc, "response", None), "status_code", None) or 0
-                    detail = str(exc).strip() or getattr(exc, "message", "") or "HTTP error"
-                    if status == 503 or "503" in detail or "loading" in detail.lower():
-                        time.sleep(min(4.0, 1.5 * (attempt + 1)))
-                        last_err = "Transcription service is warming up; try again in a moment."
-                        continue
-                    last_err = f"Transcription failed ({provider or 'default'}): {detail}"[:650]
-                    break
-                except Exception as exc:
-                    last_err = f"Transcription error ({provider or 'default'}): {exc}"[:650]
-                    break
+    for provider in ASR_PROVIDER_CHAIN:
+        for attempt in range(2):
+            try:
+                kwargs = {"token": token}
+                if provider:
+                    kwargs["provider"] = provider
+                client = InferenceClient(**kwargs)
+                out = client.automatic_speech_recognition(audio=data, model=model_id)
+                text = _extract_text(out)
+                if text:
+                    return text, None
+                last_err = "Transcription returned no text."
+                break
+            except HfHubHTTPError as exc:
+                status = getattr(getattr(exc, "response", None), "status_code", None) or 0
+                detail = str(exc).strip() or getattr(exc, "message", "") or "HTTP error"
+                if status == 503 or "503" in detail or "loading" in detail.lower():
+                    time.sleep(min(4.0, 1.5 * (attempt + 1)))
+                    last_err = "Transcription service is warming up; try again in a moment."
+                    continue
+                last_err = f"Transcription failed ({provider or 'default'}): {detail}"[:650]
+                break
+            except Exception as exc:
+                last_err = f"Transcription error ({provider or 'default'}): {exc}"[:650]
+                break
 
     return None, last_err or "Transcription service temporarily unavailable."
+
 

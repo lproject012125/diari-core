@@ -1858,12 +1858,23 @@ def api_admin_settings_get():
             masked = "*" * len(api_key)
         else:
             masked = f"{api_key[:4]}{'*' * (len(api_key) - 8)}{api_key[-4:]}"
+
+    hf_token = db.get_system_setting("hf_api_token", "") or os.environ.get("HF_API_TOKEN", "") or os.environ.get("HF_TOKEN", "")
+    masked_hf = ""
+    if hf_token:
+        if len(hf_token) <= 8:
+            masked_hf = "*" * len(hf_token)
+        else:
+            masked_hf = f"{hf_token[:4]}{'*' * (len(hf_token) - 8)}{hf_token[-4:]}"
+
     return jsonify(
         {
             "success": True,
             "settings": {
                 "hasApiKey": bool(api_key),
                 "maskedApiKey": masked,
+                "hasHfToken": bool(hf_token),
+                "maskedHfToken": masked_hf,
                 "senderEmail": db.get_system_setting("brevo_sender_email", ""),
                 "senderName": db.get_system_setting("brevo_sender_name", "DiariCore"),
                 "enableEmailNotifications": (db.get_system_setting("enable_email_notifications", "true") or "true").lower() == "true",
@@ -1882,6 +1893,7 @@ def api_admin_settings_save():
 
     data = request.get_json(silent=True) or {}
     api_key = (data.get("apiKey") or "").strip()
+    hf_token = (data.get("hfToken") or "").strip()
     sender_email = (data.get("senderEmail") or "").strip()
     sender_name = (data.get("senderName") or "").strip()
     enable_notifications = bool(data.get("enableEmailNotifications"))
@@ -1891,6 +1903,8 @@ def api_admin_settings_save():
 
     if api_key:
         db.set_system_setting("brevo_api_key", api_key)
+    if hf_token:
+        db.set_system_setting("hf_api_token", hf_token)
     if sender_email:
         db.set_system_setting("brevo_sender_email", sender_email)
     if sender_name:
@@ -2393,7 +2407,7 @@ def api_voice_status():
 @app.route("/api/voice/transcribe", methods=["POST"])
 def api_voice_transcribe():
     """Fast server voice transcription using Whisper AI."""
-    user_id, auth_err = _require_authenticated_user()
+    user_id, auth_err = _require_authenticated_user(check_csrf=False)
     if auth_err:
         return auth_err
     rl = authsec.rate_limit_check(request, f"voice:{user_id}", 15, 60.0)
