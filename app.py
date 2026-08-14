@@ -2392,11 +2392,11 @@ def api_voice_status():
 
 @app.route("/api/voice/transcribe", methods=["POST"])
 def api_voice_transcribe():
-    """Optional server transcription (opt-in client flag). Default is on-device Whisper in the browser."""
+    """Fast server voice transcription using Whisper AI."""
     user_id, auth_err = _require_authenticated_user()
     if auth_err:
         return auth_err
-    rl = authsec.rate_limit_check(request, f"voice:{user_id}", 8, 60.0)
+    rl = authsec.rate_limit_check(request, f"voice:{user_id}", 15, 60.0)
     if rl:
         return jsonify({"success": False, "error": rl}), 429
     import hf_speech
@@ -2411,11 +2411,13 @@ def api_voice_transcribe():
         return jsonify({"success": False, "error": "Recording is too large (max ~8 MB)."}), 413
 
     content_type = (f.mimetype or "audio/webm").split(";")[0].strip()
-    text, err = hf_speech.transcribe_upload_bytes(data, content_type)
+    language_hint = (request.form.get("language") or "").strip().lower() or None
+    text, err = hf_speech.transcribe_upload_bytes(data, content_type, language=language_hint)
     if text is not None:
-        return jsonify({"success": True, "text": text, "source": "hf"}), 200
+        return jsonify({"success": True, "text": text, "source": "whisper_ai"}), 200
     status = 503 if err and "warming" in err.lower() else 502
     return jsonify({"success": False, "error": err or "Transcription failed."}), status
+
 
 
 @app.route("/BOOK.json")
