@@ -61,11 +61,11 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* Layout Grid */
+/* Layout Structure */
 .admin-wrap {
     min-height: 100vh;
-    display: grid;
-    grid-template-columns: 260px 1fr;
+    display: flex;
+    width: 100%;
 }
 
 /* Mobile Header (Hidden on Desktop) */
@@ -120,6 +120,10 @@ body {
 
 /* Sidebar Styles */
 .admin-sidebar {
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+    flex-shrink: 0;
     background: var(--sidebar-bg);
     color: var(--sidebar-text);
     padding: 1.5rem 1.1rem;
@@ -273,8 +277,11 @@ body {
 
 /* Main Content Area */
 .admin-main {
+    flex: 1;
+    min-width: 0;
     padding: 2rem 2.5rem;
     overflow-x: hidden;
+    background: var(--background-color);
 }
 
 /* Tab Panes */
