@@ -146,24 +146,56 @@
     }
 
     .voice-entry-workspace .voice-recording-container {
-        margin: 1.25rem 0;
+        margin: 0.85rem 0;
     }
 
     .voice-entry-workspace .voice-circle {
-        width: 130px;
-        height: 130px;
+        width: 120px;
+        height: 120px;
     }
 
     .voice-entry-workspace .voice-circle i {
-        font-size: 2.3rem;
+        font-size: 2.2rem;
     }
 
     .voice-entry-workspace .voice-status {
-        margin: 0.75rem 0 0;
+        margin: 0.4rem 0 0;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .voice-entry-workspace .voice-status h2 {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
+        margin: 0;
+    }
+
+    .voice-entry-workspace .recording-state {
+        margin: 0.4rem 0 0;
+        padding: 0;
+        min-height: 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .voice-entry-workspace .recording-animation {
+        height: 22px;
+        margin-bottom: 0.3rem;
+        gap: 3px;
+    }
+
+    .voice-entry-workspace .voice-wave-bar {
+        width: 4px;
+        height: 18px;
+    }
+
+    .voice-entry-workspace .recording-text h3 {
+        font-size: 1.05rem;
+        margin: 0;
+        font-weight: 600;
     }
 
     .voice-entry-workspace .tips-container {
@@ -171,7 +203,7 @@
         background-color: rgba(144, 238, 144, 0.12);
         border: 1px solid rgba(144, 238, 144, 0.35);
         border-radius: 16px;
-        padding: 1.35rem 1.4rem;
+        padding: 1.25rem 1.35rem;
         margin: 0;
         box-shadow: var(--box-shadow);
         width: 100%;
@@ -181,7 +213,7 @@
         font-size: 1.05rem;
         font-weight: 600;
         color: var(--text-dark);
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.65rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -194,11 +226,11 @@
     }
 
     .voice-entry-workspace .tips-container li {
-        font-size: 0.86rem;
+        font-size: 0.84rem;
         color: var(--text-secondary);
-        line-height: 1.5;
-        margin-bottom: 0.55rem;
-        padding-left: 1.25rem;
+        line-height: 1.45;
+        margin-bottom: 0.45rem;
+        padding-left: 1.15rem;
         position: relative;
     }
 
