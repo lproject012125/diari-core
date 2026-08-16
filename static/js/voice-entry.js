@@ -587,8 +587,22 @@
                     });
 
                     const data = await res.json();
-                    if (res.ok && data.success && data.text) {
-                        finalTranscript.value = data.text.trim();
+                    const rawText = data && data.text ? String(data.text).trim() : '';
+                    const normText = rawText.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const isSilenceArtifact =
+                        normText === '' ||
+                        normText === 'so' ||
+                        normText === 'you' ||
+                        normText === 'thankyou' ||
+                        normText === 'thanksforwatching' ||
+                        normText === 'subtitlesby' ||
+                        normText === 'theend' ||
+                        normText === 'bye' ||
+                        normText === 'music' ||
+                        normText === 'silence';
+
+                    if (res.ok && data.success && rawText && !isSilenceArtifact) {
+                        finalTranscript.value = rawText;
                         updateWordCountFromTranscript();
                         setTranscriptHint(
                             '⚡ Transcribed with Whisper AI! Edit any mistakes above before saving.'
@@ -596,12 +610,18 @@
                         return;
                     }
 
-                    const err = data.error || (res.status === 401 ? 'Please log in to use AI transcription.' : 'Server transcription unavailable');
+                    // Silence or no speech detected
+                    finalTranscript.value = '';
+                    updateWordCountFromTranscript();
+                    const defaultNoSpeechMsg = "It seems like you didn't talk during the recording. No words were transcribed — please try again.";
+                    const err = data.error || (res.status === 401 ? 'Please log in to use AI transcription.' : defaultNoSpeechMsg);
                     console.warn('Server transcription note:', err);
-                    setTranscriptHint(err || clientTranscribeFailureHint(null));
+                    setTranscriptHint(err || defaultNoSpeechMsg);
                 } catch (e) {
                     console.error('AI transcription request failed:', e);
-                    setTranscriptHint(clientTranscribeFailureHint(e));
+                    finalTranscript.value = '';
+                    updateWordCountFromTranscript();
+                    setTranscriptHint("It seems like you didn't talk during the recording. No words were transcribed — please try again.");
                 } finally {
                     if (aiTranscribeBtn) {
                         aiTranscribeBtn.disabled = false;

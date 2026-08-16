@@ -56,16 +56,35 @@ def is_configured() -> bool:
     return bool(get_hf_token())
 
 
+SILENCE_PHRASES = {
+    "", ".", "...", "..", ",", "-", "--", "!", "?",
+    "so", "you", "thank you", "thanks for watching", "subtitles by",
+    "the end", "bye", "mbc", "music", "silence", "applause", "whispering", "screaming",
+}
+
+
+def _clean_transcript_text(raw: str) -> str:
+    if not raw:
+        return ""
+    text = raw.strip()
+    norm = "".join(c for c in text.lower() if c.isalnum() or c.isspace()).strip()
+    if norm in SILENCE_PHRASES:
+        return ""
+    if text.strip(" .?!-–—,;:\t\n\r") == "":
+        return ""
+    return text
+
+
 def _extract_text(out: Any) -> str:
     if out is None:
         return ""
     text = getattr(out, "text", None)
     if isinstance(text, str) and text.strip():
-        return text.strip()
+        return _clean_transcript_text(text.strip())
     if isinstance(out, dict):
         t = out.get("text")
         if isinstance(t, str) and t.strip():
-            return t.strip()
+            return _clean_transcript_text(t.strip())
     chunks = getattr(out, "chunks", None)
     if chunks:
         parts: List[str] = []
@@ -78,7 +97,7 @@ def _extract_text(out: Any) -> str:
                 parts.append(str(piece))
         joined = " ".join(parts).strip()
         if joined:
-            return joined
+            return _clean_transcript_text(joined)
     return ""
 
 
@@ -118,6 +137,7 @@ def transcribe_upload_bytes(data: bytes, content_type: str, language: Optional[s
             text = _extract_text(res_data)
             if text:
                 return text, None
+            return None, "It seems like you didn't talk during the recording. No words were transcribed — please try again."
         elif resp.status_code == 503:
             time.sleep(2.0)
             # retry once on warm-up
@@ -127,6 +147,7 @@ def transcribe_upload_bytes(data: bytes, content_type: str, language: Optional[s
                 text = _extract_text(resp.json())
                 if text:
                     return text, None
+                return None, "It seems like you didn't talk during the recording. No words were transcribed — please try again."
         elif resp.status_code == 401:
             return None, "Hugging Face token unauthorized (401). Please verify token permissions include 'Inference'."
     except Exception as e:
@@ -141,6 +162,7 @@ def transcribe_upload_bytes(data: bytes, content_type: str, language: Optional[s
         text = _extract_text(out)
         if text:
             return text, None
+        return None, "It seems like you didn't talk during the recording. No words were transcribed — please try again."
     except Exception as exc:
         print(f"[hf_speech] InferenceClient fallback error: {exc}")
 
