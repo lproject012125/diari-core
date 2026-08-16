@@ -462,9 +462,29 @@
                     </div>
                 </div>
 
+                <!-- Mobile Service Tabs Switcher (Visible on Mobile/PWA only) -->
+                <div class="service-mobile-tabs" role="tablist" id="serviceMobileTabs">
+                    <button class="service-mobile-tab-btn active" data-service-tab="voice" role="tab" aria-selected="true">
+                        <i class="bi bi-mic-fill"></i>
+                        <span>Voice AI</span>
+                    </button>
+                    <button class="service-mobile-tab-btn" data-service-tab="email" role="tab" aria-selected="false">
+                        <i class="bi bi-envelope-fill"></i>
+                        <span>Email OTP</span>
+                    </button>
+                    <button class="service-mobile-tab-btn" data-service-tab="db" role="tab" aria-selected="false">
+                        <i class="bi bi-database-fill"></i>
+                        <span>Database</span>
+                    </button>
+                    <button class="service-mobile-tab-btn" data-service-tab="nlp" role="tab" aria-selected="false">
+                        <i class="bi bi-cpu-fill"></i>
+                        <span>Emotion NLP</span>
+                    </button>
+                </div>
+
                 <div class="services-grid">
                     <!-- Voice AI Whisper Card -->
-                    <div class="service-card" id="svcCardVoice">
+                    <div class="service-card active" id="svcCardVoice" data-service-panel="voice">
                         <div class="service-card-header">
                             <div class="service-brand">
                                 <i class="bi bi-mic-fill service-icon text-primary"></i>
@@ -497,7 +517,7 @@
                     </div>
 
                     <!-- Email Delivery Service Brevo Card -->
-                    <div class="service-card" id="svcCardEmail">
+                    <div class="service-card" id="svcCardEmail" data-service-panel="email">
                         <div class="service-card-header">
                             <div class="service-brand">
                                 <i class="bi bi-envelope-fill service-icon text-info"></i>
@@ -530,7 +550,7 @@
                     </div>
 
                     <!-- Database Health Card -->
-                    <div class="service-card" id="svcCardDb">
+                    <div class="service-card" id="svcCardDb" data-service-panel="db">
                         <div class="service-card-header">
                             <div class="service-brand">
                                 <i class="bi bi-database-fill-check service-icon text-success"></i>
@@ -561,7 +581,7 @@
                     </div>
 
                     <!-- NLP Emotion & Sentiment Model Card -->
-                    <div class="service-card">
+                    <div class="service-card" id="svcCardNlp" data-service-panel="nlp">
                         <div class="service-card-header">
                             <div class="service-brand">
                                 <i class="bi bi-cpu-fill service-icon text-warning"></i>

@@ -1002,6 +1002,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
+    // Mobile Service Sub-Tabs Switcher (Voice AI, Email OTP, Database, Emotion NLP)
+    const serviceMobileTabBtns = document.querySelectorAll('.service-mobile-tab-btn[data-service-tab]');
+    const servicePanels = document.querySelectorAll('.service-card[data-service-panel]');
+
+    serviceMobileTabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.serviceTab;
+            serviceMobileTabBtns.forEach((b) => {
+                const isActive = b.dataset.serviceTab === target;
+                b.classList.toggle('active', isActive);
+                b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            servicePanels.forEach((card) => {
+                card.classList.toggle('active', card.dataset.servicePanel === target);
+            });
+        });
+    });
+
 
 
     // =========================================================================
