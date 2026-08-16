@@ -621,17 +621,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><span class="muted small">${formatDate(u.createdAt)}</span></td>
                     <td><span class="muted small">${formatDate(u.lastLogin)}</span></td>
                     <td class="text-end">
-                        <div class="d-inline-flex gap-1">
-                            <button class="btn btn-sm btn-outline btn-icon view-user-btn" data-user-id="${u.id}" title="View User Details">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline btn-icon toggle-user-btn ${toggleActionClass}" data-user-id="${u.id}" data-disabled="${u.isDisabled ? 'false' : 'true'}" title="${toggleActionText}">
-                                <i class="bi ${toggleActionIcon}"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline btn-icon text-danger delete-user-btn" data-user-id="${u.id}" data-nickname="${escapeHtml(u.nickname)}" data-email="${escapeHtml(u.email)}" title="Delete User Permanently">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                        </div>
+                        <button class="btn btn-sm btn-outline btn-icon view-user-btn" data-user-id="${u.id}" title="View User Details">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -641,14 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Bind Row Action Buttons
         document.querySelectorAll('.view-user-btn').forEach((btn) => {
             btn.addEventListener('click', () => openUserDetailsModal(btn.dataset.userId));
-        });
-
-        document.querySelectorAll('.toggle-user-btn').forEach((btn) => {
-            btn.addEventListener('click', () => toggleUserStatus(btn.dataset.userId, btn.dataset.disabled === 'true'));
-        });
-
-        document.querySelectorAll('.delete-user-btn').forEach((btn) => {
-            btn.addEventListener('click', () => openDeleteUserModal(btn.dataset.userId, btn.dataset.nickname, btn.dataset.email));
         });
     }
 
@@ -740,64 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalBody.innerHTML = '<div class="alert alert-danger">Error loading user details.</div>';
             });
     }
-
-    function toggleUserStatus(userId, shouldDisable) {
-        const actionLabel = shouldDisable ? 'deactivate' : 'activate';
-        if (!confirm(`Are you sure you want to ${actionLabel} this user's account?`)) return;
-
-        fetch(`/api/admin/users/${userId}/toggle-status`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-            body: JSON.stringify({ disabled: shouldDisable }),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    showToast(data.message || 'Status updated successfully.', 'success');
-                    loadUsers();
-                } else {
-                    showToast(data.error || 'Failed to update user status.', 'error');
-                }
-            })
-            .catch(() => showToast('Error communicating with server.', 'error'));
-    }
-
-    let userToDeleteId = null;
-    function openDeleteUserModal(userId, nickname, email) {
-        userToDeleteId = userId;
-        document.getElementById('deleteUserNickname').textContent = nickname;
-        document.getElementById('deleteUserEmail').textContent = email;
-        const modal = document.getElementById('deleteUserModal');
-        if (modal) modal.hidden = false;
-    }
-
-    document.getElementById('confirmDeleteUserBtn')?.addEventListener('click', () => {
-        if (!userToDeleteId) return;
-        const btn = document.getElementById('confirmDeleteUserBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="bi bi-trash3 spin"></i> Deleting...';
-
-        fetch(`/api/admin/users/${userToDeleteId}`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-Token': getCsrfToken() },
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    showToast(data.message || 'User deleted permanently.', 'success');
-                    document.getElementById('deleteUserModal').hidden = true;
-                    loadUsers();
-                } else {
-                    showToast(data.error || 'Failed to delete user.', 'error');
-                }
-            })
-            .catch(() => showToast('Error communicating with server.', 'error'))
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-trash3-fill me-1"></i> Delete Account';
-                userToDeleteId = null;
-            });
-    });
 
     // =========================================================================
     // 5. Analytics Controller

@@ -3192,16 +3192,17 @@ def get_admin_user_details(user_id: int):
                 (uid,),
             )
         st = cur.fetchone()
+        rd = row_to_dict(st) or {}
         stats = {
-            "totalEntries": int(st[0] or 0),
-            "firstEntryDate": str(st[1] or "—"),
-            "lastEntryDate": str(st[2] or "—"),
+            "totalEntries": int(rd.get("count") or 0),
+            "firstEntryDate": str(rd.get("first_entry") or "—"),
+            "lastEntryDate": str(rd.get("last_entry") or "—"),
             "emotions": {
-                "happy": int(st[3] or 0),
-                "sad": int(st[4] or 0),
-                "anxious": int(st[5] or 0),
-                "angry": int(st[6] or 0),
-                "neutral": int(st[7] or 0),
+                "happy": int(rd.get("happy_cnt") or 0),
+                "sad": int(rd.get("sad_cnt") or 0),
+                "anxious": int(rd.get("anxious_cnt") or 0),
+                "angry": int(rd.get("angry_cnt") or 0),
+                "neutral": int(rd.get("neutral_cnt") or 0),
             }
         }
 

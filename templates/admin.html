@@ -788,35 +788,6 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal" id="deleteUserModal" hidden role="dialog" aria-modal="true" aria-labelledby="deleteUserModalTitle">
-        <div class="modal-backdrop" data-dismiss-modal="deleteUserModal"></div>
-        <div class="modal-panel modal-panel-sm">
-            <header class="modal-header">
-                <div class="modal-title-wrap">
-                    <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
-                    <h3 id="deleteUserModalTitle" class="modal-title text-danger">Delete User Account</h3>
-                </div>
-                <button type="button" class="modal-close-btn" data-dismiss-modal="deleteUserModal" aria-label="Close">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </header>
-            <div class="modal-body">
-                <p>Are you sure you want to permanently delete user <strong id="deleteUserNickname">—</strong> (<span id="deleteUserEmail">—</span>)?</p>
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-octagon-fill me-1"></i>
-                    <strong>Warning:</strong> All journal entries, tags, and account preferences for this user will be permanently erased. This action cannot be undone.
-                </div>
-            </div>
-            <footer class="modal-footer">
-                <button type="button" class="btn btn-outline" data-dismiss-modal="deleteUserModal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">
-                    <i class="bi bi-trash3-fill me-1"></i> Delete Account
-                </button>
-            </footer>
-        </div>
-    </div>
-
     <!-- Test Email Modal -->
     <div class="modal" id="testEmailModal" hidden role="dialog" aria-modal="true" aria-labelledby="testEmailModalTitle">
         <div class="modal-backdrop" data-dismiss-modal="testEmailModal"></div>
