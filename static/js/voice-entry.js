@@ -206,7 +206,11 @@
                 if (window.innerWidth > 991) {
                     postRecordingContainer.hidden = false;
                 } else {
-                    postRecordingContainer.hidden = !visible;
+                    // On mobile: once shown (after first recording), keep it always visible
+                    if (visible) {
+                        postRecordingContainer.hidden = false;
+                    }
+                    // Never hide again on mobile — Clear/Retry keeps it visible
                 }
             }
             setPostPanelVisible(true);
@@ -870,19 +874,68 @@
                 finalTranscript.addEventListener('input', updateWordCountFromTranscript);
             }
 
-            if (aiTranscribeBtn) {
-                aiTranscribeBtn.addEventListener('click', function () {
-                    if (lastAudioBlob) {
-                        void transcribeRecordingBlobIfNeeded(lastAudioBlob, true);
-                    } else {
-                        setTranscriptHint('Record your voice first to run AI transcription.');
-                    }
-                });
-            }
+            // AI Transcribe button removed — transcription is automatic on stop
 
             if (retryBtn) {
                 retryBtn.addEventListener('click', function () {
-                    resetRecording();
+                    if (isMobile) {
+                        // Mobile Clear / Retry: keep transcript panel, scroll to recorder, clear text, then auto-start
+                        const recorderEl = document.querySelector('.voice-entry-container');
+
+                        // 1. Clear state (but don't hide the transcript panel)
+                        if (recordingRafId != null) {
+                            cancelAnimationFrame(recordingRafId);
+                            recordingRafId = null;
+                        }
+                        void stopSpeechRecognitionAsync();
+                        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                            try { mediaRecorder.stop(); } catch (_) {}
+                            mediaRecorder = null;
+                        }
+                        teardownAudioGraph();
+                        stopMediaStream();
+                        isRecording = false;
+                        startTime = null;
+                        speechFinalText = '';
+                        audioChunks = [];
+
+                        // 2. Clear transcript UI
+                        setTranscriptHint('');
+                        if (finalTranscript) {
+                            finalTranscript.value = '';
+                            finalTranscript.readOnly = false;
+                            finalTranscript.placeholder =
+                                'Your speech will appear here as you speak. You can also type or paste directly.';
+                        }
+                        if (recordingDuration) recordingDuration.textContent = '00:00';
+                        if (recordingTimeEl) recordingTimeEl.textContent = '0:00';
+                        if (wordCount) wordCount.textContent = '0';
+
+                        // 3. Reset mic circle state
+                        if (statusText) {
+                            statusText.style.display = 'block';
+                            statusText.textContent = 'Tap to record';
+                        }
+                        if (micIcon) micIcon.className = 'bi bi-mic';
+                        if (voiceCircle) voiceCircle.classList.remove('recording');
+                        if (recordingState) recordingState.style.display = 'none';
+                        waveBarEls.forEach(function (bar) {
+                            bar.style.transform = 'scaleY(0.15)';
+                        });
+
+                        // 4. Smooth scroll to recorder, then auto-start recording
+                        if (recorderEl) {
+                            recorderEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            setTimeout(function () {
+                                if (voiceCircle) voiceCircle.click();
+                            }, 500);
+                        } else {
+                            if (voiceCircle) voiceCircle.click();
+                        }
+                    } else {
+                        // Desktop: original full reset behavior
+                        resetRecording();
+                    }
                 });
             }
             if (mobileRetryBtn) {

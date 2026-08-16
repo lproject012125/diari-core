@@ -1556,14 +1556,14 @@ html.theme-dark .voice-tips-modal__list li {
     
     .summary-actions {
         display: flex;
-        flex-direction: column;
-        gap: 0.65rem;
+        flex-direction: row;
+        gap: 0.6rem;
         width: 100%;
         margin-top: 1rem;
     }
     
-    .mobile-retry-btn {
-        display: none !important;
+    .summary-actions .action-btn {
+        flex: 1;
     }
     
     .action-btn {
