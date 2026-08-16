@@ -203,12 +203,12 @@
     .voice-entry-workspace .tips-container {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         flex: 1;
         background-color: rgba(144, 238, 144, 0.12);
         border: 1px solid rgba(144, 238, 144, 0.35);
         border-radius: 16px;
-        padding: 1.6rem 1.6rem;
+        padding: 1.4rem 1.5rem;
         margin: 0;
         box-shadow: var(--box-shadow);
         width: 100%;
@@ -218,7 +218,7 @@
         font-size: 1.15rem;
         font-weight: 600;
         color: var(--text-dark);
-        margin-bottom: 0.9rem;
+        margin-bottom: 0.85rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -265,6 +265,7 @@
         border-radius: 16px;
         box-shadow: var(--box-shadow);
         height: 100%;
+        min-height: 0;
     }
 
     .voice-entry-workspace .post-recording-container .recording-summary {
@@ -273,6 +274,7 @@
         height: 100%;
         text-align: left;
         flex: 1;
+        min-height: 0;
     }
 
     .voice-entry-workspace .post-recording-container .summary-content {
@@ -280,31 +282,41 @@
         flex-direction: column;
         flex: 1;
         justify-content: space-between;
+        min-height: 0;
     }
 
     .voice-entry-workspace .post-recording-container .transcript-preview {
         flex: 1;
+        min-height: 0;
         display: flex;
         flex-direction: column;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
     }
 
     .voice-entry-workspace .post-recording-container .voice-transcript-field {
         flex: 1;
-        min-height: 240px;
+        min-height: 180px;
         width: 100%;
         font-size: 1.05rem;
         line-height: 1.6;
         padding: 1rem;
+        box-sizing: border-box;
+    }
+
+    .voice-entry-workspace .post-recording-container .voice-transcript-hint {
+        flex-shrink: 0;
+        margin-top: 0.5rem;
+        font-size: 0.88rem;
     }
 
     .voice-entry-workspace .post-recording-container .recording-stats {
         display: flex;
         gap: 3rem;
-        margin: 0.5rem auto 1rem auto;
+        margin: 0.4rem auto 0.9rem auto;
         justify-content: center;
         align-items: center;
         text-align: center;
+        flex-shrink: 0;
     }
 
     .voice-entry-workspace .post-recording-container .summary-actions {
@@ -313,6 +325,7 @@
         gap: 0.75rem;
         justify-content: flex-end;
         align-items: center;
+        flex-shrink: 0;
     }
 }
 
