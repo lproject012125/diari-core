@@ -194,17 +194,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nameEl) nameEl.textContent = displayName;
             if (emailEl) emailEl.textContent = displayEmail;
 
-            const initialChar = (displayName[0] || 'A').toUpperCase();
+            const initialChar = (displayName.trim()[0] || 'A').toUpperCase();
             if (initialsEl) initialsEl.textContent = initialChar;
 
-            const avatarUrl = u.avatarDataUrl || u.avatar_data_url;
+            const avatarUrl = typeof u.avatarDataUrl === 'string' ? u.avatarDataUrl.trim() : (typeof u.avatar_data_url === 'string' ? u.avatar_data_url.trim() : '');
             if (avatarUrl && imgEl) {
+                imgEl.onload = () => {
+                    imgEl.hidden = false;
+                    if (initialsEl) initialsEl.hidden = true;
+                };
+                imgEl.onerror = () => {
+                    imgEl.removeAttribute('src');
+                    imgEl.hidden = true;
+                    if (initialsEl) initialsEl.hidden = false;
+                };
                 imgEl.src = avatarUrl;
-                imgEl.hidden = false;
-                if (initialsEl) initialsEl.hidden = true;
-            } else if (imgEl && initialsEl) {
-                imgEl.hidden = true;
-                initialsEl.hidden = false;
+            } else {
+                if (imgEl) {
+                    imgEl.removeAttribute('src');
+                    imgEl.hidden = true;
+                }
+                if (initialsEl) {
+                    initialsEl.hidden = false;
+                }
             }
         }
 
