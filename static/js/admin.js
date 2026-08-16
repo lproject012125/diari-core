@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(10px)';
+            toast.style.transform = 'translateY(-10px)';
             toast.style.transition = 'all 0.25s ease';
             setTimeout(() => toast.remove(), 250);
         }, duration);
