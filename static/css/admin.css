@@ -1639,6 +1639,22 @@ label {
         font-size: 0.8rem;
     }
 
+    .pagination-wrap {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .pagination-info {
+        text-align: left;
+        width: 100%;
+    }
+
+    .pagination-controls {
+        width: 100%;
+        justify-content: center;
+    }
+
     .row {
         grid-template-columns: 1fr;
     }
