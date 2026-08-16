@@ -82,13 +82,37 @@
         if (span) span.textContent = String(message || '');
 
         var mobile = isMobileToastViewport();
+        var isDark = false;
+        try {
+            isDark = document.documentElement.classList.contains('theme-dark') || document.body.classList.contains('theme-dark');
+        } catch (_) {}
+
+        var bg = mobile ? (isDark ? '#1B2620' : '#FFFFFF') : toastBg(kind);
+        var fg = mobile ? (isDark ? '#FFFFFF' : '#1E293B') : toastFg(kind);
+        var borderLeft = mobile ? (kind === 'success' ? '4px solid #10B981' : kind === 'error' ? '4px solid #EF4444' : kind === 'warning' ? '4px solid #F59E0B' : '4px solid #3B82F6') : 'none';
+        var border = mobile ? (isDark ? '1px solid #28392F' : '1px solid rgba(0, 0, 0, 0.08)') : 'none';
+        var shadow = mobile ? '0 10px 28px rgba(0, 0, 0, 0.22)' : '0 4px 20px rgba(0,0,0,0.15)';
+        var iconColor = mobile ? (kind === 'success' ? '#10B981' : kind === 'error' ? '#EF4444' : kind === 'warning' ? '#F59E0B' : '#3B82F6') : 'inherit';
+
         var offscreenX = mobile ? 'translateX(calc(100% + 24px))' : 'translateX(calc(100% + 28px))';
         toast.style.cssText =
-            'position:fixed;top:20px;z-index:13000;padding:0.72rem 1rem;border-radius:12px;display:flex;align-items:center;gap:0.65rem;font-weight:500;font-family:Inter,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:transform 0.3s ease,opacity 0.3s ease;word-wrap:break-word;opacity:0;background:' +
-            toastBg(kind) +
+            'position:fixed;top:20px;z-index:13000;padding:0.75rem 1.1rem;border-radius:12px;display:flex;align-items:center;gap:0.65rem;font-weight:600;font-family:Inter,sans-serif;box-shadow:' +
+            shadow +
+            ';border:' +
+            border +
+            ';border-left:' +
+            borderLeft +
+            ';transition:transform 0.3s ease,opacity 0.3s ease;word-wrap:break-word;opacity:0;background:' +
+            bg +
             ';color:' +
-            toastFg(kind) +
+            fg +
             ';';
+
+        var iconEl = toast.querySelector('i');
+        if (iconEl && mobile) {
+            iconEl.style.color = iconColor;
+            iconEl.style.fontSize = '1.15rem';
+        }
 
         if (mobile) {
             toast.style.right = '12px';

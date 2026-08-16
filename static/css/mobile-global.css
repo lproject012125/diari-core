@@ -76,4 +76,69 @@
     iframe {
         max-width: 100%;
     }
+
+    /* High contrast notifications on mobile against green illustrated headers */
+    .diari-toast,
+    .notification,
+    .profile-notification,
+    .write-entry-notification,
+    .entries-notification,
+    .sidebar-notification,
+    .suggestions-notification {
+        background: #FFFFFF !important;
+        color: #1E293B !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        border-left: 4px solid #10B981 !important;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .diari-toast i,
+    .notification i,
+    .profile-notification i,
+    .write-entry-notification i,
+    .entries-notification i,
+    .sidebar-notification i,
+    .suggestions-notification i {
+        color: #10B981 !important;
+        font-size: 1.15rem !important;
+    }
+
+    .diari-toast--error,
+    .notification-error {
+        border-left-color: #EF4444 !important;
+    }
+    .diari-toast--error i,
+    .notification-error i {
+        color: #EF4444 !important;
+    }
+
+    .diari-toast--warning,
+    .notification-warning {
+        border-left-color: #F59E0B !important;
+    }
+    .diari-toast--warning i,
+    .notification-warning i {
+        color: #F59E0B !important;
+    }
+
+    .diari-toast--info,
+    .notification-info {
+        border-left-color: #3B82F6 !important;
+    }
+    .diari-toast--info i,
+    .notification-info i {
+        color: #3B82F6 !important;
+    }
+
+    html.theme-dark .diari-toast,
+    html.theme-dark .notification,
+    html.theme-dark .profile-notification,
+    html.theme-dark .write-entry-notification,
+    html.theme-dark .entries-notification,
+    html.theme-dark .sidebar-notification,
+    html.theme-dark .suggestions-notification {
+        background: #1B2620 !important;
+        color: #FFFFFF !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    }
 }
