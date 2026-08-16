@@ -82,89 +82,92 @@
                 <p class="subtitle">Speak your thoughts naturally</p>
             </div>
             
-            <!-- Voice Entry Container -->
-            <div class="voice-entry-container">
-                <div class="voice-lang-row">
-                    <label class="voice-lang-row__label" for="voiceLangSelect">Speaking in</label>
-                    <select id="voiceLangSelect" class="voice-lang-row__select" aria-label="Voice language">
-                        <option value="auto">Auto</option>
-                        <option value="en">English</option>
-                        <option value="tl">Filipino / Taglish</option>
-                    </select>
-                </div>
-                <!-- Voice Recording Container -->
-                <div class="voice-recording-container">
-                    <div class="voice-circle" id="voiceCircle">
-                        <i class="bi bi-mic" id="micIcon"></i>
+            <!-- Voice Entry Workspace (Side-by-side on PC, stacked on mobile/PWA) -->
+            <div class="voice-entry-workspace">
+                <!-- Voice Entry Container -->
+                <div class="voice-entry-container">
+                    <div class="voice-lang-row">
+                        <label class="voice-lang-row__label" for="voiceLangSelect">Speaking in</label>
+                        <select id="voiceLangSelect" class="voice-lang-row__select" aria-label="Voice language">
+                            <option value="auto">Auto</option>
+                            <option value="en">English</option>
+                            <option value="tl">Filipino / Taglish</option>
+                        </select>
+                    </div>
+                    <!-- Voice Recording Container -->
+                    <div class="voice-recording-container">
+                        <div class="voice-circle" id="voiceCircle">
+                            <i class="bi bi-mic" id="micIcon"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Voice Status -->
+                    <div class="voice-status">
+                        <h2 id="statusText">Tap to start recording</h2>
+                    </div>
+                    
+                    <!-- Recording State (Hidden by default) -->
+                    <div class="recording-state" id="recordingState" style="display: none;">
+                        <div class="recording-animation recording-animation--live" id="voiceWaveBars" aria-hidden="true">
+                            <span class="voice-wave-bar" data-bar="0"></span>
+                            <span class="voice-wave-bar" data-bar="1"></span>
+                            <span class="voice-wave-bar" data-bar="2"></span>
+                            <span class="voice-wave-bar" data-bar="3"></span>
+                            <span class="voice-wave-bar" data-bar="4"></span>
+                            <span class="voice-wave-bar" data-bar="5"></span>
+                            <span class="voice-wave-bar" data-bar="6"></span>
+                        </div>
+                        <div class="recording-text">
+                            <h3 id="voiceEntryRecordingLabel">Recording… <span id="voiceEntryRecordingTime">0:00</span></h3>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Voice Status -->
-                <div class="voice-status">
-                    <h2 id="statusText">Tap to start recording</h2>
-                </div>
-                
-                <!-- Recording State (Hidden by default) -->
-                <div class="recording-state" id="recordingState" style="display: none;">
-                    <div class="recording-animation recording-animation--live" id="voiceWaveBars" aria-hidden="true">
-                        <span class="voice-wave-bar" data-bar="0"></span>
-                        <span class="voice-wave-bar" data-bar="1"></span>
-                        <span class="voice-wave-bar" data-bar="2"></span>
-                        <span class="voice-wave-bar" data-bar="3"></span>
-                        <span class="voice-wave-bar" data-bar="4"></span>
-                        <span class="voice-wave-bar" data-bar="5"></span>
-                        <span class="voice-wave-bar" data-bar="6"></span>
-                    </div>
-                    <div class="recording-text">
-                        <h3 id="voiceEntryRecordingLabel">Recording… <span id="voiceEntryRecordingTime">0:00</span></h3>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Post-Recording Container (shown after a session; transcript is editable) -->
-            <div class="post-recording-container" id="postRecordingContainer" hidden>
-                <div class="recording-summary">
-                    <div class="summary-header">
-                        <h3>Transcript</h3>
-                        <button type="button" class="mobile-retry-btn" id="mobileRetryBtn" aria-label="Start over">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                    <div class="summary-content">
-                        <div class="transcript-preview">
-                            <label class="visually-hidden" for="finalTranscript">Transcript text</label>
-                            <textarea
-                                id="finalTranscript"
-                                class="voice-transcript-field"
-                                rows="8"
-                                spellcheck="true"
-                                placeholder="Your speech will appear here as you speak. You can also type or paste if your browser does not support dictation."
-                            ></textarea>
-                            <p class="voice-transcript-hint" id="voiceTranscriptHint" role="status" aria-live="polite" hidden></p>
-                        </div>
-                        <div class="recording-stats">
-                            <div class="stat">
-                                <span class="stat-label">Duration</span>
-                                <span class="stat-value" id="recordingDuration">00:00</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Words</span>
-                                <span class="stat-value" id="wordCount">0</span>
-                            </div>
-                        </div>
-                        <div class="summary-actions">
-                            <button type="button" class="action-btn secondary" id="aiTranscribeBtn" title="Re-transcribe recording with AI (Whisper)">
-                                <i class="bi bi-lightning-charge-fill text-warning"></i>
-                                AI Transcribe
-                            </button>
-                            <button class="action-btn secondary" id="retryBtn">
+                <!-- Post-Recording Container (shown after a session; transcript is editable) -->
+                <div class="post-recording-container" id="postRecordingContainer" hidden>
+                    <div class="recording-summary">
+                        <div class="summary-header">
+                            <h3>Transcript</h3>
+                            <button type="button" class="mobile-retry-btn" id="mobileRetryBtn" aria-label="Start over">
                                 <i class="bi bi-arrow-clockwise"></i>
-                                Retry
                             </button>
-                            <button class="action-btn primary" id="saveBtn">
-                                <i class="bi bi-save"></i>
-                                Save Entry
-                            </button>
+                        </div>
+                        <div class="summary-content">
+                            <div class="transcript-preview">
+                                <label class="visually-hidden" for="finalTranscript">Transcript text</label>
+                                <textarea
+                                    id="finalTranscript"
+                                    class="voice-transcript-field"
+                                    rows="8"
+                                    spellcheck="true"
+                                    placeholder="Your speech will appear here as you speak. You can also type or paste if your browser does not support dictation."
+                                ></textarea>
+                                <p class="voice-transcript-hint" id="voiceTranscriptHint" role="status" aria-live="polite" hidden></p>
+                            </div>
+                            <div class="recording-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Duration</span>
+                                    <span class="stat-value" id="recordingDuration">00:00</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Words</span>
+                                    <span class="stat-value" id="wordCount">0</span>
+                                </div>
+                            </div>
+                            <div class="summary-actions">
+                                <button type="button" class="action-btn secondary" id="aiTranscribeBtn" title="Re-transcribe recording with AI (Whisper)">
+                                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                                    AI Transcribe
+                                </button>
+                                <button class="action-btn secondary" id="retryBtn">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Retry
+                                </button>
+                                <button class="action-btn primary" id="saveBtn">
+                                    <i class="bi bi-save"></i>
+                                    Save Entry
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
