@@ -475,7 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const userSearchInput = document.getElementById('userSearchInput');
     const userSearchClearBtn = document.getElementById('userSearchClearBtn');
     const userStatusSelect = document.getElementById('userStatusSelect');
-    const statPills = document.querySelectorAll('.stat-pill[data-status-filter]');
     const usersPrevBtn = document.getElementById('usersPrevBtn');
     const usersNextBtn = document.getElementById('usersNextBtn');
 
@@ -502,26 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
     userStatusSelect?.addEventListener('change', () => {
         state.users.status = userStatusSelect.value;
         state.users.page = 1;
-        updateStatPillsActive(userStatusSelect.value);
         loadUsers();
     });
-
-    statPills.forEach((pill) => {
-        pill.addEventListener('click', () => {
-            const filter = pill.dataset.statusFilter;
-            state.users.status = filter;
-            state.users.page = 1;
-            if (userStatusSelect) userStatusSelect.value = filter;
-            updateStatPillsActive(filter);
-            loadUsers();
-        });
-    });
-
-    function updateStatPillsActive(status) {
-        statPills.forEach((p) => {
-            p.classList.toggle('active', p.dataset.statusFilter === status);
-        });
-    }
 
     usersPrevBtn?.addEventListener('click', () => {
         if (state.users.page > 1) {
@@ -569,13 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('usersTableTbody');
         if (!tbody || !userData) return;
 
-        // Update counts
-        if (userData.counts) {
-            document.getElementById('userCountTotal').textContent = userData.counts.total || 0;
-            document.getElementById('userCountActive').textContent = userData.counts.active || 0;
-            document.getElementById('userCountDisabled').textContent = userData.counts.disabled || 0;
-            document.getElementById('userCount2fa').textContent = userData.counts.twoFactor || 0;
-        }
+
 
         // Update pagination state
         state.users.totalPages = userData.totalPages || 1;
