@@ -2110,22 +2110,26 @@ def api_admin_services_test_ai():
     if csrf_err:
         return jsonify({"success": False, "error": csrf_err}), 403
 
-    import time
-    import urllib.request
-    import urllib.error
-
-    hf_token = hf_speech.get_hf_token()
-    if not hf_token:
-        return jsonify({"success": False, "error": "No Hugging Face token is configured. Please enter your token in System Settings."}), 400
-
-    t0 = time.perf_counter()
-    endpoint = "https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3-turbo"
-    headers = {
-        "Authorization": f"Bearer {hf_token}",
-        "User-Agent": "DiariCore/1.0",
-    }
-    status_code = None
     try:
+        import time
+        import urllib.request
+        import urllib.error
+
+        hf_token = hf_speech.get_hf_token()
+        if not hf_token:
+            return jsonify({
+                "success": False,
+                "error": "No Hugging Face token is configured. Please enter your token in System Settings."
+            }), 200
+
+        t0 = time.perf_counter()
+        endpoint = "https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3-turbo"
+        headers = {
+            "Authorization": f"Bearer {hf_token}",
+            "User-Agent": "DiariCore/1.0",
+        }
+        status_code = None
+
         try:
             import httpx
             with httpx.Client(timeout=httpx.Timeout(12.0, connect=6.0)) as client:
@@ -2139,31 +2143,36 @@ def api_admin_services_test_ai():
                     status_code = response.getcode()
             except urllib.error.HTTPError as he:
                 status_code = he.code
+            except Exception as ex:
+                return jsonify({"success": False, "error": f"Network error contacting router: {str(ex)}"}), 200
 
         latency = round((time.perf_counter() - t0) * 1000, 2)
-        admin_email = _get_admin_actor_email()
-        db.log_admin_action(admin_email, "TEST_AI_PING", {"status": status_code, "latencyMs": latency}, request.remote_addr)
+        try:
+            admin_email = _get_admin_actor_email()
+            db.log_admin_action(admin_email, "TEST_AI_PING", {"status": status_code, "latencyMs": latency}, request.remote_addr)
+        except Exception:
+            pass
 
         if status_code in (200, 400, 405):
             return jsonify({
                 "success": True,
-                "message": "Voice AI router endpoint is reachable and responsive!",
+                "message": "Voice AI router is operational and responsive!",
                 "latencyMs": latency,
                 "model": "openai/whisper-large-v3-turbo"
-            })
+            }), 200
         elif status_code == 401:
             return jsonify({
                 "success": False,
                 "error": "Hugging Face returned 401 Unauthorized. Your API token is invalid or lacks Inference Providers permission."
-            }), 400
+            }), 200
         else:
             return jsonify({
                 "success": True,
                 "message": f"Endpoint responded with HTTP {status_code}",
                 "latencyMs": latency
-            })
+            }), 200
     except Exception as e:
-        return jsonify({"success": False, "error": f"Connection failed: {str(e)}"}), 500
+        return jsonify({"success": False, "error": f"Voice AI test encountered an issue: {str(e)}"}), 200
 
 
 @app.route("/api/admin/audit-logs", methods=["GET"])
