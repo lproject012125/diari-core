@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarCloseBtn = document.getElementById('adminSidebarCloseBtn');
     const sidebar = document.getElementById('adminSidebar');
     const sidebarBackdrop = document.getElementById('adminSidebarBackdrop');
-    const themeToggleBtn = document.getElementById('adminThemeToggle');
     const themeToggleMobileBtn = document.getElementById('adminThemeToggleMobile');
     const logoutBtn = document.getElementById('logoutBtn');
 
@@ -137,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarCloseBtn?.addEventListener('click', closeMobileSidebar);
     sidebarBackdrop?.addEventListener('click', closeMobileSidebar);
 
-    // Dark Mode Toggle
+    // Mobile Header Dark Mode Toggle (Mobile Only)
     function toggleTheme() {
         if (window.DiariTheme && typeof window.DiariTheme.toggle === 'function') {
             window.DiariTheme.toggle();
@@ -146,8 +145,63 @@ document.addEventListener('DOMContentLoaded', () => {
             html.classList.toggle('theme-dark');
         }
     }
-    themeToggleBtn?.addEventListener('click', toggleTheme);
     themeToggleMobileBtn?.addEventListener('click', toggleTheme);
+
+    // Hydrate Admin User Profile Widget in Sidebar
+    function hydrateAdminProfile() {
+        let user = null;
+        try {
+            user = JSON.parse(localStorage.getItem('diariCoreUser') || 'null');
+        } catch (_) {
+            user = null;
+        }
+
+        const nameEl = document.getElementById('adminSidebarUserName');
+        const emailEl = document.getElementById('adminSidebarUserEmail');
+        const imgEl = document.getElementById('adminSidebarAvatarImg');
+        const initialsEl = document.getElementById('adminSidebarAvatarInitials');
+
+        function applyProfileData(u) {
+            if (!u) return;
+            const fullName = [u.firstName || u.first_name, u.lastName || u.last_name]
+                .filter((p) => typeof p === 'string' && p.trim())
+                .map((p) => p.trim())
+                .join(' ');
+            const displayName = fullName || u.fullName || u.nickname || 'Administrator';
+            const displayEmail = u.email || 'admin@diaricore.com';
+
+            if (nameEl) nameEl.textContent = displayName;
+            if (emailEl) emailEl.textContent = displayEmail;
+
+            const initialChar = (displayName[0] || 'A').toUpperCase();
+            if (initialsEl) initialsEl.textContent = initialChar;
+
+            const avatarUrl = u.avatarDataUrl || u.avatar_data_url;
+            if (avatarUrl && imgEl) {
+                imgEl.src = avatarUrl;
+                imgEl.hidden = false;
+                if (initialsEl) initialsEl.hidden = true;
+            } else if (imgEl && initialsEl) {
+                imgEl.hidden = true;
+                initialsEl.hidden = false;
+            }
+        }
+
+        if (!user) {
+            fetch('/api/user/profile')
+                .then((r) => r.json())
+                .then((data) => {
+                    if (data && data.user) {
+                        applyProfileData(data.user);
+                    }
+                })
+                .catch(() => {});
+            return;
+        }
+
+        applyProfileData(user);
+    }
+    hydrateAdminProfile();
 
     // Logout
     logoutBtn?.addEventListener('click', () => {

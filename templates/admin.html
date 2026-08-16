@@ -41,8 +41,8 @@
         <aside id="adminSidebar" class="admin-sidebar">
             <div class="admin-sidebar-header">
                 <div class="brand-group">
-                    <h1 class="brand-name"><i class="bi bi-journal-bookmark-fill me-2"></i>DiariCore</h1>
-                    <span class="admin-badge">Admin Suite</span>
+                    <h3 class="logo-text">DiariCore</h3>
+                    <p class="logo-tagline">ADMIN SUITE</p>
                 </div>
                 <button id="adminSidebarCloseBtn" class="admin-sidebar-close-btn" aria-label="Close Sidebar">
                     <i class="bi bi-x-lg"></i>
@@ -77,10 +77,20 @@
             </nav>
 
             <div class="admin-sidebar-footer">
-                <button id="adminThemeToggle" class="sidebar-action-btn" title="Toggle Light/Dark Theme">
-                    <i class="bi bi-moon-stars"></i>
-                    <span>Toggle Theme</span>
-                </button>
+                <!-- Admin User Profile Card -->
+                <div class="sidebar-profile-card">
+                    <div class="profile-left">
+                        <div class="user-avatar" id="adminSidebarAvatar">
+                            <img src="" alt="" class="avatar-img" width="44" height="44" id="adminSidebarAvatarImg" hidden>
+                            <span class="avatar-initials" id="adminSidebarAvatarInitials" aria-hidden="true">A</span>
+                        </div>
+                        <div class="user-info">
+                            <h4 class="user-name" id="adminSidebarUserName">Administrator</h4>
+                            <p class="user-email" id="adminSidebarUserEmail">admin@diaricore.com</p>
+                        </div>
+                    </div>
+                </div>
+
                 <a href="dashboard.html" class="sidebar-action-btn" title="Return to App Dashboard">
                     <i class="bi bi-house-door"></i>
                     <span>User App</span>
