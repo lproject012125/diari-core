@@ -248,6 +248,38 @@ html.theme-dark .admin-sidebar {
     opacity: 1;
 }
 
+/* Early tab activation before full JS execution to prevent visual jumping */
+[data-admin-active-tab="dashboard"] .nav-item[data-tab="dashboard"],
+[data-admin-active-tab="users"] .nav-item[data-tab="users"],
+[data-admin-active-tab="analytics"] .nav-item[data-tab="analytics"],
+[data-admin-active-tab="services"] .nav-item[data-tab="services"],
+[data-admin-active-tab="settings"] .nav-item[data-tab="settings"],
+[data-admin-active-tab="audit"] .nav-item[data-tab="audit"] {
+    background: var(--primary-color) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 3px 10px rgba(111, 143, 127, 0.25) !important;
+}
+
+[data-admin-active-tab="dashboard"] .nav-item[data-tab="dashboard"] i,
+[data-admin-active-tab="users"] .nav-item[data-tab="users"] i,
+[data-admin-active-tab="analytics"] .nav-item[data-tab="analytics"] i,
+[data-admin-active-tab="services"] .nav-item[data-tab="services"] i,
+[data-admin-active-tab="settings"] .nav-item[data-tab="settings"] i,
+[data-admin-active-tab="audit"] .nav-item[data-tab="audit"] i {
+    color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+[data-admin-active-tab="dashboard"] #tab-dashboard,
+[data-admin-active-tab="users"] #tab-users,
+[data-admin-active-tab="analytics"] #tab-analytics,
+[data-admin-active-tab="services"] #tab-services,
+[data-admin-active-tab="settings"] #tab-settings,
+[data-admin-active-tab="audit"] #tab-audit {
+    display: block;
+}
+
 /* Admin Sidebar Footer & User Profile */
 .admin-sidebar-footer {
     display: flex;

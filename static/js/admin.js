@@ -86,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
             tabId = 'dashboard';
         }
         state.currentTab = tabId;
+        try {
+            document.documentElement.setAttribute('data-admin-active-tab', tabId);
+        } catch (_) {}
 
         if (updateHash) {
             try {

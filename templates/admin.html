@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="pwa-theme-early.js"></script>
+    <script>
+        (function() {
+            try {
+                var VALID_TABS = ['dashboard', 'users', 'analytics', 'services', 'settings', 'audit'];
+                var h = (window.location.hash || '').replace('#', '').trim();
+                var initialTab = 'dashboard';
+                if (VALID_TABS.indexOf(h) !== -1) {
+                    initialTab = h;
+                } else {
+                    var s = sessionStorage.getItem('diariAdminActiveTab');
+                    if (s && VALID_TABS.indexOf(s) !== -1) {
+                        initialTab = s;
+                    }
+                }
+                document.documentElement.setAttribute('data-admin-active-tab', initialTab);
+            } catch (_) {}
+        })();
+    </script>
     <link rel="stylesheet" href="diari-shell-pending.css">
     <title>DiariCore Admin Suite</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -50,7 +68,7 @@
             </div>
 
             <nav class="admin-nav" role="tablist">
-                <button class="nav-item active" data-tab="dashboard" role="tab" aria-selected="true">
+                <button class="nav-item" data-tab="dashboard" role="tab" aria-selected="false">
                     <i class="bi bi-grid-1x2-fill"></i>
                     <span>Dashboard</span>
                 </button>
@@ -107,7 +125,7 @@
             <!-- ======================================================== -->
             <!-- 1. DASHBOARD TAB -->
             <!-- ======================================================== -->
-            <section id="tab-dashboard" class="tab-pane active">
+            <section id="tab-dashboard" class="tab-pane">
                 <div class="section-header">
                     <div>
                         <h2 class="section-title">Dashboard Overview</h2>
