@@ -208,17 +208,17 @@
         background-color: rgba(144, 238, 144, 0.12);
         border: 1px solid rgba(144, 238, 144, 0.35);
         border-radius: 16px;
-        padding: 1.35rem 1.4rem;
+        padding: 1.6rem 1.6rem;
         margin: 0;
         box-shadow: var(--box-shadow);
         width: 100%;
     }
 
     .voice-entry-workspace .tips-container h3 {
-        font-size: 1.05rem;
+        font-size: 1.15rem;
         font-weight: 600;
         color: var(--text-dark);
-        margin-bottom: 0.65rem;
+        margin-bottom: 0.9rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -228,14 +228,17 @@
         list-style: none;
         padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
     }
 
     .voice-entry-workspace .tips-container li {
-        font-size: 0.84rem;
+        font-size: 0.93rem;
         color: var(--text-secondary);
-        line-height: 1.45;
-        margin-bottom: 0.45rem;
-        padding-left: 1.15rem;
+        line-height: 1.55;
+        margin-bottom: 0;
+        padding-left: 1.25rem;
         position: relative;
     }
 
@@ -245,7 +248,7 @@
         font-weight: bold;
         position: absolute;
         left: 0;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
     .voice-entry-workspace .tips-container li:last-child {
