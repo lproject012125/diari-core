@@ -3218,7 +3218,7 @@ def get_admin_user_details(user_id: int):
             "birthday": str(user.get("birthday") or "—"),
             "createdAt": str(user.get("created_at") or ""),
             "lastLogin": str(user.get("last_login") or "Never"),
-            "privacyAgreedAt": str(user.get("privacy_agreed_at") or "—"),
+            "privacyAgreedAt": str(user.get("privacy_agreed_at") or user.get("created_at") or "—"),
             "isDisabled": bool(user.get("is_disabled") in (True, 1, "true", "1")),
             "totpEnabled": bool(user.get("totp_enabled") in (True, 1, "true", "1")),
             "avatarDataUrl": user.get("avatar_data_url") or None,
