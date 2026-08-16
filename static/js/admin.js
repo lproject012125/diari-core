@@ -1035,9 +1035,12 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center muted py-4"><span class="spinner"></span> Loading audit logs...</td></tr>';
         }
 
+        const perPage = window.innerWidth <= 768 ? 8 : 12;
+        state.audit.perPage = perPage;
+
         const params = new URLSearchParams({
             page: state.audit.page,
-            perPage: state.audit.perPage,
+            perPage: perPage,
         });
 
         return fetch(`/api/admin/audit-logs?${params.toString()}`)
