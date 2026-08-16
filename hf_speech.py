@@ -98,45 +98,52 @@ def transcribe_upload_bytes(data: bytes, content_type: str, language: Optional[s
             "Hugging Face API token is not configured yet. Set HF_API_TOKEN in Railway or Admin Settings.",
         )
 
+    model_id = HF_SPEECH_MODEL or "openai/whisper-large-v3-turbo"
+    clean_ct = (content_type or "audio/webm").split(";")[0].strip() or "audio/webm"
+
+    # 1. Primary: Direct high-speed HTTP call via Hugging Face serverless router (1-2s response)
+    try:
+        import httpx
+        url = f"https://router.huggingface.co/hf-inference/models/{model_id}"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": clean_ct,
+            "User-Agent": "DiariCore/1.0",
+        }
+        with httpx.Client(timeout=httpx.Timeout(25.0, connect=10.0)) as client:
+            resp = client.post(url, headers=headers, content=data)
+
+        if resp.status_code == 200:
+            res_data = resp.json()
+            text = _extract_text(res_data)
+            if text:
+                return text, None
+        elif resp.status_code == 503:
+            time.sleep(2.0)
+            # retry once on warm-up
+            with httpx.Client(timeout=httpx.Timeout(25.0, connect=10.0)) as client:
+                resp = client.post(url, headers=headers, content=data)
+            if resp.status_code == 200:
+                text = _extract_text(resp.json())
+                if text:
+                    return text, None
+        elif resp.status_code == 401:
+            return None, "Hugging Face token unauthorized (401). Please verify token permissions include 'Inference'."
+    except Exception as e:
+        print(f"[hf_speech] Direct HTTP call exception: {e}")
+
+    # 2. Secondary fallback via InferenceClient
     try:
         from huggingface_hub import InferenceClient
         from huggingface_hub.errors import HfHubHTTPError
-    except ImportError:
-        return (
-            None,
-            "Server is missing the huggingface_hub package; redeploy with updated requirements.txt.",
-        )
+        client = InferenceClient(token=token)
+        out = client.automatic_speech_recognition(audio=data, model=model_id)
+        text = _extract_text(out)
+        if text:
+            return text, None
+    except Exception as exc:
+        print(f"[hf_speech] InferenceClient fallback error: {exc}")
 
-    _ = content_type
-    model_id = HF_SPEECH_MODEL or "openai/whisper-large-v3-turbo"
-    last_err: Optional[str] = None
-
-    for provider in ASR_PROVIDER_CHAIN:
-        for attempt in range(2):
-            try:
-                kwargs = {"token": token}
-                if provider:
-                    kwargs["provider"] = provider
-                client = InferenceClient(**kwargs)
-                out = client.automatic_speech_recognition(audio=data, model=model_id)
-                text = _extract_text(out)
-                if text:
-                    return text, None
-                last_err = "Transcription returned no text."
-                break
-            except HfHubHTTPError as exc:
-                status = getattr(getattr(exc, "response", None), "status_code", None) or 0
-                detail = str(exc).strip() or getattr(exc, "message", "") or "HTTP error"
-                if status == 503 or "503" in detail or "loading" in detail.lower():
-                    time.sleep(min(4.0, 1.5 * (attempt + 1)))
-                    last_err = "Transcription service is warming up; try again in a moment."
-                    continue
-                last_err = f"Transcription failed ({provider or 'default'}): {detail}"[:650]
-                break
-            except Exception as exc:
-                last_err = f"Transcription error ({provider or 'default'}): {exc}"[:650]
-                break
-
-    return None, last_err or "Transcription service temporarily unavailable."
+    return None, "Transcription service temporarily unavailable. Please try speaking again."
 
 
