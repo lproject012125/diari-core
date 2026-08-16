@@ -108,13 +108,48 @@
     margin-bottom: 2rem;
 }
 
+.voice-recorder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 1.25rem;
+}
+
 .voice-recorder-card-title {
     font-size: 1.35rem;
     font-weight: 600;
     color: var(--text-dark);
-    margin: 0 0 1.25rem 0;
+    margin: 0;
     text-align: left;
-    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.voice-recorder-help-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    line-height: 1;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.voice-recorder-help-btn:hover {
+    color: var(--primary-hover);
+    transform: scale(1.1);
+}
+
+.stat-divider {
+    width: 1px;
+    height: 32px;
+    background-color: var(--border-color);
+    align-self: center;
+    opacity: 0.8;
 }
 
 @media (min-width: 992px) {
@@ -1238,7 +1273,149 @@ html.theme-dark .voice-entry-notice-modal__ok:focus-visible {
     outline-color: var(--primary-light);
 }
 
+/* Mobile Tips Modal Styles */
+.voice-tips-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.voice-tips-modal[hidden] {
+    display: none !important;
+}
+
+.voice-tips-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+}
+
+.voice-tips-modal__panel {
+    position: relative;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 1.5rem 1.35rem 1.25rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1;
+}
+
+@keyframes modalPop {
+    from {
+        transform: scale(0.94) translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+.voice-tips-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.voice-tips-modal__title-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.voice-tips-modal__title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.voice-tips-modal__close {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.voice-tips-modal__close:hover {
+    color: var(--text-dark);
+}
+
+.voice-tips-modal__list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.35rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.voice-tips-modal__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.voice-tips-modal__list li i {
+    font-size: 1.05rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+}
+
+.voice-tips-modal__footer {
+    padding-top: 0.5rem;
+}
+
+html.theme-dark .voice-tips-modal__panel {
+    background: #1f2923;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+html.theme-dark .voice-tips-modal__title {
+    color: #e5e7eb;
+}
+
+html.theme-dark .voice-tips-modal__list li {
+    color: #9ca3af;
+}
+
 /* Mobile Responsive */
+@media (max-width: 991px) {
+    .voice-recorder-help-btn {
+        display: inline-flex !important;
+    }
+
+    .voice-entry-workspace .tips-container,
+    .tips-container {
+        display: none !important;
+    }
+
+    .mobile-retry-btn {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .mobile-header {
         display: flex;
@@ -1268,19 +1445,19 @@ html.theme-dark .voice-entry-notice-modal__ok:focus-visible {
     }
     
     .voice-entry-container {
-        padding: 2rem 1.5rem;
+        padding: 1.75rem 1.35rem;
         margin: 0;
-        border-radius: 12px;
+        border-radius: 16px;
         width: 100%;
     }
     
     .voice-recording-container {
-        margin: 2rem 0;
+        margin: 1.75rem 0;
     }
     
     .voice-circle {
-        width: 120px;
-        height: 120px;
+        width: 110px;
+        height: 110px;
     }
     
     .voice-circle i {
@@ -1288,11 +1465,11 @@ html.theme-dark .voice-entry-notice-modal__ok:focus-visible {
     }
     
     .voice-status h2 {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .voice-status p {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     .voice-entry-notice-modal__panel {
@@ -1310,33 +1487,33 @@ html.theme-dark .voice-entry-notice-modal__ok:focus-visible {
     }
     
     .tips-container {
-        display: none;
+        display: none !important;
     }
     
     .post-recording-container:not([hidden]) {
         display: block;
-        padding: 2rem 1.5rem;
+        padding: 1.75rem 1.35rem;
         margin: 1rem 0 0 0;
-        border-radius: 12px;
+        border-radius: 16px;
         width: 100%;
     }
     
     .recording-state {
-        padding: 1.5rem;
-        margin: 1.5rem 0;
+        padding: 1rem;
+        margin: 1rem 0;
     }
     
     .recording-text h3 {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
     }
     
     .recording-text p {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
     
     .transcript-preview {
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
     }
     
     .transcript-preview h3 {
@@ -1346,23 +1523,35 @@ html.theme-dark .voice-entry-notice-modal__ok:focus-visible {
     .transcript-preview p,
     .voice-transcript-field {
         font-size: 1rem;
-        min-height: 60px;
+        min-height: 80px;
     }
     
     .summary-header i {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .summary-header h3 {
-        font-size: 1.5rem;
+        font-size: 1.35rem;
     }
     
     .recording-stats {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         gap: 2rem;
+        margin: 0.5rem 0 1rem 0;
     }
     
     .stat-value {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+    }
+
+    .stat-divider {
+        display: block;
+        width: 1px;
+        height: 32px;
+        background-color: var(--border-color);
+        align-self: center;
     }
     
     .summary-actions {
@@ -1370,15 +1559,11 @@ html.theme-dark .voice-entry-notice-modal__ok:focus-visible {
         flex-direction: column;
         gap: 0.65rem;
         width: 100%;
-        margin-top: 1.25rem;
+        margin-top: 1rem;
     }
     
     .mobile-retry-btn {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
+        display: none !important;
     }
     
     .action-btn {

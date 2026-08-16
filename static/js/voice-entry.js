@@ -918,6 +918,26 @@
 
             if (saveBtn) saveBtn.addEventListener('click', saveEntry);
             if (mobileSaveBtn) mobileSaveBtn.addEventListener('click', saveEntry);
+
+            // Mobile Tips Modal Controls
+            const mobileTipsBtn = document.getElementById('mobileTipsBtn');
+            const voiceTipsModal = document.getElementById('voiceTipsModal');
+            const voiceTipsCloseBtn = document.getElementById('voiceTipsCloseBtn');
+            const voiceTipsGotItBtn = document.getElementById('voiceTipsGotItBtn');
+            const voiceTipsBackdrop = document.getElementById('voiceTipsBackdrop');
+
+            function openTipsModal() {
+                if (voiceTipsModal) voiceTipsModal.hidden = false;
+            }
+
+            function closeTipsModal() {
+                if (voiceTipsModal) voiceTipsModal.hidden = true;
+            }
+
+            if (mobileTipsBtn) mobileTipsBtn.addEventListener('click', openTipsModal);
+            if (voiceTipsCloseBtn) voiceTipsCloseBtn.addEventListener('click', closeTipsModal);
+            if (voiceTipsGotItBtn) voiceTipsGotItBtn.addEventListener('click', closeTipsModal);
+            if (voiceTipsBackdrop) voiceTipsBackdrop.addEventListener('click', closeTipsModal);
         } finally {
             if (window.DiariShell && typeof window.DiariShell.release === 'function') {
                 window.DiariShell.release();
