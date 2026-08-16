@@ -2818,21 +2818,35 @@ def log_admin_action(admin_email: str, action: str, details: dict = None, ip_add
         conn.close()
 
 
-def get_admin_audit_logs(limit: int = 50):
-    """Retrieve recent administrative audit logs."""
+def get_admin_audit_logs(page: int = 1, per_page: int = 12, limit: int = None):
+    """Retrieve paginated administrative audit logs."""
     conn = get_conn()
     cur = conn.cursor()
     try:
-        lim = max(1, min(int(limit or 50), 200))
+        cur.execute("SELECT COUNT(*) FROM admin_audit_logs")
+        total = _fetchcount(cur)
+
+        if limit is not None:
+            lim = max(1, min(int(limit), 200))
+            offset = 0
+            cur_page = 1
+            total_pages = 1
+        else:
+            per_page = max(1, min(int(per_page or 12), 100))
+            total_pages = max(1, (total + per_page - 1) // per_page) if total > 0 else 1
+            cur_page = max(1, min(int(page or 1), total_pages))
+            offset = (cur_page - 1) * per_page
+            lim = per_page
+
         if USE_POSTGRES:
             cur.execute(
                 """
                 SELECT id, admin_email, action, details_json, ip_address, created_at
                 FROM admin_audit_logs
                 ORDER BY created_at DESC, id DESC
-                LIMIT %s
+                LIMIT %s OFFSET %s
                 """,
-                (lim,),
+                (lim, offset),
             )
         else:
             cur.execute(
@@ -2840,9 +2854,9 @@ def get_admin_audit_logs(limit: int = 50):
                 SELECT id, admin_email, action, details_json, ip_address, created_at
                 FROM admin_audit_logs
                 ORDER BY datetime(created_at) DESC, id DESC
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 """,
-                (lim,),
+                (lim, offset),
             )
         rows = [row_to_dict(r) for r in cur.fetchall()]
         out = []
@@ -2861,7 +2875,13 @@ def get_admin_audit_logs(limit: int = 50):
                 "ipAddress": r.get("ip_address") or "—",
                 "createdAt": str(r["created_at"] or ""),
             })
-        return out
+        return {
+            "records": out,
+            "total": total,
+            "page": cur_page,
+            "perPage": lim,
+            "totalPages": total_pages,
+        }
     finally:
         conn.close()
 

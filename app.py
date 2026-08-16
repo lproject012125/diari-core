@@ -2181,10 +2181,20 @@ def api_admin_services_test_ai():
 def api_admin_audit_logs():
     if not session.get("is_admin"):
         return jsonify({"success": False, "error": "Unauthorized"}), 401
-    limit = request.args.get("limit", 50, type=int)
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("perPage", request.args.get("per_page", 12, type=int), type=int)
+    limit = request.args.get("limit", None, type=int)
     try:
-        logs = db.get_admin_audit_logs(limit=limit)
-        return jsonify({"success": True, "logs": logs})
+        data = db.get_admin_audit_logs(page=page, per_page=per_page, limit=limit)
+        return jsonify({
+            "success": True,
+            "logs": data["records"],
+            "data": data,
+            "total": data["total"],
+            "page": data["page"],
+            "perPage": data["perPage"],
+            "totalPages": data["totalPages"],
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

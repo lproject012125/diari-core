@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPages: 1,
             total: 0,
         },
+        audit: {
+            page: 1,
+            perPage: 12,
+            totalPages: 1,
+            total: 0,
+        },
         analyticsRange: '30d',
     };
 
@@ -1027,7 +1033,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Audit Logs Controller
     // =========================================================================
     const refreshAuditBtn = document.getElementById('refreshAuditBtn');
-    refreshAuditBtn?.addEventListener('click', loadAuditLogs);
+    const auditPrevBtn = document.getElementById('auditPrevBtn');
+    const auditNextBtn = document.getElementById('auditNextBtn');
+
+    refreshAuditBtn?.addEventListener('click', () => {
+        loadAuditLogs();
+    });
+
+    auditPrevBtn?.addEventListener('click', () => {
+        if (state.audit.page > 1) {
+            state.audit.page--;
+            loadAuditLogs();
+        }
+    });
+
+    auditNextBtn?.addEventListener('click', () => {
+        if (state.audit.page < state.audit.totalPages) {
+            state.audit.page++;
+            loadAuditLogs();
+        }
+    });
 
     function loadAuditLogs() {
         const tbody = document.getElementById('auditLogsTbody');
@@ -1035,14 +1060,39 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center muted py-4"><span class="spinner"></span> Loading audit logs...</td></tr>';
         }
 
-        return fetch('/api/admin/audit-logs?limit=50')
+        const params = new URLSearchParams({
+            page: state.audit.page,
+            perPage: state.audit.perPage,
+        });
+
+        return fetch(`/api/admin/audit-logs?${params.toString()}`)
             .then((res) => res.json())
             .then((data) => {
-                if (!data.success || !data.logs) {
-                    showToast('Failed to load audit logs.', 'error');
+                if (!data.success) {
+                    showToast(data.error || 'Failed to load audit logs.', 'error');
                     return;
                 }
-                renderAuditLogsTable(data.logs);
+                const logs = data.logs || (data.data && data.data.records) || [];
+                const page = data.page || (data.data && data.data.page) || 1;
+                const totalPages = data.totalPages || (data.data && data.data.totalPages) || 1;
+                const total = data.total !== undefined ? data.total : (data.data && data.data.total) || logs.length;
+
+                state.audit.totalPages = totalPages;
+                state.audit.total = total;
+                state.audit.page = page;
+
+                const auditPaginationInfo = document.getElementById('auditPaginationInfo');
+                const auditPageNum = document.getElementById('auditPageNum');
+                if (auditPaginationInfo) {
+                    auditPaginationInfo.textContent = `Showing ${logs.length} of ${total} logs`;
+                }
+                if (auditPageNum) {
+                    auditPageNum.textContent = `Page ${page} of ${totalPages}`;
+                }
+                if (auditPrevBtn) auditPrevBtn.disabled = page <= 1;
+                if (auditNextBtn) auditNextBtn.disabled = page >= totalPages;
+
+                renderAuditLogsTable(logs);
             })
             .catch(() => showToast('Error loading audit logs.', 'error'));
     }
