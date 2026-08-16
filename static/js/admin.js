@@ -77,10 +77,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // 2. Tab Navigation & Mobile Drawer
+    // 2. Tab Navigation & Mobile Drawer (URL Hash & Session Sync)
     // =========================================================================
-    function switchTab(tabId) {
+    const VALID_TABS = ['dashboard', 'users', 'analytics', 'services', 'settings', 'audit'];
+
+    function switchTab(tabId, updateHash = true) {
+        if (!VALID_TABS.includes(tabId)) {
+            tabId = 'dashboard';
+        }
         state.currentTab = tabId;
+
+        if (updateHash) {
+            try {
+                if (window.location.hash !== `#${tabId}`) {
+                    window.location.hash = tabId;
+                }
+                sessionStorage.setItem('diariAdminActiveTab', tabId);
+            } catch (_) {}
+        }
 
         navItems.forEach((btn) => {
             const isActive = btn.dataset.tab === tabId;
@@ -120,6 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navItems.forEach((btn) => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    window.addEventListener('hashchange', () => {
+        const hashTab = (window.location.hash || '').replace('#', '').trim();
+        if (hashTab && VALID_TABS.includes(hashTab) && hashTab !== state.currentTab) {
+            switchTab(hashTab, false);
+        }
     });
 
     function openMobileSidebar() {
@@ -1229,10 +1250,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initial load: Dashboard
-    loadDashboard().finally(() => {
-        if (window.DiariShell && typeof window.DiariShell.release === 'function') {
-            window.DiariShell.release();
+    // Initial load: Resolve target tab from URL hash or sessionStorage
+    function getInitialTab() {
+        const hashTab = (window.location.hash || '').replace('#', '').trim();
+        if (VALID_TABS.includes(hashTab)) {
+            return hashTab;
         }
-    });
+        try {
+            const savedTab = sessionStorage.getItem('diariAdminActiveTab');
+            if (VALID_TABS.includes(savedTab)) {
+                return savedTab;
+            }
+        } catch (_) {}
+        return 'dashboard';
+    }
+
+    const initialTab = getInitialTab();
+    switchTab(initialTab, true);
+    if (window.DiariShell && typeof window.DiariShell.release === 'function') {
+        window.DiariShell.release();
+    }
 });
