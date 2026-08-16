@@ -28,6 +28,7 @@ import password_policy
 import space_nlp
 import push_service
 import push_scheduler
+import hf_speech
 
 ENTRY_WORD_MAX = int(os.environ.get("ENTRY_WORD_MAX", "300"))
 
@@ -2114,6 +2115,7 @@ def api_admin_services_test_ai():
         import time
         import urllib.request
         import urllib.error
+        import hf_speech
 
         hf_token = hf_speech.get_hf_token()
         if not hf_token:
