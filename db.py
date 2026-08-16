@@ -396,6 +396,25 @@ def row_to_dict(row):
     return dict(row)
 
 
+def _fetchcount(cur):
+    """Safely fetch a COUNT(*) scalar from a cursor that may return a dict row (RealDictCursor) or tuple row (sqlite3)."""
+    row = cur.fetchone()
+    if row is None:
+        return 0
+    if isinstance(row, dict):
+        # psycopg2 RealDictCursor — grab the first (and only) value
+        return int(list(row.values())[0] or 0)
+    try:
+        return int(row[0] or 0)
+    except (IndexError, TypeError):
+        return 0
+
+
+def _fetchscalar(cur):
+    """Fetch a single scalar value from any cursor type."""
+    return _fetchcount(cur)
+
+
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
@@ -2854,34 +2873,37 @@ def get_admin_dashboard_stats():
     try:
         # Total users
         cur.execute("SELECT COUNT(*) FROM users")
-        total_users = cur.fetchone()[0] or 0
+        total_users = _fetchcount(cur)
 
-        # Active users in last 30 days
-        if USE_POSTGRES:
-            cur.execute(
-                """
-                SELECT COUNT(DISTINCT id) FROM users
-                WHERE last_login >= NOW() - INTERVAL '30 days'
-                   OR id IN (SELECT DISTINCT user_id FROM journal_entries WHERE created_at >= NOW() - INTERVAL '30 days')
-                """
-            )
-        else:
-            cur.execute(
-                """
-                SELECT COUNT(DISTINCT id) FROM users
-                WHERE last_login >= datetime('now', '-30 days')
-                   OR id IN (SELECT DISTINCT user_id FROM journal_entries WHERE created_at >= datetime('now', '-30 days'))
-                """
-            )
-        active_users = cur.fetchone()[0] or 0
+        # Active users in last 30 days - handle NULL last_login gracefully
+        try:
+            if USE_POSTGRES:
+                cur.execute(
+                    """
+                    SELECT COUNT(DISTINCT id) FROM users
+                    WHERE (last_login IS NOT NULL AND last_login >= NOW() - INTERVAL '30 days')
+                       OR id IN (SELECT DISTINCT user_id FROM journal_entries WHERE created_at >= NOW() - INTERVAL '30 days')
+                    """
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT COUNT(DISTINCT id) FROM users
+                    WHERE (last_login IS NOT NULL AND last_login >= datetime('now', '-30 days'))
+                       OR id IN (SELECT DISTINCT user_id FROM journal_entries WHERE created_at >= datetime('now', '-30 days'))
+                    """
+                )
+            active_users = _fetchcount(cur)
+        except Exception:
+            active_users = total_users
 
         # Total entries
         cur.execute("SELECT COUNT(*) FROM journal_entries")
-        total_entries = cur.fetchone()[0] or 0
+        total_entries = _fetchcount(cur)
 
         # Total AI analyses
         cur.execute("SELECT COUNT(*) FROM journal_entries WHERE emotion_label IS NOT NULL AND emotion_label != ''")
-        total_ai_analyses = cur.fetchone()[0] or 0
+        total_ai_analyses = _fetchcount(cur)
 
         # Emotion distribution
         cur.execute(
@@ -2895,8 +2917,9 @@ def get_admin_dashboard_stats():
         emo_rows = cur.fetchall()
         emo_counts = {"happy": 0, "sad": 0, "anxious": 0, "angry": 0, "neutral": 0}
         for r in emo_rows:
-            k = str(r[0] or "").lower()
-            cnt = int(r[1] or 0)
+            r = row_to_dict(r)
+            k = str(r.get("emo") or "").lower()
+            cnt = int(r.get("cnt") or 0)
             if k in emo_counts:
                 emo_counts[k] += cnt
             elif "anx" in k or "fear" in k:
@@ -2938,9 +2961,10 @@ def get_admin_dashboard_stats():
                 """
             )
         for r in cur.fetchall():
-            day_key = str(r[0] or "")
+            rd = row_to_dict(r)
+            day_key = str(rd.get("day") or "")
             if day_key in date_map:
-                date_map[day_key]["entries"] = int(r[1] or 0)
+                date_map[day_key]["entries"] = int(rd.get("count") or list(rd.values())[-1] or 0)
 
         if USE_POSTGRES:
             cur.execute(
@@ -2961,9 +2985,10 @@ def get_admin_dashboard_stats():
                 """
             )
         for r in cur.fetchall():
-            day_key = str(r[0] or "")
+            rd = row_to_dict(r)
+            day_key = str(rd.get("day") or "")
             if day_key in date_map:
-                date_map[day_key]["signups"] = int(r[1] or 0)
+                date_map[day_key]["signups"] = int(rd.get("count") or list(rd.values())[-1] or 0)
 
         # Recent activities (privacy-safe: user nickname, emotion, sentiment, date, words)
         if USE_POSTGRES:
@@ -2990,15 +3015,17 @@ def get_admin_dashboard_stats():
             )
         recent = []
         for r in cur.fetchall():
+            rd = row_to_dict(r)
+            email = str(rd.get("email") or "")
             recent.append({
-                "entryId": r[0],
-                "userId": r[1],
-                "nickname": r[2],
-                "maskedEmail": f"{r[3][:2]}***@{r[3].split('@')[-1]}" if "@" in str(r[3] or "") else "***",
-                "emotion": str(r[4] or "neutral").lower(),
-                "sentiment": str(r[5] or "neutral").lower(),
-                "createdAt": str(r[6] or ""),
-                "words": max(1, int(r[7] or 1)),
+                "entryId": rd.get("id"),
+                "userId": rd.get("user_id"),
+                "nickname": rd.get("nickname"),
+                "maskedEmail": f"{email[:2]}***@{email.split('@')[-1]}" if "@" in email else "***",
+                "emotion": str(rd.get("emotion_label") or "neutral").lower(),
+                "sentiment": str(rd.get("sentiment_label") or "neutral").lower(),
+                "createdAt": str(rd.get("created_at") or ""),
+                "words": max(1, int(rd.get("word_est") or 1)),
             })
 
         return {
@@ -3037,25 +3064,40 @@ def list_admin_users(search: str = "", status_filter: str = "", page: int = 1, p
                 params.extend([search_term, search_term, search_term, search_term])
 
         if status_filter == "active":
-            where_clauses.append("(u.is_disabled IS NULL OR u.is_disabled = FALSE OR u.is_disabled = 0)")
+            if USE_POSTGRES:
+                where_clauses.append("(u.is_disabled IS NULL OR u.is_disabled = FALSE)")
+            else:
+                where_clauses.append("(u.is_disabled IS NULL OR u.is_disabled = 0)")
         elif status_filter == "disabled":
-            where_clauses.append("(u.is_disabled = TRUE OR u.is_disabled = 1)")
+            if USE_POSTGRES:
+                where_clauses.append("u.is_disabled = TRUE")
+            else:
+                where_clauses.append("u.is_disabled = 1")
         elif status_filter == "2fa":
-            where_clauses.append("(u.totp_enabled = TRUE OR u.totp_enabled = 1)")
+            if USE_POSTGRES:
+                where_clauses.append("u.totp_enabled = TRUE")
+            else:
+                where_clauses.append("u.totp_enabled = 1")
 
         where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
 
         # Total counts
         cur.execute(f"SELECT COUNT(*) FROM users u {where_sql}", tuple(params))
-        total_filtered = cur.fetchone()[0] or 0
+        total_filtered = _fetchcount(cur)
 
         # Summary counts
         cur.execute("SELECT COUNT(*) FROM users")
-        total_all = cur.fetchone()[0] or 0
-        cur.execute("SELECT COUNT(*) FROM users WHERE is_disabled = TRUE OR is_disabled = 1")
-        total_disabled = cur.fetchone()[0] or 0
-        cur.execute("SELECT COUNT(*) FROM users WHERE totp_enabled = TRUE OR totp_enabled = 1")
-        total_2fa = cur.fetchone()[0] or 0
+        total_all = _fetchcount(cur)
+        if USE_POSTGRES:
+            cur.execute("SELECT COUNT(*) FROM users WHERE is_disabled = TRUE")
+        else:
+            cur.execute("SELECT COUNT(*) FROM users WHERE is_disabled = 1")
+        total_disabled = _fetchcount(cur)
+        if USE_POSTGRES:
+            cur.execute("SELECT COUNT(*) FROM users WHERE totp_enabled = TRUE")
+        else:
+            cur.execute("SELECT COUNT(*) FROM users WHERE totp_enabled = 1")
+        total_2fa = _fetchcount(cur)
         total_active = max(0, total_all - total_disabled)
 
         # Query page records
@@ -3234,9 +3276,10 @@ def get_admin_analytics_data(days: int = 30):
             )
 
         for r in cur.fetchall():
-            day_str = str(r[0] or "")
-            emo = str(r[1] or "neutral").lower()
-            cnt = int(r[2] or 0)
+            rd = row_to_dict(r)
+            day_str = str(rd.get("day") or "")
+            emo = str(rd.get("emo") or "neutral").lower()
+            cnt = int(rd.get("cnt") or 0)
             if day_str in bucket_map:
                 bucket_map[day_str]["total"] += cnt
                 if emo in bucket_map[day_str]:
@@ -3252,43 +3295,46 @@ def get_admin_analytics_data(days: int = 30):
                 else:
                     bucket_map[day_str]["neutral"] += cnt
 
+        # Sentiment labels - add aliases for consistent dict key access
         if USE_POSTGRES:
             cur.execute(
                 """
-                SELECT LOWER(TRIM(COALESCE(sentiment_label, 'neutral'))), COUNT(*)
+                SELECT LOWER(TRIM(COALESCE(sentiment_label, 'neutral'))) as s, COUNT(*) as cnt
                 FROM journal_entries
                 WHERE created_at >= NOW() - (%s || ' days')::INTERVAL
-                GROUP BY 1
+                GROUP BY s
                 """,
                 (str(days),),
             )
         else:
             cur.execute(
                 """
-                SELECT LOWER(TRIM(COALESCE(sentiment_label, 'neutral'))), COUNT(*)
+                SELECT LOWER(TRIM(COALESCE(sentiment_label, 'neutral'))) as s, COUNT(*) as cnt
                 FROM journal_entries
                 WHERE created_at >= datetime('now', '-' || ? || ' days')
-                GROUP BY 1
+                GROUP BY s
                 """,
                 (str(days),),
             )
         sentiments = {"positive": 0, "neutral": 0, "negative": 0}
         for r in cur.fetchall():
-            s = str(r[0] or "neutral").lower()
+            rd = row_to_dict(r)
+            s = str(rd.get("s") or "neutral").lower()
+            cnt = int(rd.get("cnt") or 0)
             if s in sentiments:
-                sentiments[s] += int(r[1] or 0)
+                sentiments[s] += cnt
             elif "pos" in s:
-                sentiments["positive"] += int(r[1] or 0)
+                sentiments["positive"] += cnt
             elif "neg" in s:
-                sentiments["negative"] += int(r[1] or 0)
+                sentiments["negative"] += cnt
             else:
-                sentiments["neutral"] += int(r[1] or 0)
+                sentiments["neutral"] += cnt
 
         # Day of week distribution (0=Sun, 1=Mon, ..., 6=Sat)
         if USE_POSTGRES:
             cur.execute(
                 """
-                SELECT EXTRACT(DOW FROM created_at)::INTEGER as dow, COUNT(*)
+                SELECT EXTRACT(DOW FROM created_at)::INTEGER as dow, COUNT(*) as cnt
                 FROM journal_entries
                 WHERE created_at >= NOW() - (%s || ' days')::INTERVAL
                 GROUP BY dow
@@ -3299,7 +3345,7 @@ def get_admin_analytics_data(days: int = 30):
         else:
             cur.execute(
                 """
-                SELECT CAST(STRFTIME('%%w', created_at) AS INTEGER) as dow, COUNT(*)
+                SELECT CAST(STRFTIME('%%w', created_at) AS INTEGER) as dow, COUNT(*) as cnt
                 FROM journal_entries
                 WHERE created_at >= datetime('now', '-' || ? || ' days')
                 GROUP BY dow
@@ -3309,9 +3355,10 @@ def get_admin_analytics_data(days: int = 30):
             )
         dow_counts = [0] * 7
         for r in cur.fetchall():
-            idx = int(r[0] or 0)
+            rd = row_to_dict(r)
+            idx = int(rd.get("dow") or 0)
             if 0 <= idx <= 6:
-                dow_counts[idx] = int(r[1] or 0)
+                dow_counts[idx] = int(rd.get("cnt") or 0)
 
         return {
             "timeline": buckets,
@@ -3335,9 +3382,9 @@ def get_database_health_info():
         cur.fetchone()
         latency_ms = round((time.perf_counter() - t0) * 1000, 2)
         cur.execute("SELECT COUNT(*) FROM users")
-        u_cnt = cur.fetchone()[0] or 0
+        u_cnt = _fetchcount(cur)
         cur.execute("SELECT COUNT(*) FROM journal_entries")
-        j_cnt = cur.fetchone()[0] or 0
+        j_cnt = _fetchcount(cur)
         return {
             "engine": "PostgreSQL" if USE_POSTGRES else "SQLite",
             "connected": True,
