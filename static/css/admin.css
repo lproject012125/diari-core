@@ -93,6 +93,18 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.admin-mobile-menu-btn:hover,
+.admin-icon-btn:hover {
+    background: var(--primary-color);
+    color: #FFFFFF !important;
+}
+
+.admin-mobile-menu-btn:hover i,
+.admin-icon-btn:hover i {
+    color: #FFFFFF !important;
 }
 
 .admin-mobile-brand {
@@ -632,13 +644,11 @@ body {
 .stat-pill:hover, .stat-pill.active {
     border-color: var(--primary-color);
     background: var(--primary-color);
-    color: #FFFFFF;
+    color: #FFFFFF !important;
 }
 
-.stat-pill:hover .stat-pill-num,
-.stat-pill:hover .stat-pill-label,
-.stat-pill.active .stat-pill-num,
-.stat-pill.active .stat-pill-label {
+.stat-pill:hover .stat-pill-num, .stat-pill.active .stat-pill-num,
+.stat-pill:hover .stat-pill-label, .stat-pill.active .stat-pill-label {
     color: #FFFFFF !important;
 }
 
@@ -768,13 +778,13 @@ body {
 }
 
 .range-btn:hover {
-    background: var(--primary-light);
-    color: var(--primary-color);
+    background: var(--primary-color);
+    color: #FFFFFF !important;
 }
 
 .range-btn.active {
     background: var(--primary-color);
-    color: white;
+    color: #FFFFFF !important;
 }
 
 /* Services Cards Grid */
@@ -986,10 +996,20 @@ label {
     color: var(--text-dark);
 }
 
-.btn-outline:hover {
+.btn-outline:hover:not(:disabled) {
     background: var(--primary-color);
     border-color: var(--primary-color);
-    color: #FFFFFF;
+    color: #FFFFFF !important;
+}
+
+.btn-outline:hover:not(:disabled) i,
+.btn-outline:hover:not(:disabled) span {
+    color: #FFFFFF !important;
+}
+
+.btn-outline:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 .btn-danger {
@@ -997,27 +1017,9 @@ label {
     color: white;
 }
 
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
     background: #DC2626;
-}
-
-/* Colored outline icon buttons — keep semantic hue on hover but with solid bg */
-.btn-outline.text-danger:hover {
-    background: #EF4444;
-    border-color: #EF4444;
-    color: #FFFFFF !important;
-}
-
-.btn-outline.text-warning:hover {
-    background: #F59E0B;
-    border-color: #F59E0B;
-    color: #FFFFFF !important;
-}
-
-.btn-outline.text-success:hover {
-    background: #10B981;
-    border-color: #10B981;
-    color: #FFFFFF !important;
+    color: white;
 }
 
 .btn-icon {
@@ -1026,6 +1028,55 @@ label {
     padding: 0;
     border-radius: 6px;
     font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover:not(:disabled) {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #FFFFFF !important;
+}
+
+.btn-icon:hover:not(:disabled) i {
+    color: #FFFFFF !important;
+}
+
+.btn-icon.view-user-btn:hover:not(:disabled) {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #FFFFFF !important;
+}
+
+.btn-icon.view-user-btn:hover:not(:disabled) i {
+    color: #FFFFFF !important;
+}
+
+.btn-icon.toggle-user-btn:hover:not(:disabled) {
+    background: #D97706 !important;
+    border-color: #D97706 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-icon.toggle-user-btn.text-success:hover:not(:disabled) {
+    background: #059669 !important;
+    border-color: #059669 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-icon.toggle-user-btn:hover:not(:disabled) i {
+    color: #FFFFFF !important;
+}
+
+.btn-icon.delete-user-btn:hover:not(:disabled) {
+    background: #DC2626 !important;
+    border-color: #DC2626 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-icon.delete-user-btn:hover:not(:disabled) i {
+    color: #FFFFFF !important;
 }
 
 /* Modal Dialogs */
