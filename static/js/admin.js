@@ -970,8 +970,8 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
         })
-            .then((res) => res.json())
-            .then((data) => {
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({ success: false, error: `Server responded with status ${res.status}` }));
                 if (data.success) {
                     showToast(`✅ ${data.message} (${data.latencyMs}ms)`, 'success');
                     const latencyEl = document.getElementById('svcLatencyVoice');
