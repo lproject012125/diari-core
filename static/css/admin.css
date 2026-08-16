@@ -819,6 +819,10 @@ html.theme-dark .admin-sidebar {
     flex-wrap: wrap;
 }
 
+.users-filter-row {
+    margin-bottom: 1.25rem;
+}
+
 .search-input-wrap {
     flex: 1;
     min-width: 260px;
@@ -1598,6 +1602,41 @@ label {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .users-filter-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: nowrap;
+    }
+
+    .users-filter-row .search-input-wrap {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .users-filter-row .search-input {
+        padding: 0.55rem 1.6rem 0.55rem 2rem;
+        font-size: 0.82rem;
+    }
+
+    .users-filter-row .search-icon {
+        left: 9px;
+        font-size: 0.85rem;
+    }
+
+    .users-filter-row .filter-select-wrap {
+        flex: 0 0 auto;
+        width: 125px;
+        max-width: 40%;
+    }
+
+    .users-filter-row .form-select {
+        padding: 0.55rem 0.5rem;
+        font-size: 0.8rem;
     }
 
     .row {
