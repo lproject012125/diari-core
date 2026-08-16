@@ -593,19 +593,6 @@
 
                     const err = data.error || (res.status === 401 ? 'Please log in to use AI transcription.' : 'Server transcription unavailable');
                     console.warn('Server transcription note:', err);
-
-                    // Fallback to client-side transcription if supported
-                    if (window.DiariVoiceClient && typeof DiariVoiceClient.transcribeBlob === 'function') {
-                        setTranscriptHint('Running local speech model on device…');
-                        const deviceText = await transcribeOnDevice(blob);
-                        if (deviceText && finalTranscript) {
-                            finalTranscript.value = deviceText;
-                            updateWordCountFromTranscript();
-                            setTranscriptHint('Transcript created on device. Edit any mistakes above.');
-                            return;
-                        }
-                    }
-
                     setTranscriptHint(err || clientTranscribeFailureHint(null));
                 } catch (e) {
                     console.error('AI transcription request failed:', e);
