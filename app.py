@@ -252,6 +252,10 @@ def _require_authenticated_user(*, check_csrf: bool = True):
 
 def _login_success_payload(user_row: dict, **extra):
     csrf = _establish_user_session(int(user_row["id"]))
+    try:
+        db.record_user_login(int(user_row["id"]))
+    except Exception:
+        pass
     if _user_is_configured_admin(user_row):
         session["is_admin"] = True
     else:
@@ -1847,6 +1851,301 @@ def api_password_verify_code():
     return jsonify({"success": True, "message": "Code verified."}), 200
 
 
+# ============================================================================
+# Admin Suite Endpoints (Dashboard, Users, Analytics, AI & Services, Settings)
+# ============================================================================
+
+def _get_admin_actor_email() -> str:
+    """Helper to retrieve current admin email for audit logs."""
+    uid = session.get("user_id")
+    if uid:
+        u = db.get_user_by_id(uid)
+        if u and u.get("email"):
+            return u["email"]
+    return _configured_admin_email() or "admin@diaricore.internal"
+
+
+@app.route("/api/admin/dashboard", methods=["GET"])
+def api_admin_dashboard():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        stats = db.get_admin_dashboard_stats()
+        hf_token = db.get_system_setting("hf_api_token", "") or os.environ.get("HF_API_TOKEN", "") or os.environ.get("HF_TOKEN", "")
+        brevo_key = db.get_system_setting("brevo_api_key", "") or os.environ.get("BREVO_API_KEY", "")
+        email_enabled = (db.get_system_setting("enable_email_notifications", "true") or "true").lower() == "true"
+
+        service_summary = {
+            "database": {"status": "operational", "label": "Operational"},
+            "voiceAi": {"status": "operational" if hf_token else "warning", "label": "Operational" if hf_token else "Token Missing"},
+            "emailService": {"status": "operational" if (brevo_key and email_enabled) else ("disabled" if not email_enabled else "warning"), "label": "Operational" if (brevo_key and email_enabled) else ("Disabled" if not email_enabled else "Not Configured")},
+            "emotionAi": {"status": "operational", "label": "Operational"},
+        }
+        stats["services"] = service_summary
+        return jsonify({"success": True, "stats": stats})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/users", methods=["GET"])
+def api_admin_users():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    q = (request.args.get("q") or "").strip()
+    status = (request.args.get("status") or "").strip()
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("perPage", 20, type=int)
+    try:
+        result = db.list_admin_users(search=q, status_filter=status, page=page, per_page=per_page)
+        return jsonify({"success": True, "data": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/users/<int:user_id>", methods=["GET"])
+def api_admin_user_details(user_id):
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    try:
+        user = db.get_admin_user_details(user_id)
+        if not user:
+            return jsonify({"success": False, "error": "User not found."}), 404
+        return jsonify({"success": True, "user": user})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/users/<int:user_id>/toggle-status", methods=["POST"])
+def api_admin_user_toggle_status(user_id):
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    csrf_err = authsec.validate_csrf(request, session)
+    if csrf_err:
+        return jsonify({"success": False, "error": csrf_err}), 403
+
+    current_uid = session.get("user_id")
+    if current_uid and int(current_uid) == int(user_id):
+        return jsonify({"success": False, "error": "You cannot disable your own administrator account."}), 400
+
+    target_user = db.get_user_by_id(user_id)
+    if not target_user:
+        return jsonify({"success": False, "error": "User not found."}), 404
+    if _user_is_configured_admin(target_user):
+        return jsonify({"success": False, "error": "Cannot modify system administrator status."}), 400
+
+    data = request.get_json(silent=True) or {}
+    is_disabled = bool(data.get("disabled"))
+    ok = db.set_user_disabled_status(user_id, is_disabled)
+    if ok:
+        admin_email = _get_admin_actor_email()
+        db.log_admin_action(
+            admin_email,
+            "USER_DISABLED" if is_disabled else "USER_ACTIVATED",
+            {"targetUserId": user_id, "targetEmail": target_user.get("email"), "targetNickname": target_user.get("nickname")},
+            request.remote_addr,
+        )
+        return jsonify({"success": True, "message": f"User account has been {'deactivated' if is_disabled else 'activated'}."})
+    return jsonify({"success": False, "error": "Could not update user status."}), 500
+
+
+@app.route("/api/admin/users/<int:user_id>", methods=["DELETE"])
+def api_admin_user_delete(user_id):
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    csrf_err = authsec.validate_csrf(request, session)
+    if csrf_err:
+        return jsonify({"success": False, "error": csrf_err}), 403
+
+    current_uid = session.get("user_id")
+    if current_uid and int(current_uid) == int(user_id):
+        return jsonify({"success": False, "error": "You cannot delete your own administrator account."}), 400
+
+    target_user = db.get_user_by_id(user_id)
+    if not target_user:
+        return jsonify({"success": False, "error": "User not found."}), 404
+    if _user_is_configured_admin(target_user):
+        return jsonify({"success": False, "error": "Cannot delete system administrator account."}), 400
+
+    ok = db.delete_user_account_admin(user_id)
+    if ok:
+        admin_email = _get_admin_actor_email()
+        db.log_admin_action(
+            admin_email,
+            "USER_DELETED",
+            {"targetUserId": user_id, "targetEmail": target_user.get("email"), "targetNickname": target_user.get("nickname")},
+            request.remote_addr,
+        )
+        return jsonify({"success": True, "message": "User account and all related records deleted permanently."})
+    return jsonify({"success": False, "error": "Could not delete user account."}), 500
+
+
+@app.route("/api/admin/analytics", methods=["GET"])
+def api_admin_analytics():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    range_str = (request.args.get("range") or "30d").strip().lower()
+    days_map = {"7d": 7, "30d": 30, "90d": 90, "all": 365}
+    days = days_map.get(range_str, 30)
+    try:
+        data = db.get_admin_analytics_data(days=days)
+        return jsonify({"success": True, "analytics": data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/admin/services", methods=["GET"])
+def api_admin_services():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    db_health = db.get_database_health_info()
+
+    brevo_key = db.get_system_setting("brevo_api_key", "") or os.environ.get("BREVO_API_KEY", "")
+    sender_email = db.get_system_setting("brevo_sender_email", "") or os.environ.get("BREVO_SENDER_EMAIL", "")
+    sender_name = db.get_system_setting("brevo_sender_name", "DiariCore")
+    email_enabled = (db.get_system_setting("enable_email_notifications", "true") or "true").lower() == "true"
+
+    hf_token = db.get_system_setting("hf_api_token", "") or os.environ.get("HF_API_TOKEN", "") or os.environ.get("HF_TOKEN", "")
+
+    services = {
+        "database": {
+            "name": "Database Storage",
+            "provider": db_health.get("engine", "PostgreSQL"),
+            "status": "operational" if db_health.get("connected") else "error",
+            "latencyMs": db_health.get("latencyMs", 0),
+            "details": f"{db_health.get('totalUsers', 0)} users, {db_health.get('totalEntries', 0)} journal entries",
+        },
+        "email": {
+            "name": "Email Delivery Service",
+            "provider": "Brevo (Sendinblue) REST API v3",
+            "status": "operational" if (brevo_key and email_enabled) else ("warning" if not brevo_key else "disabled"),
+            "configured": bool(brevo_key and sender_email),
+            "enabled": email_enabled,
+            "senderEmail": sender_email or "Not configured",
+            "senderName": sender_name,
+        },
+        "voiceAi": {
+            "name": "Voice AI Speech Recognition",
+            "provider": "Hugging Face Serverless Inference Router",
+            "model": "openai/whisper-large-v3-turbo",
+            "status": "operational" if hf_token else "warning",
+            "configured": bool(hf_token),
+            "supportedLanguages": "Auto, English (en), Taglish / Filipino (tl)",
+        },
+        "emotionAi": {
+            "name": "Emotion & Sentiment NLP",
+            "provider": "Transformer Inference Pipeline",
+            "status": "operational",
+            "model": "DiariCore RoBERTa / DistilRoBERTa Ensemble",
+            "emotions": "Happy, Sad, Anxious, Angry, Neutral",
+        }
+    }
+    return jsonify({"success": True, "services": services})
+
+
+@app.route("/api/admin/services/test-email", methods=["POST"])
+def api_admin_services_test_email():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    csrf_err = authsec.validate_csrf(request, session)
+    if csrf_err:
+        return jsonify({"success": False, "error": csrf_err}), 403
+
+    data = request.get_json(silent=True) or {}
+    dest_email = (data.get("recipientEmail") or "").strip()
+    if not dest_email or "@" not in dest_email:
+        dest_email = _get_admin_actor_email()
+
+    api_key = os.environ.get("BREVO_API_KEY") or db.get_system_setting("brevo_api_key")
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or db.get_system_setting("brevo_sender_email")
+    sender_name = os.environ.get("BREVO_SENDER_NAME") or db.get_system_setting("brevo_sender_name", "DiariCore")
+
+    if not api_key:
+        return jsonify({"success": False, "error": "No Brevo API key is configured. Please add an API key in System Settings."}), 400
+    if not sender_email:
+        return jsonify({"success": False, "error": "No Sender Email is configured. Please specify a sender email in System Settings."}), 400
+
+    payload = {
+        "sender": {"name": sender_name, "email": sender_email},
+        "to": [{"email": dest_email, "name": "DiariCore Administrator"}],
+        "subject": "DiariCore System Health Test - Brevo Email Service",
+        "htmlContent": f"""
+            <div style='font-family: Inter, -apple-system, sans-serif; max-width: 520px; padding: 24px; border: 1px solid #E0E6E3; border-radius: 12px; background: #FAFDFB;'>
+                <h2 style='color: #2F3E36; margin-top: 0;'>✅ Email Service Operational</h2>
+                <p style='color: #55665D; line-height: 1.5;'>This is a diagnostic test email generated by the <strong>DiariCore Admin Suite</strong>.</p>
+                <div style='background: #EBF3EE; padding: 14px 18px; border-radius: 8px; margin: 16px 0;'>
+                    <p style='margin: 0; color: #2F3E36; font-size: 14px;'><strong>Sender:</strong> {sender_name} &lt;{sender_email}&gt;</p>
+                    <p style='margin: 4px 0 0; color: #2F3E36; font-size: 14px;'><strong>Timestamp:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+                    <p style='margin: 4px 0 0; color: #2F3E36; font-size: 14px;'><strong>Status:</strong> Connected via Brevo REST API v3</p>
+                </div>
+                <p style='color: #7D8A84; font-size: 12px; margin-bottom: 0;'>DiariCore Admin Diagnostic Tool</p>
+            </div>
+        """,
+        "textContent": f"DiariCore System Health Test: Email service is working properly. Sent from {sender_email} at {datetime.now(timezone.utc).isoformat()}.",
+    }
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json", "api-key": api_key},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            resp_body = resp.read().decode("utf-8")
+            admin_email = _get_admin_actor_email()
+            db.log_admin_action(admin_email, "TEST_EMAIL_SENT", {"recipient": dest_email, "response": resp_body[:100]}, request.remote_addr)
+            return jsonify({"success": True, "message": f"Test email successfully delivered to {dest_email}."})
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8", errors="ignore")
+        return jsonify({"success": False, "error": f"Brevo HTTP {e.code}: {err_msg[:200]}"}), 400
+    except Exception as ex:
+        return jsonify({"success": False, "error": f"Connection error: {str(ex)}"}), 500
+
+
+@app.route("/api/admin/services/test-ai", methods=["POST"])
+def api_admin_services_test_ai():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    csrf_err = authsec.validate_csrf(request, session)
+    if csrf_err:
+        return jsonify({"success": False, "error": csrf_err}), 403
+
+    import time
+    hf_token = hf_speech.get_hf_token()
+    if not hf_token:
+        return jsonify({"success": False, "error": "No Hugging Face token is configured. Please enter your token in System Settings."}), 400
+
+    t0 = time.perf_counter()
+    endpoint = "https://router.huggingface.co/hf-inference/models/openai/whisper-large-v3-turbo"
+    headers = {"Authorization": f"Bearer {hf_token}"}
+    try:
+        resp = httpx.get(endpoint, headers=headers, timeout=10.0)
+        latency = round((time.perf_counter() - t0) * 1000, 2)
+        status_code = resp.status_code
+        admin_email = _get_admin_actor_email()
+        db.log_admin_action(admin_email, "TEST_AI_PING", {"status": status_code, "latencyMs": latency}, request.remote_addr)
+        if status_code in (200, 400, 405):
+            return jsonify({"success": True, "message": "Voice AI router endpoint is reachable and responsive!", "latencyMs": latency, "model": "openai/whisper-large-v3-turbo"})
+        elif status_code == 401:
+            return jsonify({"success": False, "error": "Hugging Face returned 401 Unauthorized. Your API token is invalid or does not have Inference Providers permission."}), 400
+        else:
+            return jsonify({"success": True, "message": f"Endpoint responded with HTTP {status_code}", "latencyMs": latency})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Connection failed: {str(e)}"}), 500
+
+
+@app.route("/api/admin/audit-logs", methods=["GET"])
+def api_admin_audit_logs():
+    if not session.get("is_admin"):
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    limit = request.args.get("limit", 50, type=int)
+    try:
+        logs = db.get_admin_audit_logs(limit=limit)
+        return jsonify({"success": True, "logs": logs})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route("/api/admin/settings", methods=["GET"])
 def api_admin_settings_get():
     if not session.get("is_admin"):
@@ -1878,6 +2177,9 @@ def api_admin_settings_get():
                 "senderEmail": db.get_system_setting("brevo_sender_email", ""),
                 "senderName": db.get_system_setting("brevo_sender_name", "DiariCore"),
                 "enableEmailNotifications": (db.get_system_setting("enable_email_notifications", "true") or "true").lower() == "true",
+                "appName": db.get_system_setting("app_name", "DiariCore"),
+                "allowRegistration": (db.get_system_setting("allow_registration", "true") or "true").lower() == "true",
+                "maintenanceMode": (db.get_system_setting("maintenance_mode", "false") or "false").lower() == "true",
             },
         }
     )
@@ -1897,6 +2199,9 @@ def api_admin_settings_save():
     sender_email = (data.get("senderEmail") or "").strip()
     sender_name = (data.get("senderName") or "").strip()
     enable_notifications = bool(data.get("enableEmailNotifications"))
+    app_name = (data.get("appName") or "DiariCore").strip()
+    allow_registration = bool(data.get("allowRegistration", True))
+    maintenance_mode = bool(data.get("maintenanceMode", False))
 
     if sender_email and ("@" not in sender_email or "." not in sender_email):
         return jsonify({"success": False, "error": "Sender email is invalid."}), 400
@@ -1910,11 +2215,20 @@ def api_admin_settings_save():
     if sender_name:
         db.set_system_setting("brevo_sender_name", sender_name)
     db.set_system_setting("enable_email_notifications", "true" if enable_notifications else "false")
+    db.set_system_setting("app_name", app_name)
+    db.set_system_setting("allow_registration", "true" if allow_registration else "false")
+    db.set_system_setting("maintenance_mode", "true" if maintenance_mode else "false")
+
+    admin_email = _get_admin_actor_email()
+    db.log_admin_action(admin_email, "SETTINGS_UPDATED", {"enableNotifications": enable_notifications, "maintenanceMode": maintenance_mode}, request.remote_addr)
+
     return jsonify({"success": True, "message": "Settings saved successfully."}), 200
 
 
 @app.route("/api/admin/logout", methods=["POST"])
 def api_admin_logout():
+    admin_email = _get_admin_actor_email()
+    db.log_admin_action(admin_email, "ADMIN_LOGOUT", {}, request.remote_addr)
     session.clear()
     return jsonify({"success": True})
 

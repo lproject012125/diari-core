@@ -15,7 +15,10 @@ from zoneinfo import ZoneInfo
 
 import db
 
-NOTIFY_TZ = ZoneInfo("Asia/Manila")
+try:
+    NOTIFY_TZ = ZoneInfo("Asia/Manila")
+except Exception:
+    NOTIFY_TZ = timezone(timedelta(hours=8))
 MS_PER_DAY = 86400000
 BASE_DIR = Path(__file__).resolve().parent
 _TEMPLATES: dict | None = None

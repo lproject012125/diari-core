@@ -5,67 +5,822 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="pwa-theme-early.js"></script>
     <link rel="stylesheet" href="diari-shell-pending.css">
-    <title>DiariCore Admin</title>
+    <title>DiariCore Admin Suite</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="mobile-global.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="theme.js"></script>
     <link href="pwa.css" rel="stylesheet">
     <script src="pwa.js"></script>
-
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div id="adminToastContainer" class="admin-toast-container" aria-live="polite" aria-atomic="true"></div>
+
     <div class="admin-wrap">
-        <aside class="admin-sidebar">
-            <h1>DiariCore</h1>
-            <p>Admin Panel</p>
-            <nav>
-                <button class="nav-item active"><i class="bi bi-gear"></i> System Settings</button>
+        <!-- Mobile Header Bar -->
+        <header class="admin-mobile-bar">
+            <button id="adminMobileMenuBtn" class="admin-mobile-menu-btn" aria-label="Toggle Navigation">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="admin-mobile-brand">
+                <span class="brand-title">DiariCore</span>
+                <span class="brand-badge">Admin</span>
+            </div>
+            <button id="adminThemeToggleMobile" class="admin-icon-btn" aria-label="Toggle Theme">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+        </header>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div id="adminSidebarBackdrop" class="admin-sidebar-backdrop"></div>
+
+        <!-- Admin Sidebar Navigation -->
+        <aside id="adminSidebar" class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="brand-group">
+                    <h1 class="brand-name"><i class="bi bi-journal-bookmark-fill me-2"></i>DiariCore</h1>
+                    <span class="admin-badge">Admin Suite</span>
+                </div>
+                <button id="adminSidebarCloseBtn" class="admin-sidebar-close-btn" aria-label="Close Sidebar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <nav class="admin-nav" role="tablist">
+                <button class="nav-item active" data-tab="dashboard" role="tab" aria-selected="true">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="users" role="tab" aria-selected="false">
+                    <i class="bi bi-people-fill"></i>
+                    <span>User Management</span>
+                </button>
+                <button class="nav-item" data-tab="analytics" role="tab" aria-selected="false">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span>Analytics</span>
+                </button>
+                <button class="nav-item" data-tab="services" role="tab" aria-selected="false">
+                    <i class="bi bi-cpu-fill"></i>
+                    <span>AI &amp; Services</span>
+                </button>
+                <button class="nav-item" data-tab="settings" role="tab" aria-selected="false">
+                    <i class="bi bi-sliders"></i>
+                    <span>System Settings</span>
+                </button>
+                <button class="nav-item" data-tab="audit" role="tab" aria-selected="false">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Audit Logs</span>
+                </button>
             </nav>
-            <button id="logoutBtn" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
+
+            <div class="admin-sidebar-footer">
+                <button id="adminThemeToggle" class="sidebar-action-btn" title="Toggle Light/Dark Theme">
+                    <i class="bi bi-moon-stars"></i>
+                    <span>Toggle Theme</span>
+                </button>
+                <a href="dashboard.html" class="sidebar-action-btn" title="Return to App Dashboard">
+                    <i class="bi bi-house-door"></i>
+                    <span>User App</span>
+                </a>
+                <button id="logoutBtn" class="logout-btn" title="Sign out of Administrator Session">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
         </aside>
 
+        <!-- Main Content Area -->
         <main class="admin-main diari-shell-main">
-            <section class="card">
-                <h2>System Settings</h2>
-                <p class="muted">Configure Brevo email OTP settings and Hugging Face Voice AI model credentials.</p>
-
-                <h3 style="font-size: 16px; margin-top: 18px; margin-bottom: 4px; color: var(--primary-color);">Email Service (Brevo)</h3>
-                <label for="brevoApiKey">Brevo API Key</label>
-                <input id="brevoApiKey" type="password" placeholder="Enter new API key to update">
-                <p class="muted" id="apiKeyHint">No API key configured.</p>
-
-                <div class="row">
+            <!-- ======================================================== -->
+            <!-- 1. DASHBOARD TAB -->
+            <!-- ======================================================== -->
+            <section id="tab-dashboard" class="tab-pane active">
+                <div class="section-header">
                     <div>
-                        <label for="senderEmail">Sender Email</label>
-                        <input id="senderEmail" type="email" placeholder="no-reply@yourdomain.com">
+                        <h2 class="section-title">Dashboard Overview</h2>
+                        <p class="section-subtitle">System metrics, user activity, and live health status.</p>
                     </div>
-                    <div>
-                        <label for="senderName">Sender Name</label>
-                        <input id="senderName" type="text" placeholder="DiariCore">
+                    <div class="header-actions">
+                        <button id="refreshDashboardBtn" class="btn btn-outline" title="Refresh Dashboard Metrics">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
                     </div>
                 </div>
 
-                <label class="checkline">
-                    <input id="enableEmailNotifications" type="checkbox">
-                    Enable Email Notifications
-                </label>
+                <!-- KPI Summary Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-users">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Total Users</span>
+                            <h3 class="kpi-value" id="kpiTotalUsers">—</h3>
+                            <span class="kpi-trend" id="kpiTotalUsersSub">Registered accounts</span>
+                        </div>
+                    </div>
 
-                <hr style="margin: 24px 0 16px; border: 0; border-top: 1px solid var(--border-color);">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-active">
+                            <i class="bi bi-person-check-fill"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Active Users (30d)</span>
+                            <h3 class="kpi-value" id="kpiActiveUsers">—</h3>
+                            <span class="kpi-trend text-success" id="kpiActiveUsersSub">Active journalers</span>
+                        </div>
+                    </div>
 
-                <h3 style="font-size: 16px; margin-top: 8px; margin-bottom: 4px; color: var(--primary-color);">Voice AI Speech Recognition (Whisper)</h3>
-                <p class="muted">Powers fast server voice journaling transcription (Whisper Large V3 Turbo).</p>
-                <label for="hfApiToken">Hugging Face API Token</label>
-                <input id="hfApiToken" type="password" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                <p class="muted" id="hfTokenHint">No Hugging Face token configured.</p>
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-entries">
+                            <i class="bi bi-journal-richtext"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Total Entries</span>
+                            <h3 class="kpi-value" id="kpiTotalEntries">—</h3>
+                            <span class="kpi-trend" id="kpiTotalEntriesSub">Voice &amp; Text journals</span>
+                        </div>
+                    </div>
 
-                <button id="saveSettingsBtn" class="save-btn" style="margin-top: 24px;"><i class="bi bi-floppy"></i> Save Settings</button>
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-ai">
+                            <i class="bi bi-stars"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">AI Analyses</span>
+                            <h3 class="kpi-value" id="kpiTotalAi">—</h3>
+                            <span class="kpi-trend text-primary" id="kpiTotalAiSub">Emotion/NLP inferences</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Health Quick Pills -->
+                <div class="health-pills-card">
+                    <div class="health-pill-item">
+                        <span class="status-indicator status-operational" id="statusDbDot"></span>
+                        <div class="health-pill-info">
+                            <span class="health-pill-name">Database</span>
+                            <span class="health-pill-desc" id="statusDbDesc">Operational</span>
+                        </div>
+                    </div>
+                    <div class="health-pill-divider"></div>
+                    <div class="health-pill-item">
+                        <span class="status-indicator status-operational" id="statusVoiceDot"></span>
+                        <div class="health-pill-info">
+                            <span class="health-pill-name">Whisper Voice AI</span>
+                            <span class="health-pill-desc" id="statusVoiceDesc">Operational</span>
+                        </div>
+                    </div>
+                    <div class="health-pill-divider"></div>
+                    <div class="health-pill-item">
+                        <span class="status-indicator status-operational" id="statusEmailDot"></span>
+                        <div class="health-pill-info">
+                            <span class="health-pill-name">Brevo Email OTP</span>
+                            <span class="health-pill-desc" id="statusEmailDesc">Operational</span>
+                        </div>
+                    </div>
+                    <div class="health-pill-divider"></div>
+                    <div class="health-pill-item">
+                        <span class="status-indicator status-operational" id="statusNlpDot"></span>
+                        <div class="health-pill-info">
+                            <span class="health-pill-name">RoBERTa Emotion</span>
+                            <span class="health-pill-desc">Operational</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">User &amp; Journal Activity</h3>
+                                <p class="chart-subtitle">Entries and registrations over the last 30 days</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="userActivityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Emotion Distribution</h3>
+                                <p class="chart-subtitle">Aggregated distribution of the 5 core emotions</p>
+                            </div>
+                        </div>
+                        <div class="chart-container chart-donut-container">
+                            <canvas id="emotionDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Table (Privacy Safe - No private text exposed) -->
+                <div class="card recent-activity-card">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3 class="card-title">Recent Journaling Activity</h3>
+                            <p class="muted">Live stream of journaling metadata (no private entry content is exposed).</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Detected Emotion</th>
+                                    <th>Sentiment</th>
+                                    <th>Word Count</th>
+                                    <th>Timestamp (UTC)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentActivityTbody">
+                                <tr><td colspan="5" class="text-center muted py-4">Loading activity data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- 2. USER MANAGEMENT TAB -->
+            <!-- ======================================================== -->
+            <section id="tab-users" class="tab-pane">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">User Management</h2>
+                        <p class="section-subtitle">Manage accounts, monitor 2FA security, and review account metadata.</p>
+                    </div>
+                </div>
+
+                <!-- User Quick Stats Row -->
+                <div class="user-stats-bar">
+                    <div class="stat-pill" data-status-filter="">
+                        <span class="stat-pill-num" id="userCountTotal">0</span>
+                        <span class="stat-pill-label">Total Users</span>
+                    </div>
+                    <div class="stat-pill active" data-status-filter="active">
+                        <span class="stat-pill-num text-success" id="userCountActive">0</span>
+                        <span class="stat-pill-label">Active</span>
+                    </div>
+                    <div class="stat-pill" data-status-filter="disabled">
+                        <span class="stat-pill-num text-danger" id="userCountDisabled">0</span>
+                        <span class="stat-pill-label">Disabled</span>
+                    </div>
+                    <div class="stat-pill" data-status-filter="2fa">
+                        <span class="stat-pill-num text-primary" id="userCount2fa">0</span>
+                        <span class="stat-pill-label">2FA Enabled</span>
+                    </div>
+                </div>
+
+                <!-- Search & Filters Toolbar -->
+                <div class="card filter-card">
+                    <div class="filter-row">
+                        <div class="search-input-wrap">
+                            <i class="bi bi-search search-icon"></i>
+                            <input type="text" id="userSearchInput" class="search-input" placeholder="Search by name, nickname, or email...">
+                            <button id="userSearchClearBtn" class="search-clear-btn" hidden aria-label="Clear Search">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                        <div class="filter-select-wrap">
+                            <select id="userStatusSelect" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active Only</option>
+                                <option value="disabled">Disabled Only</option>
+                                <option value="2fa">2FA Enabled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Data Table -->
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>2FA</th>
+                                    <th>Entries</th>
+                                    <th>Registered</th>
+                                    <th>Last Login</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableTbody">
+                                <tr><td colspan="8" class="text-center muted py-4">Loading users...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-wrap" id="usersPagination">
+                        <span class="pagination-info" id="usersPaginationInfo">Showing 0 users</span>
+                        <div class="pagination-controls">
+                            <button id="usersPrevBtn" class="btn btn-sm btn-outline" disabled>
+                                <i class="bi bi-chevron-left"></i> Previous
+                            </button>
+                            <span id="usersPageNum" class="page-indicator">Page 1 of 1</span>
+                            <button id="usersNextBtn" class="btn btn-sm btn-outline" disabled>
+                                Next <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- 3. ANALYTICS TAB -->
+            <!-- ======================================================== -->
+            <section id="tab-analytics" class="tab-pane">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Mindful Analytics &amp; Trends</h2>
+                        <p class="section-subtitle">Aggregate behavioral insights, emotional patterns, and sentiment trends.</p>
+                    </div>
+                    <div class="range-selector" id="analyticsRangeSelector">
+                        <button class="range-btn" data-range="7d">7 Days</button>
+                        <button class="range-btn active" data-range="30d">30 Days</button>
+                        <button class="range-btn" data-range="90d">3 Months</button>
+                        <button class="range-btn" data-range="all">All Time</button>
+                    </div>
+                </div>
+
+                <!-- Analytics Summary KPIs -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-entries">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Entries in Period</span>
+                            <h3 class="kpi-value" id="analyticsEntriesCount">—</h3>
+                            <span class="kpi-trend" id="analyticsRangeLabel">Selected range</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-active">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Daily Avg Entries</span>
+                            <h3 class="kpi-value" id="analyticsDailyAvg">—</h3>
+                            <span class="kpi-trend text-success">Frequency rate</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-users">
+                            <i class="bi bi-emoji-smile-fill"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Top Dominant Emotion</span>
+                            <h3 class="kpi-value" id="analyticsTopEmotion">—</h3>
+                            <span class="kpi-trend" id="analyticsTopEmotionSub">Overall mood</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap kpi-ai">
+                            <i class="bi bi-shield-heart-fill"></i>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-label">Positive Sentiment Ratio</span>
+                            <h3 class="kpi-value" id="analyticsPositiveRatio">—</h3>
+                            <span class="kpi-trend text-primary">Wellbeing index</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deep Analytics Charts -->
+                <div class="charts-row">
+                    <div class="chart-card chart-card-wide">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Emotion Trends Over Time</h3>
+                                <p class="chart-subtitle">Daily frequency comparison across Happy, Sad, Anxious, Angry, and Neutral</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="analyticsEmotionTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Sentiment Distribution</h3>
+                                <p class="chart-subtitle">Positive, Neutral, and Negative balance</p>
+                            </div>
+                        </div>
+                        <div class="chart-container chart-donut-container">
+                            <canvas id="analyticsSentimentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">Peak Journaling Days</h3>
+                                <p class="chart-subtitle">Entries distributed by day of the week</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="analyticsDowChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- 4. AI & SERVICES TAB -->
+            <!-- ======================================================== -->
+            <section id="tab-services" class="tab-pane">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">AI &amp; External Services</h2>
+                        <p class="section-subtitle">Real-time status, connection diagnostics, and health testing tools.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="refreshServicesBtn" class="btn btn-outline">
+                            <i class="bi bi-arrow-clockwise"></i> Re-check Status
+                        </button>
+                    </div>
+                </div>
+
+                <div class="services-grid">
+                    <!-- Voice AI Whisper Card -->
+                    <div class="service-card" id="svcCardVoice">
+                        <div class="service-card-header">
+                            <div class="service-brand">
+                                <i class="bi bi-mic-fill service-icon text-primary"></i>
+                                <div>
+                                    <h3 class="service-title">Voice AI (Whisper)</h3>
+                                    <span class="service-provider">Hugging Face Serverless Router</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-operational" id="svcBadgeVoice">Operational</span>
+                        </div>
+                        <div class="service-body">
+                            <div class="service-field">
+                                <span class="field-label">Model Engine:</span>
+                                <span class="field-val"><code>openai/whisper-large-v3-turbo</code></span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Supported Locales:</span>
+                                <span class="field-val">Auto, English, Filipino / Taglish</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Connection Latency:</span>
+                                <span class="field-val" id="svcLatencyVoice">Checking...</span>
+                            </div>
+                        </div>
+                        <div class="service-footer">
+                            <button id="testAiBtn" class="btn btn-sm btn-primary w-100">
+                                <i class="bi bi-lightning-charge-fill"></i> Test Voice AI Connection
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Email Delivery Service Brevo Card -->
+                    <div class="service-card" id="svcCardEmail">
+                        <div class="service-card-header">
+                            <div class="service-brand">
+                                <i class="bi bi-envelope-fill service-icon text-info"></i>
+                                <div>
+                                    <h3 class="service-title">Email OTP &amp; Delivery</h3>
+                                    <span class="service-provider">Brevo (Sendinblue) REST API v3</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-operational" id="svcBadgeEmail">Operational</span>
+                        </div>
+                        <div class="service-body">
+                            <div class="service-field">
+                                <span class="field-label">Sender Email:</span>
+                                <span class="field-val" id="svcSenderEmail">—</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Sender Name:</span>
+                                <span class="field-val" id="svcSenderName">—</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Notifications:</span>
+                                <span class="field-val" id="svcEmailEnabled">—</span>
+                            </div>
+                        </div>
+                        <div class="service-footer">
+                            <button id="openTestEmailModalBtn" class="btn btn-sm btn-outline w-100">
+                                <i class="bi bi-send-fill"></i> Send Diagnostic Test Email
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Database Health Card -->
+                    <div class="service-card" id="svcCardDb">
+                        <div class="service-card-header">
+                            <div class="service-brand">
+                                <i class="bi bi-database-fill-check service-icon text-success"></i>
+                                <div>
+                                    <h3 class="service-title">Database Engine</h3>
+                                    <span class="service-provider" id="svcDbEngine">PostgreSQL / SQLite</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-operational" id="svcBadgeDb">Connected</span>
+                        </div>
+                        <div class="service-body">
+                            <div class="service-field">
+                                <span class="field-label">Query Ping:</span>
+                                <span class="field-val" id="svcDbLatency">— ms</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Total Users:</span>
+                                <span class="field-val" id="svcDbUsers">—</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Total Entries:</span>
+                                <span class="field-val" id="svcDbEntries">—</span>
+                            </div>
+                        </div>
+                        <div class="service-footer">
+                            <span class="muted small"><i class="bi bi-shield-lock-fill"></i> SSL encrypted connection</span>
+                        </div>
+                    </div>
+
+                    <!-- NLP Emotion & Sentiment Model Card -->
+                    <div class="service-card">
+                        <div class="service-card-header">
+                            <div class="service-brand">
+                                <i class="bi bi-cpu-fill service-icon text-warning"></i>
+                                <div>
+                                    <h3 class="service-title">Emotion &amp; Sentiment NLP</h3>
+                                    <span class="service-provider">Transformer Pipeline Inference</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-operational">Ready</span>
+                        </div>
+                        <div class="service-body">
+                            <div class="service-field">
+                                <span class="field-label">Classification:</span>
+                                <span class="field-val">RoBERTa &amp; DistilRoBERTa Ensemble</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Emotion Classes:</span>
+                                <span class="field-val">Happy, Sad, Anxious, Angry, Neutral</span>
+                            </div>
+                            <div class="service-field">
+                                <span class="field-label">Execution:</span>
+                                <span class="field-val">Local PyTorch / Inference Pipeline</span>
+                            </div>
+                        </div>
+                        <div class="service-footer">
+                            <span class="muted small"><i class="bi bi-check-circle-fill text-success"></i> Real-time inference active</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- 5. SYSTEM SETTINGS TAB -->
+            <!-- ======================================================== -->
+            <section id="tab-settings" class="tab-pane">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">System Settings</h2>
+                        <p class="section-subtitle">Configure API credentials, email delivery parameters, and application preferences.</p>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Email Service Configuration Card -->
+                    <div class="card settings-card">
+                        <div class="card-header-flex">
+                            <div class="card-header-icon-title">
+                                <i class="bi bi-envelope-at-fill text-primary fs-5"></i>
+                                <h3 class="card-title">Email Service (Brevo)</h3>
+                            </div>
+                        </div>
+                        <p class="muted">Used for password resets, 2FA recovery, and account email verification.</p>
+
+                        <div class="form-group">
+                            <label for="brevoApiKey">Brevo API Key</label>
+                            <div class="input-password-wrap">
+                                <input id="brevoApiKey" type="password" class="form-control" placeholder="Enter new API key to update">
+                                <button type="button" class="password-toggle-btn" data-target="brevoApiKey" aria-label="Toggle password visibility">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <p class="field-hint" id="apiKeyHint">No API key configured.</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group">
+                                <label for="senderEmail">Sender Email</label>
+                                <input id="senderEmail" type="email" class="form-control" placeholder="no-reply@yourdomain.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="senderName">Sender Name</label>
+                                <input id="senderName" type="text" class="form-control" placeholder="DiariCore">
+                            </div>
+                        </div>
+
+                        <label class="checkline">
+                            <input id="enableEmailNotifications" type="checkbox">
+                            <span>Enable Email Notifications (OTP &amp; Security Alerts)</span>
+                        </label>
+                    </div>
+
+                    <!-- Voice AI Configuration Card -->
+                    <div class="card settings-card">
+                        <div class="card-header-flex">
+                            <div class="card-header-icon-title">
+                                <i class="bi bi-mic-fill text-primary fs-5"></i>
+                                <h3 class="card-title">Voice AI Speech Recognition (Whisper)</h3>
+                            </div>
+                        </div>
+                        <p class="muted">Powers ultra-fast serverless voice transcription (Whisper Large V3 Turbo).</p>
+
+                        <div class="form-group">
+                            <label for="hfApiToken">Hugging Face API Token</label>
+                            <div class="input-password-wrap">
+                                <input id="hfApiToken" type="password" class="form-control" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                                <button type="button" class="password-toggle-btn" data-target="hfApiToken" aria-label="Toggle token visibility">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <p class="field-hint" id="hfTokenHint">No Hugging Face token configured.</p>
+                        </div>
+                    </div>
+
+                    <!-- General Application Settings Card -->
+                    <div class="card settings-card">
+                        <div class="card-header-flex">
+                            <div class="card-header-icon-title">
+                                <i class="bi bi-toggles text-primary fs-5"></i>
+                                <h3 class="card-title">General Application Options</h3>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="appNameInput">Application Name</label>
+                            <input id="appNameInput" type="text" class="form-control" placeholder="DiariCore">
+                        </div>
+
+                        <div class="toggles-list">
+                            <label class="checkline">
+                                <input id="allowRegistrationCheck" type="checkbox">
+                                <span>Allow New User Registrations</span>
+                            </label>
+                            <label class="checkline">
+                                <input id="maintenanceModeCheck" type="checkbox">
+                                <span>Enable Maintenance Mode (Restricts access to admins only)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button id="saveSettingsBtn" class="btn btn-primary btn-lg">
+                        <i class="bi bi-floppy-fill me-1"></i> Save Settings
+                    </button>
+                </div>
+            </section>
+
+            <!-- ======================================================== -->
+            <!-- 6. AUDIT LOGS TAB -->
+            <!-- ======================================================== -->
+            <section id="tab-audit" class="tab-pane">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Audit Logs</h2>
+                        <p class="section-subtitle">Chronological record of administrative operations, security events, and configuration updates.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="refreshAuditBtn" class="btn btn-outline">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Logs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Action</th>
+                                    <th>Admin Email</th>
+                                    <th>Details</th>
+                                    <th>IP Address</th>
+                                    <th>Timestamp (UTC)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsTbody">
+                                <tr><td colspan="6" class="text-center muted py-4">Loading audit logs...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
         </main>
     </div>
 
-    <script src="diari-security.js"></script>    <script src="diari-offline.js"></script>
+    <!-- ============================================================ -->
+    <!-- MODALS -->
+    <!-- ============================================================ -->
+
+    <!-- User Details Modal (Privacy Safe) -->
+    <div class="modal" id="userDetailsModal" hidden role="dialog" aria-modal="true" aria-labelledby="userDetailsModalTitle">
+        <div class="modal-backdrop" data-dismiss-modal="userDetailsModal"></div>
+        <div class="modal-panel modal-panel-md">
+            <header class="modal-header">
+                <div class="modal-title-wrap">
+                    <i class="bi bi-person-badge-fill text-primary fs-5"></i>
+                    <h3 id="userDetailsModalTitle" class="modal-title">User Account Details</h3>
+                </div>
+                <button type="button" class="modal-close-btn" data-dismiss-modal="userDetailsModal" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </header>
+            <div class="modal-body" id="userDetailsModalBody">
+                <div class="text-center py-4"><span class="spinner"></span> Loading user details...</div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-outline" data-dismiss-modal="userDetailsModal">Close</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteUserModal" hidden role="dialog" aria-modal="true" aria-labelledby="deleteUserModalTitle">
+        <div class="modal-backdrop" data-dismiss-modal="deleteUserModal"></div>
+        <div class="modal-panel modal-panel-sm">
+            <header class="modal-header">
+                <div class="modal-title-wrap">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-5"></i>
+                    <h3 id="deleteUserModalTitle" class="modal-title text-danger">Delete User Account</h3>
+                </div>
+                <button type="button" class="modal-close-btn" data-dismiss-modal="deleteUserModal" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </header>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete user <strong id="deleteUserNickname">—</strong> (<span id="deleteUserEmail">—</span>)?</p>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-octagon-fill me-1"></i>
+                    <strong>Warning:</strong> All journal entries, tags, and account preferences for this user will be permanently erased. This action cannot be undone.
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-outline" data-dismiss-modal="deleteUserModal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">
+                    <i class="bi bi-trash3-fill me-1"></i> Delete Account
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Test Email Modal -->
+    <div class="modal" id="testEmailModal" hidden role="dialog" aria-modal="true" aria-labelledby="testEmailModalTitle">
+        <div class="modal-backdrop" data-dismiss-modal="testEmailModal"></div>
+        <div class="modal-panel modal-panel-sm">
+            <header class="modal-header">
+                <div class="modal-title-wrap">
+                    <i class="bi bi-send-fill text-primary fs-5"></i>
+                    <h3 id="testEmailModalTitle" class="modal-title">Send Test Email</h3>
+                </div>
+                <button type="button" class="modal-close-btn" data-dismiss-modal="testEmailModal" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </header>
+            <div class="modal-body">
+                <p class="muted">Sends a diagnostic health-check email via your configured Brevo account.</p>
+                <div class="form-group">
+                    <label for="testEmailRecipient">Recipient Email</label>
+                    <input id="testEmailRecipient" type="email" class="form-control" placeholder="your-email@domain.com">
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-outline" data-dismiss-modal="testEmailModal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="sendTestEmailSubmitBtn">
+                    <i class="bi bi-send me-1"></i> Send Test Email
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="diari-security.js"></script>
+    <script src="diari-offline.js"></script>
     <script src="diari-shell.js"></script>
     <script src="admin.js"></script>
 </body>

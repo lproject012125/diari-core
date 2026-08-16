@@ -17,11 +17,11 @@ SQLITE_PATH = os.environ.get("DATABASE_PATH", "diaricore.db")
 # Columns for auth-related user reads (includes TOTP secrets — never expose to client except via app serializers).
 _USER_AUTH_SELECT = (
     "id, nickname, email, password_hash, first_name, last_name, gender, birthday, created_at, avatar_data_url, "
-    "totp_secret, totp_enabled, totp_setup_secret, totp_setup_expires, ui_preferences_json"
+    "totp_secret, totp_enabled, totp_setup_secret, totp_setup_expires, ui_preferences_json, is_disabled, last_login"
 )
 _USER_PUBLIC_SELECT = (
     "id, nickname, email, first_name, last_name, gender, birthday, created_at, avatar_data_url, totp_enabled, "
-    "ui_preferences_json"
+    "ui_preferences_json, is_disabled, last_login"
 )
 
 
@@ -284,6 +284,52 @@ def _ensure_user_profile_email_change_challenges_table(cur):
         )
 
 
+def _ensure_user_status_columns(cur):
+    """Account status (active vs disabled) and last login tracking."""
+    if USE_POSTGRES:
+        cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT FALSE")
+        cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP")
+    else:
+        cur.execute("PRAGMA table_info(users)")
+        cols = {str(r[1]).lower() for r in (cur.fetchall() or [])}
+        if "is_disabled" not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN is_disabled INTEGER NOT NULL DEFAULT 0")
+        if "last_login" not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN last_login TEXT")
+
+
+def _ensure_admin_audit_logs_table(cur):
+    """Audit log records for administrative activities."""
+    if USE_POSTGRES:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS admin_audit_logs (
+                id SERIAL PRIMARY KEY,
+                admin_email VARCHAR(255) NOT NULL,
+                action VARCHAR(64) NOT NULL,
+                details_json TEXT,
+                ip_address VARCHAR(64),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_created ON admin_audit_logs(created_at DESC);")
+    else:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS admin_audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                admin_email TEXT NOT NULL,
+                action TEXT NOT NULL,
+                details_json TEXT,
+                ip_address TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_created ON admin_audit_logs(created_at DESC);")
+
+
 def _ensure_push_subscriptions_table(cur):
     if USE_POSTGRES:
         cur.execute(
@@ -519,6 +565,8 @@ def init_db():
         _ensure_login_totp_recovery_otps_table(cur)
         _ensure_user_password_change_challenges_table(cur)
         _ensure_user_profile_email_change_challenges_table(cur)
+        _ensure_user_status_columns(cur)
+        _ensure_admin_audit_logs_table(cur)
         _ensure_push_subscriptions_table(cur)
         if USE_POSTGRES:
             cur.execute(
@@ -1604,6 +1652,8 @@ def verify_login(identifier: str, password: str):
         return False, "Invalid username or password."
     if not check_password_hash(user["password_hash"], password):
         return False, "Invalid username or password."
+    if user.get("is_disabled") in (True, 1, "true", "1"):
+        return False, "Your account has been deactivated by an administrator."
     out = {k: v for k, v in user.items() if k != "password_hash"}
     return True, out
 
@@ -2651,3 +2701,655 @@ def get_tag_trigger_summary(user_id: int, min_entries_per_bucket: int = 3):
         "happinessTaggedEntries": happy_entries_with_tags,
         "minRequiredEntries": min_entries,
     }
+
+
+# ============================================================================
+# Admin Suite Database Helpers
+# ============================================================================
+
+def record_user_login(user_id: int):
+    """Update last_login timestamp for user."""
+    if not user_id or int(user_id) <= 0:
+        return
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        if USE_POSTGRES:
+            cur.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = %s", (int(user_id),))
+        else:
+            cur.execute("UPDATE users SET last_login = datetime('now') WHERE id = ?", (int(user_id),))
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def set_user_disabled_status(user_id: int, is_disabled: bool) -> bool:
+    """Enable or disable user account from admin panel."""
+    if not user_id or int(user_id) <= 0:
+        return False
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        val = bool(is_disabled)
+        if USE_POSTGRES:
+            cur.execute("UPDATE users SET is_disabled = %s WHERE id = %s", (val, int(user_id)))
+        else:
+            cur.execute("UPDATE users SET is_disabled = ? WHERE id = ?", (1 if val else 0, int(user_id)))
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def delete_user_account_admin(user_id: int) -> bool:
+    """Permanently delete user account and associated journal records."""
+    if not user_id or int(user_id) <= 0:
+        return False
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        uid = int(user_id)
+        if USE_POSTGRES:
+            cur.execute("DELETE FROM journal_entries WHERE user_id = %s", (uid,))
+            cur.execute("DELETE FROM user_tags WHERE user_id = %s", (uid,))
+            cur.execute("DELETE FROM push_subscriptions WHERE user_id = %s", (uid,))
+            cur.execute("DELETE FROM users WHERE id = %s", (uid,))
+        else:
+            cur.execute("DELETE FROM journal_entries WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM user_tags WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM push_subscriptions WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM users WHERE id = ?", (uid,))
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def log_admin_action(admin_email: str, action: str, details: dict = None, ip_address: str = None):
+    """Record administrative audit log."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        d_json = json.dumps(details or {})
+        email_clean = str(admin_email or "admin")[:255]
+        action_clean = str(action or "ACTION")[:64]
+        ip_clean = str(ip_address or "")[:64]
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                INSERT INTO admin_audit_logs (admin_email, action, details_json, ip_address, created_at)
+                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                """,
+                (email_clean, action_clean, d_json, ip_clean),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO admin_audit_logs (admin_email, action, details_json, ip_address, created_at)
+                VALUES (?, ?, ?, ?, datetime('now'))
+                """,
+                (email_clean, action_clean, d_json, ip_clean),
+            )
+        conn.commit()
+    except Exception:
+        pass
+    finally:
+        conn.close()
+
+
+def get_admin_audit_logs(limit: int = 50):
+    """Retrieve recent administrative audit logs."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        lim = max(1, min(int(limit or 50), 200))
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT id, admin_email, action, details_json, ip_address, created_at
+                FROM admin_audit_logs
+                ORDER BY created_at DESC, id DESC
+                LIMIT %s
+                """,
+                (lim,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT id, admin_email, action, details_json, ip_address, created_at
+                FROM admin_audit_logs
+                ORDER BY datetime(created_at) DESC, id DESC
+                LIMIT ?
+                """,
+                (lim,),
+            )
+        rows = [row_to_dict(r) for r in cur.fetchall()]
+        out = []
+        for r in rows:
+            details = {}
+            if r.get("details_json"):
+                try:
+                    details = json.loads(r["details_json"])
+                except Exception:
+                    details = {}
+            out.append({
+                "id": r["id"],
+                "adminEmail": r["admin_email"],
+                "action": r["action"],
+                "details": details,
+                "ipAddress": r.get("ip_address") or "—",
+                "createdAt": str(r["created_at"] or ""),
+            })
+        return out
+    finally:
+        conn.close()
+
+
+def get_admin_dashboard_stats():
+    """Retrieve key metrics, 30-day timeline, and emotion breakdown for admin dashboard."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        # Total users
+        cur.execute("SELECT COUNT(*) FROM users")
+        total_users = cur.fetchone()[0] or 0
+
+        # Active users in last 30 days
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT id) FROM users
+                WHERE last_login >= NOW() - INTERVAL '30 days'
+                   OR id IN (SELECT DISTINCT user_id FROM journal_entries WHERE created_at >= NOW() - INTERVAL '30 days')
+                """
+            )
+        else:
+            cur.execute(
+                """
+                SELECT COUNT(DISTINCT id) FROM users
+                WHERE last_login >= datetime('now', '-30 days')
+                   OR id IN (SELECT DISTINCT user_id FROM journal_entries WHERE created_at >= datetime('now', '-30 days'))
+                """
+            )
+        active_users = cur.fetchone()[0] or 0
+
+        # Total entries
+        cur.execute("SELECT COUNT(*) FROM journal_entries")
+        total_entries = cur.fetchone()[0] or 0
+
+        # Total AI analyses
+        cur.execute("SELECT COUNT(*) FROM journal_entries WHERE emotion_label IS NOT NULL AND emotion_label != ''")
+        total_ai_analyses = cur.fetchone()[0] or 0
+
+        # Emotion distribution
+        cur.execute(
+            """
+            SELECT LOWER(TRIM(emotion_label)) as emo, COUNT(*) as cnt
+            FROM journal_entries
+            WHERE emotion_label IS NOT NULL AND emotion_label != ''
+            GROUP BY LOWER(TRIM(emotion_label))
+            """
+        )
+        emo_rows = cur.fetchall()
+        emo_counts = {"happy": 0, "sad": 0, "anxious": 0, "angry": 0, "neutral": 0}
+        for r in emo_rows:
+            k = str(r[0] or "").lower()
+            cnt = int(r[1] or 0)
+            if k in emo_counts:
+                emo_counts[k] += cnt
+            elif "anx" in k or "fear" in k:
+                emo_counts["anxious"] += cnt
+            elif "joy" in k or "hap" in k or "love" in k:
+                emo_counts["happy"] += cnt
+            elif "sad" in k:
+                emo_counts["sad"] += cnt
+            elif "ang" in k:
+                emo_counts["angry"] += cnt
+            else:
+                emo_counts["neutral"] += cnt
+
+        # 30-day activity timeline
+        timeline = []
+        today = datetime.now(timezone.utc).date()
+        for i in range(29, -1, -1):
+            d = today - timedelta(days=i)
+            d_str = d.strftime("%Y-%m-%d")
+            timeline.append({"date": d_str, "entries": 0, "signups": 0})
+        date_map = {item["date"]: item for item in timeline}
+
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as day, COUNT(*)
+                FROM journal_entries
+                WHERE created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY day
+                """
+            )
+        else:
+            cur.execute(
+                """
+                SELECT SUBSTR(created_at, 1, 10) as day, COUNT(*)
+                FROM journal_entries
+                WHERE created_at >= datetime('now', '-30 days')
+                GROUP BY day
+                """
+            )
+        for r in cur.fetchall():
+            day_key = str(r[0] or "")
+            if day_key in date_map:
+                date_map[day_key]["entries"] = int(r[1] or 0)
+
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as day, COUNT(*)
+                FROM users
+                WHERE created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY day
+                """
+            )
+        else:
+            cur.execute(
+                """
+                SELECT SUBSTR(created_at, 1, 10) as day, COUNT(*)
+                FROM users
+                WHERE created_at >= datetime('now', '-30 days')
+                GROUP BY day
+                """
+            )
+        for r in cur.fetchall():
+            day_key = str(r[0] or "")
+            if day_key in date_map:
+                date_map[day_key]["signups"] = int(r[1] or 0)
+
+        # Recent activities (privacy-safe: user nickname, emotion, sentiment, date, words)
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT j.id, j.user_id, u.nickname, u.email, j.emotion_label, j.sentiment_label,
+                       j.created_at, LENGTH(j.text_content) - LENGTH(REPLACE(j.text_content, ' ', '')) + 1 as word_est
+                FROM journal_entries j
+                JOIN users u ON u.id = j.user_id
+                ORDER BY j.created_at DESC
+                LIMIT 6
+                """
+            )
+        else:
+            cur.execute(
+                """
+                SELECT j.id, j.user_id, u.nickname, u.email, j.emotion_label, j.sentiment_label,
+                       j.created_at, LENGTH(j.text_content) - LENGTH(REPLACE(j.text_content, ' ', '')) + 1 as word_est
+                FROM journal_entries j
+                JOIN users u ON u.id = j.user_id
+                ORDER BY datetime(j.created_at) DESC
+                LIMIT 6
+                """
+            )
+        recent = []
+        for r in cur.fetchall():
+            recent.append({
+                "entryId": r[0],
+                "userId": r[1],
+                "nickname": r[2],
+                "maskedEmail": f"{r[3][:2]}***@{r[3].split('@')[-1]}" if "@" in str(r[3] or "") else "***",
+                "emotion": str(r[4] or "neutral").lower(),
+                "sentiment": str(r[5] or "neutral").lower(),
+                "createdAt": str(r[6] or ""),
+                "words": max(1, int(r[7] or 1)),
+            })
+
+        return {
+            "totalUsers": total_users,
+            "activeUsers": active_users,
+            "totalEntries": total_entries,
+            "totalAiAnalyses": total_ai_analyses,
+            "emotionDistribution": emo_counts,
+            "activityTimeline": timeline,
+            "recentActivity": recent,
+        }
+    finally:
+        conn.close()
+
+
+def list_admin_users(search: str = "", status_filter: str = "", page: int = 1, per_page: int = 20):
+    """Retrieve paginated user list with entry counts, 2FA, and disabled status for admin management."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        search_clean = (search or "").strip().lower()
+        search_term = f"%{search_clean}%"
+        status_filter = (status_filter or "").strip().lower()
+        page = max(1, int(page or 1))
+        per_page = max(5, min(int(per_page or 20), 100))
+        offset = (page - 1) * per_page
+
+        where_clauses = []
+        params = []
+        if search_clean:
+            if USE_POSTGRES:
+                where_clauses.append("(LOWER(u.nickname) LIKE %s OR LOWER(u.email) LIKE %s OR LOWER(COALESCE(u.first_name,'')) LIKE %s OR LOWER(COALESCE(u.last_name,'')) LIKE %s)")
+                params.extend([search_term, search_term, search_term, search_term])
+            else:
+                where_clauses.append("(LOWER(u.nickname) LIKE ? OR LOWER(u.email) LIKE ? OR LOWER(COALESCE(u.first_name,'')) LIKE ? OR LOWER(COALESCE(u.last_name,'')) LIKE ?)")
+                params.extend([search_term, search_term, search_term, search_term])
+
+        if status_filter == "active":
+            where_clauses.append("(u.is_disabled IS NULL OR u.is_disabled = FALSE OR u.is_disabled = 0)")
+        elif status_filter == "disabled":
+            where_clauses.append("(u.is_disabled = TRUE OR u.is_disabled = 1)")
+        elif status_filter == "2fa":
+            where_clauses.append("(u.totp_enabled = TRUE OR u.totp_enabled = 1)")
+
+        where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+        # Total counts
+        cur.execute(f"SELECT COUNT(*) FROM users u {where_sql}", tuple(params))
+        total_filtered = cur.fetchone()[0] or 0
+
+        # Summary counts
+        cur.execute("SELECT COUNT(*) FROM users")
+        total_all = cur.fetchone()[0] or 0
+        cur.execute("SELECT COUNT(*) FROM users WHERE is_disabled = TRUE OR is_disabled = 1")
+        total_disabled = cur.fetchone()[0] or 0
+        cur.execute("SELECT COUNT(*) FROM users WHERE totp_enabled = TRUE OR totp_enabled = 1")
+        total_2fa = cur.fetchone()[0] or 0
+        total_active = max(0, total_all - total_disabled)
+
+        # Query page records
+        query_sql = f"""
+            SELECT u.id, u.nickname, u.email, u.first_name, u.last_name, u.gender, u.birthday,
+                   u.created_at, u.last_login, u.is_disabled, u.totp_enabled, u.avatar_data_url,
+                   (SELECT COUNT(*) FROM journal_entries j WHERE j.user_id = u.id) as entry_count
+            FROM users u
+            {where_sql}
+            ORDER BY u.created_at DESC, u.id DESC
+            LIMIT {'%s' if USE_POSTGRES else '?'} OFFSET {'%s' if USE_POSTGRES else '?'}
+        """
+        page_params = list(params) + [per_page, offset]
+        cur.execute(query_sql, tuple(page_params))
+
+        users = []
+        for r in cur.fetchall():
+            row_dict = row_to_dict(r)
+            full_name = f"{row_dict.get('first_name') or ''} {row_dict.get('last_name') or ''}".strip()
+            users.append({
+                "id": row_dict["id"],
+                "nickname": row_dict["nickname"],
+                "email": row_dict["email"],
+                "fullName": full_name or row_dict["nickname"],
+                "gender": row_dict.get("gender") or "Not specified",
+                "birthday": str(row_dict.get("birthday") or "—"),
+                "createdAt": str(row_dict.get("created_at") or ""),
+                "lastLogin": str(row_dict.get("last_login") or "Never"),
+                "isDisabled": bool(row_dict.get("is_disabled") in (True, 1, "true", "1")),
+                "totpEnabled": bool(row_dict.get("totp_enabled") in (True, 1, "true", "1")),
+                "entryCount": int(row_dict.get("entry_count") or 0),
+                "avatarDataUrl": row_dict.get("avatar_data_url") or None,
+            })
+
+        return {
+            "records": users,
+            "total": total_filtered,
+            "page": page,
+            "perPage": per_page,
+            "totalPages": max(1, (total_filtered + per_page - 1) // per_page),
+            "counts": {
+                "total": total_all,
+                "active": total_active,
+                "disabled": total_disabled,
+                "twoFactor": total_2fa,
+            }
+        }
+    finally:
+        conn.close()
+
+
+def get_admin_user_details(user_id: int):
+    """Retrieve privacy-safe user metadata and aggregated emotion statistics."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        user = get_user_by_id(user_id)
+        if not user:
+            return None
+
+        uid = int(user_id)
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT COUNT(*) as count,
+                       MIN(created_at) as first_entry,
+                       MAX(created_at) as last_entry,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'happy' THEN 1 END) as happy_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'sad' THEN 1 END) as sad_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'anxious' THEN 1 END) as anxious_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'angry' THEN 1 END) as angry_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'neutral' THEN 1 END) as neutral_cnt
+                FROM journal_entries
+                WHERE user_id = %s
+                """,
+                (uid,),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT COUNT(*) as count,
+                       MIN(created_at) as first_entry,
+                       MAX(created_at) as last_entry,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'happy' THEN 1 END) as happy_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'sad' THEN 1 END) as sad_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'anxious' THEN 1 END) as anxious_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'angry' THEN 1 END) as angry_cnt,
+                       COUNT(CASE WHEN LOWER(emotion_label) = 'neutral' THEN 1 END) as neutral_cnt
+                FROM journal_entries
+                WHERE user_id = ?
+                """,
+                (uid,),
+            )
+        st = cur.fetchone()
+        stats = {
+            "totalEntries": int(st[0] or 0),
+            "firstEntryDate": str(st[1] or "—"),
+            "lastEntryDate": str(st[2] or "—"),
+            "emotions": {
+                "happy": int(st[3] or 0),
+                "sad": int(st[4] or 0),
+                "anxious": int(st[5] or 0),
+                "angry": int(st[6] or 0),
+                "neutral": int(st[7] or 0),
+            }
+        }
+
+        full_name = f"{user.get('first_name') or ''} {user.get('last_name') or ''}".strip()
+        return {
+            "id": user["id"],
+            "nickname": user["nickname"],
+            "email": user["email"],
+            "fullName": full_name or user["nickname"],
+            "firstName": user.get("first_name") or "",
+            "lastName": user.get("last_name") or "",
+            "gender": user.get("gender") or "Not specified",
+            "birthday": str(user.get("birthday") or "—"),
+            "createdAt": str(user.get("created_at") or ""),
+            "lastLogin": str(user.get("last_login") or "Never"),
+            "privacyAgreedAt": str(user.get("privacy_agreed_at") or "—"),
+            "isDisabled": bool(user.get("is_disabled") in (True, 1, "true", "1")),
+            "totpEnabled": bool(user.get("totp_enabled") in (True, 1, "true", "1")),
+            "avatarDataUrl": user.get("avatar_data_url") or None,
+            "journalStats": stats,
+        }
+    finally:
+        conn.close()
+
+
+def get_admin_analytics_data(days: int = 30):
+    """Retrieve detailed analytics timelines, emotion trends, and sentiment distribution."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        days = max(7, min(int(days or 30), 365)) if days != 0 else 365
+
+        today = datetime.now(timezone.utc).date()
+        buckets = []
+        for i in range(days - 1, -1, -1):
+            d = today - timedelta(days=i)
+            d_str = d.strftime("%Y-%m-%d")
+            buckets.append({
+                "date": d_str,
+                "total": 0,
+                "happy": 0,
+                "sad": 0,
+                "anxious": 0,
+                "angry": 0,
+                "neutral": 0,
+            })
+        bucket_map = {b["date"]: b for b in buckets}
+
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as day,
+                       LOWER(TRIM(COALESCE(emotion_label, 'neutral'))) as emo,
+                       COUNT(*) as cnt
+                FROM journal_entries
+                WHERE created_at >= NOW() - (%s || ' days')::INTERVAL
+                GROUP BY day, emo
+                """,
+                (str(days),),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT SUBSTR(created_at, 1, 10) as day,
+                       LOWER(TRIM(COALESCE(emotion_label, 'neutral'))) as emo,
+                       COUNT(*) as cnt
+                FROM journal_entries
+                WHERE created_at >= datetime('now', '-' || ? || ' days')
+                GROUP BY day, emo
+                """,
+                (str(days),),
+            )
+
+        for r in cur.fetchall():
+            day_str = str(r[0] or "")
+            emo = str(r[1] or "neutral").lower()
+            cnt = int(r[2] or 0)
+            if day_str in bucket_map:
+                bucket_map[day_str]["total"] += cnt
+                if emo in bucket_map[day_str]:
+                    bucket_map[day_str][emo] += cnt
+                elif "anx" in emo:
+                    bucket_map[day_str]["anxious"] += cnt
+                elif "hap" in emo or "joy" in emo:
+                    bucket_map[day_str]["happy"] += cnt
+                elif "sad" in emo:
+                    bucket_map[day_str]["sad"] += cnt
+                elif "ang" in emo:
+                    bucket_map[day_str]["angry"] += cnt
+                else:
+                    bucket_map[day_str]["neutral"] += cnt
+
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT LOWER(TRIM(COALESCE(sentiment_label, 'neutral'))), COUNT(*)
+                FROM journal_entries
+                WHERE created_at >= NOW() - (%s || ' days')::INTERVAL
+                GROUP BY 1
+                """,
+                (str(days),),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT LOWER(TRIM(COALESCE(sentiment_label, 'neutral'))), COUNT(*)
+                FROM journal_entries
+                WHERE created_at >= datetime('now', '-' || ? || ' days')
+                GROUP BY 1
+                """,
+                (str(days),),
+            )
+        sentiments = {"positive": 0, "neutral": 0, "negative": 0}
+        for r in cur.fetchall():
+            s = str(r[0] or "neutral").lower()
+            if s in sentiments:
+                sentiments[s] += int(r[1] or 0)
+            elif "pos" in s:
+                sentiments["positive"] += int(r[1] or 0)
+            elif "neg" in s:
+                sentiments["negative"] += int(r[1] or 0)
+            else:
+                sentiments["neutral"] += int(r[1] or 0)
+
+        # Day of week distribution (0=Sun, 1=Mon, ..., 6=Sat)
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                SELECT EXTRACT(DOW FROM created_at)::INTEGER as dow, COUNT(*)
+                FROM journal_entries
+                WHERE created_at >= NOW() - (%s || ' days')::INTERVAL
+                GROUP BY dow
+                ORDER BY dow
+                """,
+                (str(days),),
+            )
+        else:
+            cur.execute(
+                """
+                SELECT CAST(STRFTIME('%%w', created_at) AS INTEGER) as dow, COUNT(*)
+                FROM journal_entries
+                WHERE created_at >= datetime('now', '-' || ? || ' days')
+                GROUP BY dow
+                ORDER BY dow
+                """,
+                (str(days),),
+            )
+        dow_counts = [0] * 7
+        for r in cur.fetchall():
+            idx = int(r[0] or 0)
+            if 0 <= idx <= 6:
+                dow_counts[idx] = int(r[1] or 0)
+
+        return {
+            "timeline": buckets,
+            "sentiments": sentiments,
+            "dayOfWeek": dow_counts,
+            "totalEntriesInRange": sum(b["total"] for b in buckets),
+            "rangeDays": days,
+        }
+    finally:
+        conn.close()
+
+
+def get_database_health_info():
+    """Retrieve database engine health, latency, and row counts."""
+    import time
+    t0 = time.perf_counter()
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT 1")
+        cur.fetchone()
+        latency_ms = round((time.perf_counter() - t0) * 1000, 2)
+        cur.execute("SELECT COUNT(*) FROM users")
+        u_cnt = cur.fetchone()[0] or 0
+        cur.execute("SELECT COUNT(*) FROM journal_entries")
+        j_cnt = cur.fetchone()[0] or 0
+        return {
+            "engine": "PostgreSQL" if USE_POSTGRES else "SQLite",
+            "connected": True,
+            "latencyMs": latency_ms,
+            "totalUsers": u_cnt,
+            "totalEntries": j_cnt,
+        }
+    except Exception as e:
+        return {
+            "engine": "PostgreSQL" if USE_POSTGRES else "SQLite",
+            "connected": False,
+            "error": str(e),
+        }
+    finally:
+        conn.close()
