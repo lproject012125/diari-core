@@ -34,7 +34,11 @@ for p in _ASR_PROVIDERS:
 
 def get_hf_token() -> str:
     """Retrieve HF Token from environment or system_settings database table."""
-    token = os.environ.get("HF_API_TOKEN", "").strip() or os.environ.get("HF_TOKEN", "").strip()
+    token = (
+        os.environ.get("HF_API_TOKEN_FOR_VOICE", "").strip()
+        or os.environ.get("HF_API_TOKEN", "").strip()
+        or os.environ.get("HF_TOKEN", "").strip()
+    )
     if token:
         return token
     try:
