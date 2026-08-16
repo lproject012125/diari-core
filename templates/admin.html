@@ -84,10 +84,7 @@
                     <i class="bi bi-cpu-fill"></i>
                     <span>AI &amp; Services</span>
                 </button>
-                <button class="nav-item" data-tab="settings" role="tab" aria-selected="false">
-                    <i class="bi bi-sliders"></i>
-                    <span>System Settings</span>
-                </button>
+
                 <button class="nav-item" data-tab="audit" role="tab" aria-selected="false">
                     <i class="bi bi-shield-check"></i>
                     <span>Audit Logs</span>
@@ -617,111 +614,7 @@
                 </div>
             </section>
 
-            <!-- ======================================================== -->
-            <!-- 5. SYSTEM SETTINGS TAB -->
-            <!-- ======================================================== -->
-            <section id="tab-settings" class="tab-pane">
-                <div class="section-header">
-                    <div>
-                        <h2 class="section-title">System Settings</h2>
-                        <p class="section-subtitle">Configure API credentials, email delivery parameters, and application preferences.</p>
-                    </div>
-                </div>
 
-                <div class="settings-grid">
-                    <!-- Email Service Configuration Card -->
-                    <div class="card settings-card">
-                        <div class="card-header-flex">
-                            <div class="card-header-icon-title">
-                                <i class="bi bi-envelope-at-fill text-primary fs-5"></i>
-                                <h3 class="card-title">Email Service (Brevo)</h3>
-                            </div>
-                        </div>
-                        <p class="muted">Used for password resets, 2FA recovery, and account email verification.</p>
-
-                        <div class="form-group">
-                            <label for="brevoApiKey">Brevo API Key</label>
-                            <div class="input-password-wrap">
-                                <input id="brevoApiKey" type="password" class="form-control" placeholder="Enter new API key to update">
-                                <button type="button" class="password-toggle-btn" data-target="brevoApiKey" aria-label="Toggle password visibility">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                            <p class="field-hint" id="apiKeyHint">No API key configured.</p>
-                        </div>
-
-                        <div class="row">
-                            <div class="form-group">
-                                <label for="senderEmail">Sender Email</label>
-                                <input id="senderEmail" type="email" class="form-control" placeholder="no-reply@yourdomain.com">
-                            </div>
-                            <div class="form-group">
-                                <label for="senderName">Sender Name</label>
-                                <input id="senderName" type="text" class="form-control" placeholder="DiariCore">
-                            </div>
-                        </div>
-
-                        <label class="checkline">
-                            <input id="enableEmailNotifications" type="checkbox">
-                            <span>Enable Email Notifications (OTP &amp; Security Alerts)</span>
-                        </label>
-                    </div>
-
-                    <!-- Voice AI Configuration Card -->
-                    <div class="card settings-card">
-                        <div class="card-header-flex">
-                            <div class="card-header-icon-title">
-                                <i class="bi bi-mic-fill text-primary fs-5"></i>
-                                <h3 class="card-title">Voice AI Speech Recognition (Whisper)</h3>
-                            </div>
-                        </div>
-                        <p class="muted">Powers ultra-fast serverless voice transcription (Whisper Large V3 Turbo).</p>
-
-                        <div class="form-group">
-                            <label for="hfApiToken">Hugging Face API Token</label>
-                            <div class="input-password-wrap">
-                                <input id="hfApiToken" type="password" class="form-control" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-                                <button type="button" class="password-toggle-btn" data-target="hfApiToken" aria-label="Toggle token visibility">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                            <p class="field-hint" id="hfTokenHint">No Hugging Face token configured.</p>
-                        </div>
-                    </div>
-
-                    <!-- General Application Settings Card -->
-                    <div class="card settings-card">
-                        <div class="card-header-flex">
-                            <div class="card-header-icon-title">
-                                <i class="bi bi-toggles text-primary fs-5"></i>
-                                <h3 class="card-title">General Application Options</h3>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="appNameInput">Application Name</label>
-                            <input id="appNameInput" type="text" class="form-control" placeholder="DiariCore">
-                        </div>
-
-                        <div class="toggles-list">
-                            <label class="checkline">
-                                <input id="allowRegistrationCheck" type="checkbox">
-                                <span>Allow New User Registrations</span>
-                            </label>
-                            <label class="checkline">
-                                <input id="maintenanceModeCheck" type="checkbox">
-                                <span>Enable Maintenance Mode (Restricts access to admins only)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-actions">
-                    <button id="saveSettingsBtn" class="btn btn-primary btn-lg">
-                        <i class="bi bi-floppy-fill me-1"></i> Save Settings
-                    </button>
-                </div>
-            </section>
 
             <!-- ======================================================== -->
             <!-- 6. AUDIT LOGS TAB -->

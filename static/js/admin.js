@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // 2. Tab Navigation & Mobile Drawer (URL Hash & Session Sync)
     // =========================================================================
-    const VALID_TABS = ['dashboard', 'users', 'analytics', 'services', 'settings', 'audit'];
+    const VALID_TABS = ['dashboard', 'users', 'analytics', 'services', 'audit'];
 
     function switchTab(tabId, updateHash = true) {
         if (!VALID_TABS.includes(tabId)) {
@@ -126,9 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'services':
                 loadServices();
                 break;
-            case 'settings':
-                loadSettings();
-                break;
+
             case 'audit':
                 loadAuditLogs();
                 break;
@@ -1023,96 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
-    // =========================================================================
-    // 7. System Settings Controller
-    // =========================================================================
-    const brevoApiKey = document.getElementById('brevoApiKey');
-    const senderEmail = document.getElementById('senderEmail');
-    const senderName = document.getElementById('senderName');
-    const enableEmailNotifications = document.getElementById('enableEmailNotifications');
-    const hfApiToken = document.getElementById('hfApiToken');
-    const appNameInput = document.getElementById('appNameInput');
-    const allowRegistrationCheck = document.getElementById('allowRegistrationCheck');
-    const maintenanceModeCheck = document.getElementById('maintenanceModeCheck');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const apiKeyHint = document.getElementById('apiKeyHint');
-    const hfTokenHint = document.getElementById('hfTokenHint');
 
-    // Password visibility toggle buttons
-    document.querySelectorAll('.password-toggle-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const targetId = btn.dataset.target;
-            const input = document.getElementById(targetId);
-            if (!input) return;
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
-            btn.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-        });
-    });
-
-    function loadSettings() {
-        return fetch('/api/admin/settings')
-            .then((res) => res.json())
-            .then((data) => {
-                if (!data.success) {
-                    showToast('Unauthorized or unable to load settings.', 'error');
-                    return;
-                }
-                const s = data.settings || {};
-                if (senderEmail) senderEmail.value = s.senderEmail || '';
-                if (senderName) senderName.value = s.senderName || 'DiariCore';
-                if (enableEmailNotifications) enableEmailNotifications.checked = !!s.enableEmailNotifications;
-                if (appNameInput) appNameInput.value = s.appName || 'DiariCore';
-                if (allowRegistrationCheck) allowRegistrationCheck.checked = s.allowRegistration !== false;
-                if (maintenanceModeCheck) maintenanceModeCheck.checked = !!s.maintenanceMode;
-
-                if (apiKeyHint) {
-                    apiKeyHint.textContent = s.hasApiKey ? `Configured key: ${s.maskedApiKey}` : 'No API key configured.';
-                }
-                if (hfTokenHint) {
-                    hfTokenHint.textContent = s.hasHfToken ? `Configured token: ${s.maskedHfToken}` : 'No Hugging Face token configured.';
-                }
-            })
-            .catch(() => showToast('Error loading system settings.', 'error'));
-    }
-
-    saveSettingsBtn?.addEventListener('click', () => {
-        saveSettingsBtn.disabled = true;
-        saveSettingsBtn.innerHTML = '<i class="bi bi-floppy spin"></i> Saving...';
-
-        const payload = {
-            apiKey: brevoApiKey ? brevoApiKey.value.trim() : '',
-            hfToken: hfApiToken ? hfApiToken.value.trim() : '',
-            senderEmail: senderEmail ? senderEmail.value.trim() : '',
-            senderName: senderName ? senderName.value.trim() : '',
-            enableEmailNotifications: enableEmailNotifications?.checked || false,
-            appName: appNameInput ? appNameInput.value.trim() : 'DiariCore',
-            allowRegistration: allowRegistrationCheck?.checked || false,
-            maintenanceMode: maintenanceModeCheck?.checked || false,
-        };
-
-        fetch('/api/admin/settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-            body: JSON.stringify(payload),
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    showToast(data.message || 'Settings saved successfully!', 'success');
-                    if (brevoApiKey) brevoApiKey.value = '';
-                    if (hfApiToken) hfApiToken.value = '';
-                    loadSettings();
-                } else {
-                    showToast(data.error || 'Failed to save settings.', 'error');
-                }
-            })
-            .catch((err) => showToast(`Error: ${err.message}`, 'error'))
-            .finally(() => {
-                saveSettingsBtn.disabled = false;
-                saveSettingsBtn.innerHTML = '<i class="bi bi-floppy-fill me-1"></i> Save Settings';
-            });
-    });
 
     // =========================================================================
     // 8. Audit Logs Controller
