@@ -631,7 +631,24 @@ body {
 
 .stat-pill:hover, .stat-pill.active {
     border-color: var(--primary-color);
-    background: var(--primary-light);
+    background: var(--primary-color);
+    box-shadow: 0 4px 14px rgba(111, 143, 127, 0.3);
+}
+
+.stat-pill:hover .stat-pill-num,
+.stat-pill.active .stat-pill-num,
+.stat-pill:hover .stat-pill-num.text-success,
+.stat-pill.active .stat-pill-num.text-success,
+.stat-pill:hover .stat-pill-num.text-danger,
+.stat-pill.active .stat-pill-num.text-danger,
+.stat-pill:hover .stat-pill-num.text-primary,
+.stat-pill.active .stat-pill-num.text-primary {
+    color: #FFFFFF !important;
+}
+
+.stat-pill:hover .stat-pill-label,
+.stat-pill.active .stat-pill-label {
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .stat-pill-num {
@@ -760,12 +777,13 @@ body {
 }
 
 .range-btn:hover {
-    color: var(--text-dark);
+    background: var(--primary-light);
+    color: var(--primary-color);
 }
 
 .range-btn.active {
     background: var(--primary-color);
-    color: white;
+    color: #FFFFFF;
 }
 
 /* Services Cards Grid */
@@ -969,6 +987,7 @@ label {
 
 .btn-primary:hover {
     background: var(--primary-hover);
+    color: #FFFFFF;
 }
 
 .btn-outline {
@@ -978,9 +997,9 @@ label {
 }
 
 .btn-outline:hover {
-    background: var(--primary-light);
+    background: var(--primary-color);
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    color: #FFFFFF;
 }
 
 .btn-danger {
