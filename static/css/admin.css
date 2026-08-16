@@ -1432,9 +1432,77 @@ label {
         left: 0;
         top: 0;
         bottom: 0;
-        width: 270px;
+        height: 100%;
+        height: 100dvh;
+        height: 100svh;
+        max-height: 100svh;
+        width: min(275px, 80vw);
         transform: translateX(-100%);
         transition: transform var(--transition-norm);
+        padding: 1.1rem 0.95rem max(0.9rem, env(safe-area-inset-bottom, 0.9rem));
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        box-sizing: border-box;
+    }
+
+    .admin-sidebar-header {
+        margin-bottom: 0.85rem;
+        padding-bottom: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .admin-nav {
+        gap: 0.25rem;
+        flex: 1 1 auto;
+        overflow-y: auto;
+    }
+
+    .nav-item {
+        padding: 0.58rem 0.8rem;
+        font-size: 0.88rem;
+        gap: 0.7rem;
+    }
+
+    .nav-item i {
+        font-size: 1.05rem;
+    }
+
+    .admin-sidebar-footer {
+        margin-top: auto;
+        padding-top: 0.65rem;
+        gap: 0.45rem;
+        flex-shrink: 0;
+    }
+
+    .sidebar-profile-card {
+        padding: 0.15rem 0 0.35rem;
+    }
+
+    .sidebar-profile-card .user-avatar,
+    .sidebar-profile-card .avatar-img,
+    .sidebar-profile-card .avatar-initials {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        font-size: 0.95rem;
+    }
+
+    .sidebar-profile-card .user-name {
+        font-size: 13px;
+    }
+
+    .sidebar-profile-card .user-email {
+        font-size: 11px;
+    }
+
+    .sidebar-action-btn,
+    .logout-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.82rem;
+        gap: 0.55rem;
     }
 
     .admin-sidebar.open {
