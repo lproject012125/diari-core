@@ -632,23 +632,14 @@ body {
 .stat-pill:hover, .stat-pill.active {
     border-color: var(--primary-color);
     background: var(--primary-color);
-    box-shadow: 0 4px 14px rgba(111, 143, 127, 0.3);
+    color: #FFFFFF;
 }
 
 .stat-pill:hover .stat-pill-num,
-.stat-pill.active .stat-pill-num,
-.stat-pill:hover .stat-pill-num.text-success,
-.stat-pill.active .stat-pill-num.text-success,
-.stat-pill:hover .stat-pill-num.text-danger,
-.stat-pill.active .stat-pill-num.text-danger,
-.stat-pill:hover .stat-pill-num.text-primary,
-.stat-pill.active .stat-pill-num.text-primary {
-    color: #FFFFFF !important;
-}
-
 .stat-pill:hover .stat-pill-label,
+.stat-pill.active .stat-pill-num,
 .stat-pill.active .stat-pill-label {
-    color: rgba(255, 255, 255, 0.85);
+    color: #FFFFFF !important;
 }
 
 .stat-pill-num {
@@ -783,7 +774,7 @@ body {
 
 .range-btn.active {
     background: var(--primary-color);
-    color: #FFFFFF;
+    color: white;
 }
 
 /* Services Cards Grid */
@@ -987,7 +978,6 @@ label {
 
 .btn-primary:hover {
     background: var(--primary-hover);
-    color: #FFFFFF;
 }
 
 .btn-outline {
@@ -1009,6 +999,25 @@ label {
 
 .btn-danger:hover {
     background: #DC2626;
+}
+
+/* Colored outline icon buttons — keep semantic hue on hover but with solid bg */
+.btn-outline.text-danger:hover {
+    background: #EF4444;
+    border-color: #EF4444;
+    color: #FFFFFF !important;
+}
+
+.btn-outline.text-warning:hover {
+    background: #F59E0B;
+    border-color: #F59E0B;
+    color: #FFFFFF !important;
+}
+
+.btn-outline.text-success:hover {
+    background: #10B981;
+    border-color: #10B981;
+    color: #FFFFFF !important;
 }
 
 .btn-icon {
