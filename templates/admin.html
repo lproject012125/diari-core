@@ -124,14 +124,16 @@
             <!-- ======================================================== -->
             <section id="tab-dashboard" class="tab-pane">
                 <div class="section-header">
-                    <div>
-                        <h2 class="section-title">Dashboard Overview</h2>
+                    <div class="section-header-content">
+                        <div class="section-header-title-row">
+                            <h2 class="section-title">Dashboard Overview</h2>
+                            <div class="header-actions">
+                                <button id="refreshDashboardBtn" class="btn btn-outline btn-icon-mobile" title="Refresh Dashboard Metrics" aria-label="Refresh Dashboard Metrics">
+                                    <i class="bi bi-arrow-clockwise"></i> <span class="btn-text">Refresh</span>
+                                </button>
+                            </div>
+                        </div>
                         <p class="section-subtitle">System metrics, user activity, and live health status.</p>
-                    </div>
-                    <div class="header-actions">
-                        <button id="refreshDashboardBtn" class="btn btn-outline" title="Refresh Dashboard Metrics">
-                            <i class="bi bi-arrow-clockwise"></i> Refresh
-                        </button>
                     </div>
                 </div>
 
@@ -451,14 +453,16 @@
             <!-- ======================================================== -->
             <section id="tab-services" class="tab-pane">
                 <div class="section-header">
-                    <div>
-                        <h2 class="section-title">AI &amp; External Services</h2>
+                    <div class="section-header-content">
+                        <div class="section-header-title-row">
+                            <h2 class="section-title">AI &amp; External Services</h2>
+                            <div class="header-actions">
+                                <button id="refreshServicesBtn" class="btn btn-outline btn-icon-mobile" title="Re-check Status" aria-label="Re-check Status">
+                                    <i class="bi bi-arrow-clockwise"></i> <span class="btn-text">Re-check Status</span>
+                                </button>
+                            </div>
+                        </div>
                         <p class="section-subtitle">Real-time status, connection diagnostics, and health testing tools.</p>
-                    </div>
-                    <div class="header-actions">
-                        <button id="refreshServicesBtn" class="btn btn-outline">
-                            <i class="bi bi-arrow-clockwise"></i> Re-check Status
-                        </button>
                     </div>
                 </div>
 
@@ -620,14 +624,16 @@
             <!-- ======================================================== -->
             <section id="tab-audit" class="tab-pane">
                 <div class="section-header">
-                    <div>
-                        <h2 class="section-title">Audit Logs</h2>
+                    <div class="section-header-content">
+                        <div class="section-header-title-row">
+                            <h2 class="section-title">Audit Logs</h2>
+                            <div class="header-actions">
+                                <button id="refreshAuditBtn" class="btn btn-outline btn-icon-mobile" title="Refresh Logs" aria-label="Refresh Logs">
+                                    <i class="bi bi-arrow-clockwise"></i> <span class="btn-text">Refresh Logs</span>
+                                </button>
+                            </div>
+                        </div>
                         <p class="section-subtitle">Chronological record of administrative operations, security events, and configuration updates.</p>
-                    </div>
-                    <div class="header-actions">
-                        <button id="refreshAuditBtn" class="btn btn-outline">
-                            <i class="bi bi-arrow-clockwise"></i> Refresh Logs
-                        </button>
                     </div>
                 </div>
 

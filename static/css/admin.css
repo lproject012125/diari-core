@@ -462,8 +462,20 @@ html.theme-dark .admin-sidebar {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1.75rem;
-    flex-wrap: wrap;
     gap: 1rem;
+}
+
+.section-header-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.section-header-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .section-title {
@@ -1741,6 +1753,53 @@ label {
         box-sizing: border-box;
         padding: 0.75rem 0.95rem;
         font-size: 0.8rem;
+    }
+
+    .section-header {
+        margin-bottom: 1.25rem;
+    }
+
+    .section-header-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .section-title {
+        font-size: 1.45rem;
+    }
+
+    .btn-icon-mobile {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: var(--radius-sm);
+        background: var(--card-background);
+        border: 1px solid var(--border-color);
+        color: var(--text-dark);
+        box-shadow: var(--box-shadow);
+        transition: all var(--transition-fast);
+    }
+
+    .btn-icon-mobile:hover,
+    .btn-icon-mobile:active {
+        background: var(--primary-light);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .btn-icon-mobile .btn-text {
+        display: none !important;
+    }
+
+    .btn-icon-mobile i {
+        font-size: 1.15rem;
+        margin: 0 !important;
     }
 
     .row {
