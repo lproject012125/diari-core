@@ -203,8 +203,13 @@
     
             function setPostPanelVisible(visible) {
                 if (!postRecordingContainer) return;
-                postRecordingContainer.hidden = !visible;
+                if (window.innerWidth > 991) {
+                    postRecordingContainer.hidden = false;
+                } else {
+                    postRecordingContainer.hidden = !visible;
+                }
             }
+            setPostPanelVisible(true);
 
             function setTranscriptHint(message) {
                 if (!transcriptHint) return;

@@ -84,47 +84,63 @@
             
             <!-- Voice Entry Workspace (Side-by-side on PC, stacked on mobile/PWA) -->
             <div class="voice-entry-workspace">
-                <!-- Voice Entry Container -->
-                <div class="voice-entry-container">
-                    <div class="voice-lang-row">
-                        <label class="voice-lang-row__label" for="voiceLangSelect">Speaking in</label>
-                        <select id="voiceLangSelect" class="voice-lang-row__select" aria-label="Voice language">
-                            <option value="auto">Auto</option>
-                            <option value="en">English</option>
-                            <option value="tl">Filipino / Taglish</option>
-                        </select>
-                    </div>
-                    <!-- Voice Recording Container -->
-                    <div class="voice-recording-container">
-                        <div class="voice-circle" id="voiceCircle">
-                            <i class="bi bi-mic" id="micIcon"></i>
+                <!-- Left Column (Desktop): Recorder Card + Tips Card -->
+                <div class="voice-entry-left-col">
+                    <!-- Voice Entry Container -->
+                    <div class="voice-entry-container">
+                        <h2 class="voice-recorder-card-title">Voice Recorder</h2>
+                        <div class="voice-lang-row">
+                            <label class="voice-lang-row__label" for="voiceLangSelect">Speaking in</label>
+                            <select id="voiceLangSelect" class="voice-lang-row__select" aria-label="Voice language">
+                                <option value="auto">Auto</option>
+                                <option value="en">English</option>
+                                <option value="tl">Filipino / Taglish</option>
+                            </select>
+                        </div>
+                        <!-- Voice Recording Container -->
+                        <div class="voice-recording-container">
+                            <div class="voice-circle" id="voiceCircle">
+                                <i class="bi bi-mic" id="micIcon"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Voice Status -->
+                        <div class="voice-status">
+                            <h2 id="statusText">Tap to start recording</h2>
+                        </div>
+                        
+                        <!-- Recording State (Hidden by default) -->
+                        <div class="recording-state" id="recordingState" style="display: none;">
+                            <div class="recording-animation recording-animation--live" id="voiceWaveBars" aria-hidden="true">
+                                <span class="voice-wave-bar" data-bar="0"></span>
+                                <span class="voice-wave-bar" data-bar="1"></span>
+                                <span class="voice-wave-bar" data-bar="2"></span>
+                                <span class="voice-wave-bar" data-bar="3"></span>
+                                <span class="voice-wave-bar" data-bar="4"></span>
+                                <span class="voice-wave-bar" data-bar="5"></span>
+                                <span class="voice-wave-bar" data-bar="6"></span>
+                            </div>
+                            <div class="recording-text">
+                                <h3 id="voiceEntryRecordingLabel">Recording… <span id="voiceEntryRecordingTime">0:00</span></h3>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Voice Status -->
-                    <div class="voice-status">
-                        <h2 id="statusText">Tap to start recording</h2>
-                    </div>
-                    
-                    <!-- Recording State (Hidden by default) -->
-                    <div class="recording-state" id="recordingState" style="display: none;">
-                        <div class="recording-animation recording-animation--live" id="voiceWaveBars" aria-hidden="true">
-                            <span class="voice-wave-bar" data-bar="0"></span>
-                            <span class="voice-wave-bar" data-bar="1"></span>
-                            <span class="voice-wave-bar" data-bar="2"></span>
-                            <span class="voice-wave-bar" data-bar="3"></span>
-                            <span class="voice-wave-bar" data-bar="4"></span>
-                            <span class="voice-wave-bar" data-bar="5"></span>
-                            <span class="voice-wave-bar" data-bar="6"></span>
-                        </div>
-                        <div class="recording-text">
-                            <h3 id="voiceEntryRecordingLabel">Recording… <span id="voiceEntryRecordingTime">0:00</span></h3>
-                        </div>
+
+                    <!-- Tips Container (Inside Left Column for Desktop) -->
+                    <div class="tips-container">
+                        <h3><i class="bi bi-lightbulb text-warning"></i> Tips for best results</h3>
+                        <ul>
+                            <li>Speak in a quiet environment for better accuracy.</li>
+                            <li>You can take pauses — it helps us understand you better.</li>
+                            <li>Be natural! You can speak in Filipino, English, or a mix of both (Taglish).</li>
+                            <li>AI transcription may occasionally mishear words — review and edit any mistakes or misspelled text in the box above before saving.</li>
+                            <li>Your journal entry is private and secure.</li>
+                        </ul>
                     </div>
                 </div>
                 
-                <!-- Post-Recording Container (shown after a session; transcript is editable) -->
-                <div class="post-recording-container" id="postRecordingContainer" hidden>
+                <!-- Right Column (Desktop): Transcript Container -->
+                <div class="post-recording-container" id="postRecordingContainer">
                     <div class="recording-summary">
                         <div class="summary-header">
                             <h3>Transcript</h3>
@@ -138,9 +154,9 @@
                                 <textarea
                                     id="finalTranscript"
                                     class="voice-transcript-field"
-                                    rows="8"
+                                    rows="10"
                                     spellcheck="true"
-                                    placeholder="Your speech will appear here as you speak. You can also type or paste if your browser does not support dictation."
+                                    placeholder="Your speech will appear here as you speak. You can also type or paste directly."
                                 ></textarea>
                                 <p class="voice-transcript-hint" id="voiceTranscriptHint" role="status" aria-live="polite" hidden></p>
                             </div>
@@ -171,17 +187,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Tips Container (Outside) -->
-            <div class="tips-container">
-                <h3>Tips for voice journaling</h3>
-                <ul>
-                    <li><strong>Best spelling:</strong> use Chrome or Edge and watch text appear <strong>while you speak</strong> (live captions). Earphones are fine; the browser engine usually spells better than the backup model after you stop.</li>
-                    <li>Set <strong>Filipino / Taglish</strong> for Tagalog journaling. If the box is empty after stop, a smaller on-device model runs — some words may be misspelled; fix them in the box before Save.</li>
-                    <li>Speak at a steady pace, close to the mic, in a quiet room. Pauses between phrases help.</li>
-                    <li>You can always edit the transcript, then use <strong>Save Entry</strong> for tags and emotion analysis.</li>
-                </ul>
             </div>
         </div>
     </div>
