@@ -1196,69 +1196,8 @@ document.addEventListener('DOMContentLoaded', function() {
         clearSignInValidation();
     }
 
-    function checkExistingLoginLockout() {
-        try {
-            var raw = sessionStorage.getItem('diari_login_lockout_data') || sessionStorage.getItem('diari_login_lockout_until');
-            if (!raw) {
-                pauseLoginLockoutUi();
-                return;
-            }
-            var data = null;
-            if (raw.startsWith('{')) {
-                data = JSON.parse(raw);
-            } else {
-                data = { account: '', expiresAt: parseInt(raw, 10) };
-            }
-            if (!data || !data.expiresAt) {
-                pauseLoginLockoutUi();
-                return;
-            }
-            var remainingSec = Math.ceil((data.expiresAt - Date.now()) / 1000);
-            if (remainingSec > 0) {
-                currentLockedAccount = (data.account || '').toLowerCase();
-                var currentInputUser = (document.getElementById('email')?.value || '').trim().toLowerCase();
-                // ONLY activate lockout if user has actually typed the locked username!
-                if (currentLockedAccount && currentInputUser && currentInputUser === currentLockedAccount) {
-                    startLoginLockout(remainingSec, currentLockedAccount);
-                } else {
-                    pauseLoginLockoutUi();
-                }
-            } else {
-                sessionStorage.removeItem('diari_login_lockout_data');
-                sessionStorage.removeItem('diari_login_lockout_until');
-                pauseLoginLockoutUi();
-            }
-        } catch (_) {
-            pauseLoginLockoutUi();
-        }
-    }
-
-    const usernameInput = document.getElementById('email');
-    if (usernameInput) {
-        usernameInput.addEventListener('input', function () {
-            var typedUser = usernameInput.value.trim().toLowerCase();
-            try {
-                var raw = sessionStorage.getItem('diari_login_lockout_data');
-                if (raw) {
-                    var data = JSON.parse(raw);
-                    var remainingSec = Math.ceil((data.expiresAt - Date.now()) / 1000);
-                    if (remainingSec > 0) {
-                        if (typedUser && data.account && typedUser === data.account.toLowerCase()) {
-                            startLoginLockout(remainingSec, data.account);
-                            return;
-                        } else {
-                            pauseLoginLockoutUi();
-                            return;
-                        }
-                    }
-                }
-            } catch (_) {}
-            if (lockoutTimerInterval) {
-                pauseLoginLockoutUi();
-            }
-        });
-    }
-
+    // Keep the active lockout banner visible until the countdown expires. It should only
+    // reappear when the user re-attempts sign-in and the server confirms the account is locked.
     function clearSignInValidation() {
         const usernameField = document.getElementById('email');
         const passwordField = document.getElementById('password');
