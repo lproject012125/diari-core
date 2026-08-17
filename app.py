@@ -870,8 +870,13 @@ def api_login():
             "maxAttempts": authsec.MAX_LOGIN_ATTEMPTS,
         }), 401
 
-    # Login succeeded: clear failed attempt tracker
+    # Login succeeded: clear failed attempt tracker for input, username, and email
     authsec.clear_login_failures(request, username)
+    if isinstance(result, dict):
+        if result.get("username"):
+            authsec.clear_login_failures(request, str(result["username"]))
+        if result.get("email"):
+            authsec.clear_login_failures(request, str(result["email"]))
 
     session.pop("is_admin", None)
 
