@@ -120,8 +120,15 @@ document.addEventListener('DOMContentLoaded', () => {
         inputs.forEach(i => i.classList.remove('error'));
     };
 
+    const setResendLoading = (isLoading) => {
+        const label = resendBtn.querySelector('.resend-label');
+        resendBtn.classList.toggle('is-loading', isLoading);
+        if (label) label.textContent = isLoading ? 'Sending...' : 'Resend Code';
+    };
+
     const startResendCooldown = () => {
         resendCooldown = 60;
+        setResendLoading(false);
         resendBtn.disabled = true;
         if (resendCooldownInterval) clearInterval(resendCooldownInterval);
         const renderCooldown = () => {
@@ -135,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resendCooldown <= 0) {
                 clearInterval(resendCooldownInterval);
                 resendBtn.disabled = false;
-                resendBtn.textContent = 'Resend Code';
+                setResendLoading(false);
                 if (resendCountdown) resendCountdown.textContent = '';
                 return;
             }
@@ -224,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resendBtn.addEventListener('click', () => {
         if (resendBtn.disabled) return;
         resendBtn.disabled = true;
-        resendBtn.textContent = 'Resending...';
+        setResendLoading(true);
         clearErrors();
 
         fetch('/api/register/resend', {
@@ -237,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!ok || !data.success) {
                     setError(data.error || 'Failed to resend code.');
                     resendBtn.disabled = false;
-                    resendBtn.textContent = 'Resend Code';
+                    setResendLoading(false);
                     return;
                 }
                 seconds = 10 * 60;
@@ -251,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(() => {
                 setError('Failed to resend code.');
                 resendBtn.disabled = false;
-                resendBtn.textContent = 'Resend Code';
+                setResendLoading(false);
             });
     });
 
