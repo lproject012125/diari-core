@@ -108,6 +108,17 @@
                     <div class="form-options">
                         <a href="#" class="forgot-password">Forgot password?</a>
                     </div>
+
+                    <div id="loginLockoutBanner" class="login-lockout-banner" hidden role="alert" aria-live="polite">
+                        <div class="lockout-banner-icon">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <div class="lockout-banner-content">
+                            <div class="lockout-banner-title">Account Temporarily Locked</div>
+                            <div class="lockout-banner-desc">Too many failed login attempts. To protect your account, please wait:</div>
+                            <div class="lockout-countdown" id="lockoutCountdownText">15:00</div>
+                        </div>
+                    </div>
                     
                     <button type="submit" class="btn-signin">SIGN IN</button>
                 </form>

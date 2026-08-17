@@ -1103,6 +1103,101 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    var lockoutTimerInterval = null;
+
+    function formatCountdownTime(totalSeconds) {
+        var mins = Math.floor(totalSeconds / 60);
+        var secs = totalSeconds % 60;
+        return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+
+    function startLoginLockout(remainingSeconds) {
+        var banner = document.getElementById('loginLockoutBanner');
+        var countdownEl = document.getElementById('lockoutCountdownText');
+        var passwordField = document.getElementById('password');
+        var submitBtn = loginForm ? loginForm.querySelector('.btn-signin') : null;
+
+        if (lockoutTimerInterval) {
+            clearInterval(lockoutTimerInterval);
+            lockoutTimerInterval = null;
+        }
+
+        var expiresAt = Date.now() + (remainingSeconds * 1000);
+        try {
+            sessionStorage.setItem('diari_login_lockout_until', String(expiresAt));
+        } catch (_) {}
+
+        if (banner) {
+            banner.hidden = false;
+        }
+
+        if (passwordField) {
+            passwordField.disabled = true;
+            passwordField.value = '';
+        }
+
+        function updateTimer() {
+            var diffMs = expiresAt - Date.now();
+            var leftSec = Math.max(0, Math.ceil(diffMs / 1000));
+
+            if (countdownEl) {
+                countdownEl.textContent = formatCountdownTime(leftSec);
+            }
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'LOCKED (' + formatCountdownTime(leftSec) + ')';
+            }
+
+            if (leftSec <= 0) {
+                endLoginLockout();
+            }
+        }
+
+        updateTimer();
+        lockoutTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function endLoginLockout() {
+        if (lockoutTimerInterval) {
+            clearInterval(lockoutTimerInterval);
+            lockoutTimerInterval = null;
+        }
+        try {
+            sessionStorage.removeItem('diari_login_lockout_until');
+        } catch (_) {}
+
+        var banner = document.getElementById('loginLockoutBanner');
+        var passwordField = document.getElementById('password');
+        var submitBtn = loginForm ? loginForm.querySelector('.btn-signin') : null;
+
+        if (banner) {
+            banner.hidden = true;
+        }
+        if (passwordField) {
+            passwordField.disabled = false;
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'SIGN IN';
+        }
+        clearSignInValidation();
+    }
+
+    function checkExistingLoginLockout() {
+        try {
+            var raw = sessionStorage.getItem('diari_login_lockout_until');
+            if (!raw) return;
+            var expiresAt = parseInt(raw, 10);
+            if (!expiresAt || isNaN(expiresAt)) return;
+            var remainingSec = Math.ceil((expiresAt - Date.now()) / 1000);
+            if (remainingSec > 0) {
+                startLoginLockout(remainingSec);
+            } else {
+                sessionStorage.removeItem('diari_login_lockout_until');
+            }
+        } catch (_) {}
+    }
+
     function clearSignInValidation() {
         const usernameField = document.getElementById('email');
         const passwordField = document.getElementById('password');
@@ -1125,52 +1220,68 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const submitBtn = loginForm.querySelector('.btn-signin');
-                submitBtn.textContent = 'Signing In...';
-                submitBtn.disabled = true;
-                
-                fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username, password: password })
-                })
-                    .then((res) => res.json().then((data) => ({ ok: res.ok, status: res.status, data })))
-                    .then(({ ok, status, data }) => {
-                        if (!ok || !data.success) {
-                            const usernameField = document.getElementById('email');
-                            const passwordField = document.getElementById('password');
-                            if (status === 401) {
-                                if (usernameField) {
-                                    usernameField.classList.add('error');
-                                    usernameField.classList.remove('success');
-                                    const usernameError = document.getElementById('email-error');
-                                    if (usernameError) usernameError.classList.remove('show');
-                                }
-                                if (passwordField) {
-                                    passwordField.value = '';
-                                    showError(passwordField, 'Incorrect username or password.');
-                                    passwordField.focus();
-                                }
-                            } else {
-                                showNotification(data.error || 'Something went wrong. Please try again.', 'error');
+            submitBtn.textContent = 'Signing In...';
+            submitBtn.disabled = true;
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+                .then((res) => res.json().then((data) => ({ ok: res.ok, status: res.status, data })))
+                .then(({ ok, status, data }) => {
+                    if (!ok || !data.success) {
+                        const usernameField = document.getElementById('email');
+                        const passwordField = document.getElementById('password');
+
+                        if (status === 429 || data.locked) {
+                            const retryAfter = data.retryAfter || data.lockoutSeconds || 900;
+                            startLoginLockout(retryAfter);
+                            showNotification(
+                                data.error || 'Too many failed login attempts. Login locked for 15 minutes.',
+                                'error',
+                                6000
+                            );
+                            return;
+                        }
+
+                        if (status === 401) {
+                            if (usernameField) {
+                                usernameField.classList.add('error');
+                                usernameField.classList.remove('success');
+                                const usernameError = document.getElementById('email-error');
+                                if (usernameError) usernameError.classList.remove('show');
                             }
-                            submitBtn.textContent = 'SIGN IN';
-                            submitBtn.disabled = false;
-                            return;
+                            if (passwordField) {
+                                passwordField.value = '';
+                                const errMsg = data.error || 'Incorrect username or password.';
+                                showError(passwordField, errMsg);
+                                passwordField.focus();
+                            }
+                        } else {
+                            showNotification(data.error || 'Something went wrong. Please try again.', 'error');
                         }
-                        if (data.requiresTwoFactor && data.challengeToken) {
-                            submitBtn.textContent = 'SIGN IN';
-                            submitBtn.disabled = false;
-                            showLoginTotpStep(data.challengeToken);
-                            return;
-                        }
-                        const u = data.user;
-                        finishSuccessfulLogin(u, data);
-                    })
-                    .catch(() => {
-                        showNotification('Could not reach the server. Run the DiariCore app (Flask) or check your connection.', 'error');
                         submitBtn.textContent = 'SIGN IN';
                         submitBtn.disabled = false;
-                    });
+                        return;
+                    }
+
+                    endLoginLockout();
+
+                    if (data.requiresTwoFactor && data.challengeToken) {
+                        submitBtn.textContent = 'SIGN IN';
+                        submitBtn.disabled = false;
+                        showLoginTotpStep(data.challengeToken);
+                        return;
+                    }
+                    const u = data.user;
+                    finishSuccessfulLogin(u, data);
+                })
+                .catch(() => {
+                    showNotification('Could not reach the server. Run the DiariCore app (Flask) or check your connection.', 'error');
+                    submitBtn.textContent = 'SIGN IN';
+                    submitBtn.disabled = false;
+                });
         });
     }
 
@@ -2346,5 +2457,6 @@ document.addEventListener('DOMContentLoaded', function() {
         switchToSignUp();
     } else {
         restoreAuthPhaseState();
+        checkExistingLoginLockout();
     }
 });

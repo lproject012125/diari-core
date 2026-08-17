@@ -831,18 +831,47 @@ def api_register_resend():
 
 @app.route("/api/login", methods=["POST"])
 def api_login():
-    rl = authsec.rate_limit_check(request, "login", _RATE_LOGIN[0], _RATE_LOGIN[1])
-    if rl:
-        return jsonify({"success": False, "error": rl}), 429
     data = request.get_json(silent=True) or {}
     username = insec.strip_null_bytes((data.get("username") or data.get("email") or "").strip())
     password = data.get("password") or ""
     if not username or not password:
         return jsonify({"success": False, "error": "Username and password are required."}), 400
 
+    # 15-minute lockout check (5 failed attempts)
+    is_locked, remaining_sec, lock_msg = authsec.check_login_lockout(request, username)
+    if is_locked:
+        return jsonify({
+            "success": False,
+            "error": lock_msg,
+            "locked": True,
+            "retryAfter": remaining_sec,
+            "lockoutSeconds": remaining_sec,
+        }), 429
+
+    rl = authsec.rate_limit_check(request, "login", _RATE_LOGIN[0], _RATE_LOGIN[1])
+    if rl:
+        return jsonify({"success": False, "error": rl}), 429
+
     ok, result = db.verify_login(username, password)
     if not ok:
-        return jsonify({"success": False, "error": result}), 401
+        is_locked_now, rem_sec, attempts_left, fail_msg = authsec.record_login_failure(request, username)
+        if is_locked_now:
+            return jsonify({
+                "success": False,
+                "error": fail_msg,
+                "locked": True,
+                "retryAfter": rem_sec,
+                "lockoutSeconds": rem_sec,
+            }), 429
+        return jsonify({
+            "success": False,
+            "error": fail_msg,
+            "attemptsLeft": attempts_left,
+            "maxAttempts": authsec.MAX_LOGIN_ATTEMPTS,
+        }), 401
+
+    # Login succeeded: clear failed attempt tracker
+    authsec.clear_login_failures(request, username)
 
     session.pop("is_admin", None)
 

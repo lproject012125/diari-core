@@ -479,6 +479,97 @@ body {
     transform: translateY(0);
 }
 
+.btn-signin:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Login Rate Limit Lockout Banner */
+.login-lockout-banner {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-left: 4px solid #D97706;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    box-shadow: 0 2px 10px rgba(217, 119, 6, 0.08);
+    animation: fadeIn 0.3s ease;
+}
+
+html.theme-dark .login-lockout-banner {
+    background: #252015;
+    border-color: #4D3815;
+    border-left-color: #F59E0B;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.login-lockout-banner[hidden] {
+    display: none !important;
+}
+
+.lockout-banner-icon {
+    font-size: 1.35rem;
+    color: #D97706;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+html.theme-dark .lockout-banner-icon {
+    color: #F59E0B;
+}
+
+.lockout-banner-content {
+    flex: 1;
+}
+
+.lockout-banner-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #92400E;
+    margin-bottom: 0.2rem;
+}
+
+html.theme-dark .lockout-banner-title {
+    color: #FDE68A;
+}
+
+.lockout-banner-desc {
+    font-size: 0.8rem;
+    color: #78350F;
+    line-height: 1.4;
+    margin-bottom: 0.45rem;
+}
+
+html.theme-dark .lockout-banner-desc {
+    color: #E6D0A8;
+}
+
+.lockout-countdown {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #FEF3C7;
+    color: #92400E;
+    font-weight: 700;
+    font-size: 0.92rem;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    letter-spacing: 1px;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    border: 1px solid #FCD34D;
+}
+
+html.theme-dark .lockout-countdown {
+    background: #3B2E15;
+    color: #FDE68A;
+    border-color: #63471A;
+}
+
 /* Divider */
 .divider {
     display: flex;
