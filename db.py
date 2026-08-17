@@ -193,6 +193,32 @@ def _ensure_login_totp_challenges_table(cur):
         cur.execute("CREATE INDEX IF NOT EXISTS idx_login_totp_challenges_user_id ON login_totp_challenges (user_id);")
 
 
+def _ensure_login_lockouts_table(cur):
+    """Persist login failures so lockouts survive process restarts and deploys."""
+    if USE_POSTGRES:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS login_lockouts (
+                account_key VARCHAR(128) PRIMARY KEY,
+                attempts_json TEXT NOT NULL DEFAULT '[]',
+                locked_until TEXT,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+    else:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS login_lockouts (
+                account_key TEXT PRIMARY KEY,
+                attempts_json TEXT NOT NULL DEFAULT '[]',
+                locked_until TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+
+
 def _ensure_login_totp_recovery_otps_table(cur):
     """One-time email codes to recover sign-in when authenticator app access is lost."""
     if USE_POSTGRES:
@@ -581,6 +607,7 @@ def init_db():
         _ensure_user_ui_preferences_column(cur)
         _ensure_user_totp_columns(cur)
         _ensure_login_totp_challenges_table(cur)
+        _ensure_login_lockouts_table(cur)
         _ensure_login_totp_recovery_otps_table(cur)
         _ensure_user_password_change_challenges_table(cur)
         _ensure_user_profile_email_change_challenges_table(cur)
@@ -796,6 +823,99 @@ def get_user_by_nickname(nickname: str):
 
 def get_user_by_username(username: str):
     return get_user_by_nickname(username)
+
+
+def get_login_lockout_key(identifier: str) -> str:
+    """Return one stable lockout key for either sign-in identifier of an account."""
+    normalized = (identifier or "").strip().lower()
+    user = get_user_by_email(normalized) if "@" in normalized else None
+    if not user:
+        user = get_user_by_username(normalized)
+    if user:
+        return f"user:{int(user['id'])}"
+    return f"identifier:{normalized}"
+
+
+def _parse_lockout_timestamp(value):
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def get_login_lockout(account_key: str):
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        placeholder = "%s" if USE_POSTGRES else "?"
+        cur.execute(
+            f"SELECT attempts_json, locked_until FROM login_lockouts WHERE account_key = {placeholder}",
+            (account_key,),
+        )
+        row = row_to_dict(cur.fetchone())
+        if not row:
+            return [], None
+        try:
+            attempts = json.loads(row.get("attempts_json") or "[]")
+            attempts = [str(attempt) for attempt in attempts if isinstance(attempt, str)]
+        except (TypeError, ValueError):
+            attempts = []
+        return attempts, _parse_lockout_timestamp(row.get("locked_until"))
+    finally:
+        conn.close()
+
+
+def save_login_lockout(account_key: str, attempts: list[str], locked_until) -> bool:
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        attempts_json = json.dumps(attempts, separators=(",", ":"))
+        locked_value = locked_until.isoformat() if locked_until else None
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                INSERT INTO login_lockouts (account_key, attempts_json, locked_until, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (account_key) DO UPDATE SET
+                    attempts_json = EXCLUDED.attempts_json,
+                    locked_until = EXCLUDED.locked_until,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (account_key, attempts_json, locked_value),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO login_lockouts (account_key, attempts_json, locked_until, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(account_key) DO UPDATE SET
+                    attempts_json = excluded.attempts_json,
+                    locked_until = excluded.locked_until,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (account_key, attempts_json, locked_value),
+            )
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
+def clear_login_lockout(account_key: str) -> None:
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        placeholder = "%s" if USE_POSTGRES else "?"
+        cur.execute(f"DELETE FROM login_lockouts WHERE account_key = {placeholder}", (account_key,))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def get_user_by_id(user_id: int):

@@ -1,19 +1,20 @@
 """
-Session CSRF checks and lightweight in-memory rate limits (no extra DB round-trips).
+Session CSRF checks, in-memory request rate limits, and persistent login lockouts.
 """
 
 from __future__ import annotations
 
 import secrets
 import time
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from threading import Lock
 from typing import Any, Dict, List, Optional
 
+import db
+
 _lock = Lock()
 _hits: Dict[str, List[float]] = defaultdict(list)
-_login_failures: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"attempts": [], "locked_until": 0.0})
-
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_LOCKOUT_SECONDS = 900.0  # 15 minutes
 
@@ -45,26 +46,23 @@ def rate_limit_check(request, scope: str, limit: int, window_sec: float) -> Opti
 
 def _get_login_keys(request, identifier: str) -> List[str]:
     ident_norm = (identifier or "").strip().lower()
-    if ident_norm:
-        return [f"user:{ident_norm}"]
-    return []
+    return [db.get_login_lockout_key(ident_norm)] if ident_norm else []
 
 
 def check_login_lockout(request, identifier: str) -> tuple[bool, int, str]:
     """
-    Check if the user identifier or IP is locked out.
+    Check if the account identifier is locked out.
     Returns (is_locked, remaining_seconds, message).
     """
     keys = _get_login_keys(request, identifier)
-    now = time.monotonic()
-    with _lock:
-        max_remaining = 0
-        for k in keys:
-            data = _login_failures.get(k)
-            if data and data.get("locked_until", 0.0) > now:
-                rem = int(data["locked_until"] - now) + 1
-                if rem > max_remaining:
-                    max_remaining = rem
+    now = datetime.now(timezone.utc)
+    max_remaining = 0
+    for k in keys:
+        _, locked_until = db.get_login_lockout(k)
+        if locked_until and locked_until > now:
+            rem = int((locked_until - now).total_seconds()) + 1
+            if rem > max_remaining:
+                max_remaining = rem
         if max_remaining > 0:
             mins = (max_remaining + 59) // 60
             msg = (
@@ -77,51 +75,56 @@ def check_login_lockout(request, identifier: str) -> tuple[bool, int, str]:
 
 def record_login_failure(request, identifier: str) -> tuple[bool, int, int, str]:
     """
-    Record a failed login attempt for the identifier and IP.
+    Record a failed login attempt for the account identifier.
     Returns (is_locked, remaining_seconds, attempts_left, message).
     """
     keys = _get_login_keys(request, identifier)
-    now = time.monotonic()
-    window = LOGIN_LOCKOUT_SECONDS
-    with _lock:
-        worst_locked = False
-        worst_remaining = 0
-        min_attempts_left = MAX_LOGIN_ATTEMPTS
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(seconds=LOGIN_LOCKOUT_SECONDS)
+    worst_locked = False
+    worst_remaining = 0
+    min_attempts_left = MAX_LOGIN_ATTEMPTS
 
-        for k in keys:
-            entry = _login_failures[k]
-            # Prune attempts older than the lockout window
-            entry["attempts"] = [t for t in entry["attempts"] if now - t < window]
-            entry["attempts"].append(now)
+    for k in keys:
+        attempts, locked_until = db.get_login_lockout(k)
+        parsed_attempts = []
+        for attempt in attempts:
+            try:
+                timestamp = datetime.fromisoformat(attempt.replace("Z", "+00:00"))
+                timestamp = timestamp if timestamp.tzinfo else timestamp.replace(tzinfo=timezone.utc)
+                if timestamp >= window_start:
+                    parsed_attempts.append(timestamp)
+            except ValueError:
+                continue
+        parsed_attempts.append(now)
 
-            if len(entry["attempts"]) >= MAX_LOGIN_ATTEMPTS:
-                entry["locked_until"] = now + LOGIN_LOCKOUT_SECONDS
-                entry["attempts"] = []
-                worst_locked = True
-                worst_remaining = int(LOGIN_LOCKOUT_SECONDS)
-            else:
-                left = MAX_LOGIN_ATTEMPTS - len(entry["attempts"])
-                if left < min_attempts_left:
-                    min_attempts_left = left
-
-        if worst_locked:
-            msg = (
-                "Too many failed login attempts. To protect your account, login has been locked for 15 minutes."
-            )
-            return True, worst_remaining, 0, msg
+        if len(parsed_attempts) >= MAX_LOGIN_ATTEMPTS:
+            locked_until = now + timedelta(seconds=LOGIN_LOCKOUT_SECONDS)
+            db.save_login_lockout(k, [], locked_until)
+            worst_locked = True
+            worst_remaining = int(LOGIN_LOCKOUT_SECONDS)
         else:
-            msg = (
-                f"Incorrect username or password. {min_attempts_left} attempt{'s' if min_attempts_left != 1 else ''} remaining before temporary lockout."
-            )
-            return False, 0, min_attempts_left, msg
+            db.save_login_lockout(k, [attempt.isoformat() for attempt in parsed_attempts], None)
+            left = MAX_LOGIN_ATTEMPTS - len(parsed_attempts)
+            if left < min_attempts_left:
+                min_attempts_left = left
+
+    if worst_locked:
+        msg = (
+            "Too many failed login attempts. To protect your account, login has been locked for 15 minutes."
+        )
+        return True, worst_remaining, 0, msg
+    msg = (
+        f"Incorrect username or password. {min_attempts_left} attempt{'s' if min_attempts_left != 1 else ''} remaining before temporary lockout."
+    )
+    return False, 0, min_attempts_left, msg
 
 
 def clear_login_failures(request, identifier: str) -> None:
     """Clear failed login attempts and lockouts on successful login."""
     keys = _get_login_keys(request, identifier)
-    with _lock:
-        for k in keys:
-            _login_failures.pop(k, None)
+    for k in keys:
+        db.clear_login_lockout(k)
 
 
 def validate_csrf(request, session_map: Any) -> Optional[str]:
