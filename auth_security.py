@@ -44,14 +44,10 @@ def rate_limit_check(request, scope: str, limit: int, window_sec: float) -> Opti
 
 
 def _get_login_keys(request, identifier: str) -> List[str]:
-    keys = []
     ident_norm = (identifier or "").strip().lower()
     if ident_norm:
-        keys.append(f"user:{ident_norm}")
-    ip = client_ip(request)
-    if ip and ip != "unknown":
-        keys.append(f"ip:{ip}")
-    return keys
+        return [f"user:{ident_norm}"]
+    return []
 
 
 def check_login_lockout(request, identifier: str) -> tuple[bool, int, str]:

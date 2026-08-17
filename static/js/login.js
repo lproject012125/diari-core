@@ -1104,6 +1104,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     var lockoutTimerInterval = null;
+    var currentLockedAccount = '';
 
     function formatCountdownTime(totalSeconds) {
         var mins = Math.floor(totalSeconds / 60);
@@ -1111,11 +1112,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
     }
 
-    function startLoginLockout(remainingSeconds) {
+    function startLoginLockout(remainingSeconds, targetAccount) {
         var banner = document.getElementById('loginLockoutBanner');
         var countdownEl = document.getElementById('lockoutCountdownText');
         var passwordField = document.getElementById('password');
         var submitBtn = loginForm ? loginForm.querySelector('.btn-signin') : null;
+
+        var account = (targetAccount || currentLockedAccount || '').trim().toLowerCase();
+        currentLockedAccount = account;
 
         if (lockoutTimerInterval) {
             clearInterval(lockoutTimerInterval);
@@ -1124,7 +1128,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         var expiresAt = Date.now() + (remainingSeconds * 1000);
         try {
-            sessionStorage.setItem('diari_login_lockout_until', String(expiresAt));
+            sessionStorage.setItem('diari_login_lockout_data', JSON.stringify({
+                account: account,
+                expiresAt: expiresAt
+            }));
         } catch (_) {}
 
         if (banner) {
@@ -1157,45 +1164,87 @@ document.addEventListener('DOMContentLoaded', function() {
         lockoutTimerInterval = setInterval(updateTimer, 1000);
     }
 
+    function pauseLoginLockoutUi() {
+        if (lockoutTimerInterval) {
+            clearInterval(lockoutTimerInterval);
+            lockoutTimerInterval = null;
+        }
+        var banner = document.getElementById('loginLockoutBanner');
+        var passwordField = document.getElementById('password');
+        var submitBtn = loginForm ? loginForm.querySelector('.btn-signin') : null;
+
+        if (banner) banner.hidden = true;
+        if (passwordField) passwordField.disabled = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'SIGN IN';
+        }
+    }
+
     function endLoginLockout() {
         if (lockoutTimerInterval) {
             clearInterval(lockoutTimerInterval);
             lockoutTimerInterval = null;
         }
+        currentLockedAccount = '';
         try {
+            sessionStorage.removeItem('diari_login_lockout_data');
             sessionStorage.removeItem('diari_login_lockout_until');
         } catch (_) {}
 
-        var banner = document.getElementById('loginLockoutBanner');
-        var passwordField = document.getElementById('password');
-        var submitBtn = loginForm ? loginForm.querySelector('.btn-signin') : null;
-
-        if (banner) {
-            banner.hidden = true;
-        }
-        if (passwordField) {
-            passwordField.disabled = false;
-        }
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'SIGN IN';
-        }
+        pauseLoginLockoutUi();
         clearSignInValidation();
     }
 
     function checkExistingLoginLockout() {
         try {
-            var raw = sessionStorage.getItem('diari_login_lockout_until');
+            var raw = sessionStorage.getItem('diari_login_lockout_data') || sessionStorage.getItem('diari_login_lockout_until');
             if (!raw) return;
-            var expiresAt = parseInt(raw, 10);
-            if (!expiresAt || isNaN(expiresAt)) return;
-            var remainingSec = Math.ceil((expiresAt - Date.now()) / 1000);
-            if (remainingSec > 0) {
-                startLoginLockout(remainingSec);
+            var data = null;
+            if (raw.startsWith('{')) {
+                data = JSON.parse(raw);
             } else {
+                data = { account: '', expiresAt: parseInt(raw, 10) };
+            }
+            if (!data || !data.expiresAt) return;
+            var remainingSec = Math.ceil((data.expiresAt - Date.now()) / 1000);
+            if (remainingSec > 0) {
+                currentLockedAccount = (data.account || '').toLowerCase();
+                var currentInputUser = (document.getElementById('email')?.value || '').trim().toLowerCase();
+                if (!currentLockedAccount || !currentInputUser || currentInputUser === currentLockedAccount) {
+                    startLoginLockout(remainingSec, currentLockedAccount);
+                }
+            } else {
+                sessionStorage.removeItem('diari_login_lockout_data');
                 sessionStorage.removeItem('diari_login_lockout_until');
             }
         } catch (_) {}
+    }
+
+    const usernameInput = document.getElementById('email');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function () {
+            var typedUser = usernameInput.value.trim().toLowerCase();
+            try {
+                var raw = sessionStorage.getItem('diari_login_lockout_data');
+                if (raw) {
+                    var data = JSON.parse(raw);
+                    var remainingSec = Math.ceil((data.expiresAt - Date.now()) / 1000);
+                    if (remainingSec > 0) {
+                        if (typedUser && data.account && typedUser === data.account.toLowerCase()) {
+                            startLoginLockout(remainingSec, data.account);
+                            return;
+                        } else {
+                            pauseLoginLockoutUi();
+                            return;
+                        }
+                    }
+                }
+            } catch (_) {}
+            if (lockoutTimerInterval) {
+                pauseLoginLockoutUi();
+            }
+        });
     }
 
     function clearSignInValidation() {
@@ -1236,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         if (status === 429 || data.locked) {
                             const retryAfter = data.retryAfter || data.lockoutSeconds || 900;
-                            startLoginLockout(retryAfter);
+                            startLoginLockout(retryAfter, username);
                             showNotification(
                                 data.error || 'Too many failed login attempts. Login locked for 15 minutes.',
                                 'error',

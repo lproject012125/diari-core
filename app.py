@@ -202,7 +202,7 @@ if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("FLASK_ENV") == "prod
             "SECRET_KEY is not set in the environment. Set a long random SECRET_KEY in Railway Variables."
         )
 
-_RATE_LOGIN = (12, 900.0)
+_RATE_LOGIN = (60, 900.0)
 _RATE_REGISTER = (8, 3600.0)
 _RATE_OTP = (10, 900.0)
 _RATE_FORGOT = (6, 3600.0)
