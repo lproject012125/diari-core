@@ -1497,7 +1497,7 @@ function setProfileEmailChangeOtpResendLoading(isLoading) {
     } else {
         btn.classList.remove('is-loading');
         btn.removeAttribute('aria-busy');
-        if (label) label.textContent = 'Resend code';
+        if (label) label.textContent = 'Resend Code';
     }
 }
 
@@ -2026,7 +2026,7 @@ function setProfilePwdChangeOtpResendLoading(isLoading) {
     } else {
         btn.classList.remove('is-loading');
         btn.removeAttribute('aria-busy');
-        if (label) label.textContent = 'Resend code';
+        if (label) label.textContent = 'Resend Code';
     }
 }
 
