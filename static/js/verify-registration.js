@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let verifyBtnText = document.getElementById('verifyBtnText');
     let verifyBtnIcon = document.getElementById('verifyBtnIcon');
     const resendBtn = document.getElementById('resendBtn');
+    const resendCountdown = document.getElementById('resendCountdown');
     const timerLabel = document.getElementById('timerLabel');
     const errorClose = document.getElementById('otpErrorClose');
     const successClose = document.getElementById('otpSuccessClose');
@@ -126,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderCooldown = () => {
             const m = Math.floor(resendCooldown / 60);
             const s = resendCooldown % 60;
-            resendBtn.textContent = `Resend Code (${m}:${String(s).padStart(2, '0')})`;
+            if (resendCountdown) resendCountdown.textContent = ` (${m}:${String(s).padStart(2, '0')})`;
         };
         renderCooldown();
         resendCooldownInterval = setInterval(() => {
@@ -135,11 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(resendCooldownInterval);
                 resendBtn.disabled = false;
                 resendBtn.textContent = 'Resend Code';
+                if (resendCountdown) resendCountdown.textContent = '';
                 return;
             }
             renderCooldown();
         }, 1000);
     };
+    // A verification code was sent before this page opened, so begin its resend cooldown immediately.
+    startResendCooldown();
 
     inputs.forEach((input, idx) => {
         input.addEventListener('input', (e) => {

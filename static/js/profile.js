@@ -1443,24 +1443,16 @@ function clearProfileEmailChangeResendCooldown() {
     }
     profileEmailChangeOtpResendRemaining = 0;
     const timer = document.getElementById('profileEmailChangeOtpTimer');
-    if (timer) timer.textContent = '00:00';
+    if (timer) timer.textContent = '';
     const btn = document.getElementById('profileEmailChangeOtpResendBtn');
     if (btn) btn.disabled = false;
-    const cooldownRow = document.getElementById('profileEmailChangeOtpCooldownRow');
-    const resendRow = document.getElementById('profileEmailChangeOtpResendRow');
-    if (cooldownRow) cooldownRow.hidden = true;
-    if (resendRow) resendRow.hidden = false;
 }
 
 function startProfileEmailChangeResendCooldown(seconds) {
     const btn = document.getElementById('profileEmailChangeOtpResendBtn');
     const timer = document.getElementById('profileEmailChangeOtpTimer');
-    const cooldownRow = document.getElementById('profileEmailChangeOtpCooldownRow');
-    const resendRow = document.getElementById('profileEmailChangeOtpResendRow');
     profileEmailChangeOtpResendRemaining = seconds;
     if (btn) btn.disabled = true;
-    if (cooldownRow) cooldownRow.hidden = false;
-    if (resendRow) resendRow.hidden = true;
     if (profileEmailChangeOtpResendInterval) clearInterval(profileEmailChangeOtpResendInterval);
     function tick() {
         if (profileEmailChangeOtpResendRemaining <= 0) {
@@ -1470,7 +1462,7 @@ function startProfileEmailChangeResendCooldown(seconds) {
         const mm = Math.floor(profileEmailChangeOtpResendRemaining / 60);
         const ss = profileEmailChangeOtpResendRemaining % 60;
         if (timer) {
-            timer.textContent = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+            timer.textContent = ` (${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')})`;
         }
         profileEmailChangeOtpResendRemaining -= 1;
     }
@@ -1914,24 +1906,16 @@ function clearProfilePwdChangeResendCooldown() {
     }
     profilePwdChangeOtpResendRemaining = 0;
     const timer = document.getElementById('profilePwdChangeOtpTimer');
-    if (timer) timer.textContent = '00:00';
+    if (timer) timer.textContent = '';
     const btn = document.getElementById('profilePwdChangeOtpResendBtn');
     if (btn) btn.disabled = false;
-    const cooldownRow = document.getElementById('profilePwdChangeOtpCooldownRow');
-    const resendRow = document.getElementById('profilePwdChangeOtpResendRow');
-    if (cooldownRow) cooldownRow.hidden = true;
-    if (resendRow) resendRow.hidden = false;
 }
 
 function startProfilePwdChangeResendCooldown(seconds) {
     const btn = document.getElementById('profilePwdChangeOtpResendBtn');
     const timer = document.getElementById('profilePwdChangeOtpTimer');
-    const cooldownRow = document.getElementById('profilePwdChangeOtpCooldownRow');
-    const resendRow = document.getElementById('profilePwdChangeOtpResendRow');
     profilePwdChangeOtpResendRemaining = seconds;
     if (btn) btn.disabled = true;
-    if (cooldownRow) cooldownRow.hidden = false;
-    if (resendRow) resendRow.hidden = true;
     if (profilePwdChangeOtpResendInterval) clearInterval(profilePwdChangeOtpResendInterval);
     function tick() {
         if (profilePwdChangeOtpResendRemaining <= 0) {
@@ -1941,7 +1925,7 @@ function startProfilePwdChangeResendCooldown(seconds) {
         const mm = Math.floor(profilePwdChangeOtpResendRemaining / 60);
         const ss = profilePwdChangeOtpResendRemaining % 60;
         if (timer) {
-            timer.textContent = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+            timer.textContent = ` (${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')})`;
         }
         profilePwdChangeOtpResendRemaining -= 1;
     }
