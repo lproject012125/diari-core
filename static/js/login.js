@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginTotpRecoveryResendBtn) {
             loginTotpRecoveryResendBtn.disabled = false;
             loginTotpRecoveryResendBtn.classList.remove('is-loading');
-            loginTotpRecoveryResendBtn.textContent = 'Resend code';
+            loginTotpRecoveryResendBtn.textContent = 'Resend Code';
             loginTotpRecoveryResendBtn.removeAttribute('aria-disabled');
         }
         if (loginTotpRecoveryResendTimer) loginTotpRecoveryResendTimer.textContent = '';
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginTotpRecoveryResendBtn) {
             loginTotpRecoveryResendBtn.disabled = false;
             loginTotpRecoveryResendBtn.classList.remove('is-loading');
-            loginTotpRecoveryResendBtn.textContent = 'Resend code';
+            loginTotpRecoveryResendBtn.textContent = 'Resend Code';
             loginTotpRecoveryResendBtn.removeAttribute('aria-disabled');
         }
         if (loginTotpRecoveryResendTimer) loginTotpRecoveryResendTimer.textContent = '';
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearRecoveryResendLoading() {
         if (!loginTotpRecoveryResendBtn) return;
         loginTotpRecoveryResendBtn.classList.remove('is-loading');
-        loginTotpRecoveryResendBtn.textContent = 'Resend code';
+        loginTotpRecoveryResendBtn.textContent = 'Resend Code';
     }
 
     function handleRecoveryEmailResponse(out, triggeredByResend) {

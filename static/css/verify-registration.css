@@ -239,6 +239,18 @@ body {
     opacity: 1;
 }
 
+@keyframes registrationOtpDigitFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+        box-shadow: 0 2px 0 rgba(111, 143, 127, 0.12), 0 4px 14px rgba(47, 62, 54, 0.06);
+    }
+    50% {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 0 rgba(111, 143, 127, 0.18), 0 12px 28px rgba(111, 143, 127, 0.12);
+    }
+}
+
 .digit {
     width: 46px;
     height: 46px;
@@ -254,11 +266,21 @@ body {
     visibility: visible;
     opacity: 1;
     box-shadow: inset 0 0 0 1px rgba(111, 143, 127, 0.06);
+    animation: registrationOtpDigitFloat 2.8s ease-in-out infinite;
 }
 
+.digit:nth-child(1) { animation-delay: 0s; }
+.digit:nth-child(2) { animation-delay: 0.12s; }
+.digit:nth-child(3) { animation-delay: 0.24s; }
+.digit:nth-child(4) { animation-delay: 0.36s; }
+.digit:nth-child(5) { animation-delay: 0.48s; }
+.digit:nth-child(6) { animation-delay: 0.6s; }
+
 .digit:focus {
+    animation: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(111, 143, 127, 0.12);
+    transform: translateY(-2px);
 }
 
 .digit.error {
@@ -536,7 +558,8 @@ body {
     }
 
     .verify-shell,
-    .verify-logo {
+    .verify-logo,
+    .digit {
         animation: none;
         transition: none;
     }

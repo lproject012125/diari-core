@@ -3862,7 +3862,6 @@ html.theme-dark .profile-totp-setup-stepper__dotCell.is-done .profile-totp-setup
 }
 
 .profile-pwd-change-otp-modal__digit.profile-totp-digit {
-    animation: none;
     width: clamp(2.85rem, 9.5vw, 3.35rem);
     height: clamp(3.2rem, 10.5vw, 3.75rem);
     border-radius: 14px;
