@@ -1234,14 +1234,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         const usernameField = document.getElementById('email');
                         const passwordField = document.getElementById('password');
 
-                        if (status === 429 || data.locked) {
+                        if (data.locked) {
                             const retryAfter = data.retryAfter || data.lockoutSeconds || 900;
                             startLoginLockout(retryAfter, username);
-                            showNotification(
-                                data.error || 'Too many failed login attempts. Login locked for 15 minutes.',
-                                'error',
-                                6000
-                            );
                             return;
                         }
 
