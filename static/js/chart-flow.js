@@ -9,6 +9,10 @@
         return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
 
+    function isMobile() {
+        return Boolean(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+    }
+
     const activeLoops = new WeakMap();
 
     function readPrimaryRgb(chart) {
@@ -31,7 +35,7 @@
     }
 
     function startChartFlow(chart) {
-        if (!chart || prefersReducedMotion() || activeLoops.has(chart)) return;
+        if (!chart || prefersReducedMotion() || isMobile() || activeLoops.has(chart)) return;
         let phase = 0;
         let raf = 0;
         const tick = () => {
@@ -47,7 +51,7 @@
     }
 
     function bindChart(chart) {
-        if (!chart || prefersReducedMotion()) return;
+        if (!chart || prefersReducedMotion() || isMobile()) return;
         registerChartJsPlugins();
         stopChartFlow(chart);
         startChartFlow(chart);
@@ -276,12 +280,12 @@
     }
 
     function markSparklineWrap(wrapEl) {
-        if (!wrapEl || prefersReducedMotion()) return;
+        if (!wrapEl || prefersReducedMotion() || isMobile()) return;
         wrapEl.classList.add('weekly-sparkline-wrap--flow');
     }
 
     function enhanceSparklineSvg(innerHtml, hasLine, lineColor, chartTheme) {
-        if (prefersReducedMotion() || !hasLine) return innerHtml;
+        if (prefersReducedMotion() || isMobile() || !hasLine) return innerHtml;
 
         const stroke = lineColor || '#6F8F7F';
         const border = chartTheme?.pointBorder || '#ffffff';
@@ -321,7 +325,7 @@
     }
 
     function decorateChartContainers(root) {
-        if (prefersReducedMotion()) return;
+        if (prefersReducedMotion() || isMobile()) return;
         const scope = root && root.querySelectorAll ? root : document;
         scope.querySelectorAll('.chart-card .chart-container, .weekly-sparkline-wrap').forEach((el) => {
             el.classList.add('chart-container--flow');
