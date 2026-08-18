@@ -815,6 +815,20 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
     display: block;
 }
 
+/* Search/filter no-results: hide the book icon and the month dropdown + calendar header */
+.entries-content--empty-results:not(.entries-content--no-journal-entries) .entries-empty-state__icon--journal {
+    display: none;
+}
+
+.entries-content--empty-results:not(.entries-content--no-journal-entries) .entries-empty-state__icon--search {
+    display: block;
+}
+
+.entries-content--empty-results:not(.entries-content--no-journal-entries) .entries-section--main .entries-toolbar,
+.entries-content--empty-results:not(.entries-content--no-journal-entries) .entries-section--main .entries-month-header {
+    display: none !important;
+}
+
 @media (max-width: 768px) {
     .entries-content--empty-results .entries-section:not(.entries-section--main),
     .entries-content--empty-results .load-more-section {
@@ -843,13 +857,12 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
         display: block;
     }
 
-    .entries-content--empty-results .entries-empty-state__icon--search {
-        display: none !important;
+    .entries-content--empty-results:not(.entries-content--no-journal-entries) .entries-empty-state__icon--search {
+        display: block !important;
     }
 
-    .entries-content--empty-results .entries-empty-state__icon--journal {
-        display: block !important;
-        margin-bottom: 0.65rem;
+    .entries-content--empty-results:not(.entries-content--no-journal-entries) .entries-empty-state__icon--journal {
+        display: none !important;
     }
 
     .entries-content--no-journal-entries .entries-empty-state__icon--search {
