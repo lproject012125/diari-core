@@ -814,6 +814,10 @@ def api_register_resend():
     if not email:
         return jsonify({"success": False, "error": "Email is required."}), 400
 
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(db.get_login_lockout_key(email))
+    if is_locked:
+        return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
+
     pending = db.get_pending_registration(email)
     if not pending:
         return jsonify({"success": False, "error": "No pending registration found."}), 404
@@ -932,6 +936,10 @@ def api_login_totp_recovery_request():
     user_id = db.peek_login_totp_challenge_user_id(challenge_token)
     if not user_id:
         return jsonify({"success": False, "error": "Unable to send recovery email."}), 400
+
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(f"user:{user_id}")
+    if is_locked:
+        return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
     user = db.get_user_by_id(user_id)
     if not user or not _truthy_db_flag(user.get("totp_enabled")):
@@ -1522,6 +1530,10 @@ def api_user_profile_email_change_resend():
     if auth_err:
         return auth_err
 
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(f"user:{user_id}")
+    if is_locked:
+        return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
+
     user = db.get_user_by_id(user_id)
     if not user:
         return jsonify({"success": False, "error": "User not found."}), 404
@@ -1684,6 +1696,10 @@ def api_user_password_change_request():
     if new_password != confirm_password:
         return jsonify({"success": False, "error": "New password and confirmation do not match."}), 400
 
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(f"user:{user_id}")
+    if is_locked:
+        return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
+
     user = db.get_user_by_id(user_id)
     if not user:
         return jsonify({"success": False, "error": "User not found."}), 404
@@ -1782,6 +1798,10 @@ def api_password_forgot():
     if not ok_email:
         return jsonify({"success": False, "error": err_email or "Please enter a valid email."}), 400
     email = email.lower()
+
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(db.get_login_lockout_key(email))
+    if is_locked:
+        return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
     user = db.get_user_by_email(email)
     if not user:

@@ -219,6 +219,32 @@ def _ensure_login_lockouts_table(cur):
         )
 
 
+def _ensure_otp_resend_limits_table(cur):
+    """Persist OTP resend rate limits so they survive restarts and deploys."""
+    if USE_POSTGRES:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS otp_resend_limits (
+                account_key VARCHAR(256) PRIMARY KEY,
+                attempts_json TEXT NOT NULL DEFAULT '[]',
+                locked_until TEXT,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+    else:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS otp_resend_limits (
+                account_key TEXT PRIMARY KEY,
+                attempts_json TEXT NOT NULL DEFAULT '[]',
+                locked_until TEXT,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            """
+        )
+
+
 def _ensure_login_totp_recovery_otps_table(cur):
     """One-time email codes to recover sign-in when authenticator app access is lost."""
     if USE_POSTGRES:
@@ -608,6 +634,7 @@ def init_db():
         _ensure_user_totp_columns(cur)
         _ensure_login_totp_challenges_table(cur)
         _ensure_login_lockouts_table(cur)
+        _ensure_otp_resend_limits_table(cur)
         _ensure_login_totp_recovery_otps_table(cur)
         _ensure_user_password_change_challenges_table(cur)
         _ensure_user_profile_email_change_challenges_table(cur)
@@ -914,6 +941,67 @@ def clear_login_lockout(account_key: str) -> None:
         placeholder = "%s" if USE_POSTGRES else "?"
         cur.execute(f"DELETE FROM login_lockouts WHERE account_key = {placeholder}", (account_key,))
         conn.commit()
+    finally:
+        conn.close()
+
+
+def get_otp_resend_limit(account_key: str):
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        placeholder = "%s" if USE_POSTGRES else "?"
+        cur.execute(
+            f"SELECT attempts_json, locked_until FROM otp_resend_limits WHERE account_key = {placeholder}",
+            (account_key,),
+        )
+        row = row_to_dict(cur.fetchone())
+        if not row:
+            return [], None
+        try:
+            attempts = json.loads(row.get("attempts_json") or "[]")
+            attempts = [str(a) for a in attempts if isinstance(a, str)]
+        except (TypeError, ValueError):
+            attempts = []
+        return attempts, _parse_lockout_timestamp(row.get("locked_until"))
+    finally:
+        conn.close()
+
+
+def save_otp_resend_limit(account_key: str, attempts: list[str], locked_until) -> bool:
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        attempts_json = json.dumps(attempts, separators=(",", ":"))
+        locked_value = locked_until.isoformat() if locked_until else None
+        if USE_POSTGRES:
+            cur.execute(
+                """
+                INSERT INTO otp_resend_limits (account_key, attempts_json, locked_until, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (account_key) DO UPDATE SET
+                    attempts_json = EXCLUDED.attempts_json,
+                    locked_until = EXCLUDED.locked_until,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (account_key, attempts_json, locked_value),
+            )
+        else:
+            cur.execute(
+                """
+                INSERT INTO otp_resend_limits (account_key, attempts_json, locked_until, updated_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(account_key) DO UPDATE SET
+                    attempts_json = excluded.attempts_json,
+                    locked_until = excluded.locked_until,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (account_key, attempts_json, locked_value),
+            )
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        return False
     finally:
         conn.close()
 
