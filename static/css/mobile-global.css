@@ -143,20 +143,23 @@
     }
 
     /* Inline validation messages: keep appear/disappear smooth on mobile. */
-    /* The default transition animates max-height 80px->0 while the real content
-       is much shorter, so on hide the box pauses at full size then snaps shut.
-       Sync the collapse (max-height, margin-top, padding) to finish with the
-       fade, with a slightly shorter duration so it feels snappy. */
+    /* Animating layout properties (max-height, margin-top, padding) every
+       frame is invisible on a fast PC/F12 but causes visible jank on a real
+       phone. On mobile animate ONLY GPU-composited opacity + transform; the
+       height change happens instantly while the box is transparent (fade-in)
+       or after it has already faded (fade-out via .diari-error-hiding, which
+       holds the height during the fade, set inline by hideInlineError). */
     .custom-error,
     .profile-account-detail-form .custom-error,
     .profile-account-detail-card--security .custom-error,
     .login-totp-step .custom-error,
     .login-totp-recovery-card__error.custom-error {
-        transition:
-            opacity 0.16s ease,
-            transform 0.16s ease,
-            max-height 0.2s ease,
-            margin-top 0.2s ease,
-            padding 0.2s ease !important;
+        transition: opacity 0.18s ease, transform 0.18s ease !important;
+    }
+
+    .custom-error.diari-error-hiding {
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 0.18s ease, transform 0.18s ease !important;
     }
 }

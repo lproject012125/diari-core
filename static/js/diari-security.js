@@ -144,19 +144,45 @@
         return apiFetch(url, { method: 'GET', credentials: 'same-origin' });
     }
 
+    var INLINE_ERROR_FADE_MS = 220;
+
+    function clearInlineErrorTimers(el) {
+        if (el.__diariErrorRaf) {
+            cancelAnimationFrame(el.__diariErrorRaf);
+            el.__diariErrorRaf = null;
+        }
+        if (el.__diariHideT) {
+            clearTimeout(el.__diariHideT);
+            el.__diariHideT = null;
+        }
+    }
+
     function showInlineError(el, message) {
         if (!el) return;
         if (typeof message === 'string') {
             el.textContent = message;
         }
-        if (el.__diariErrorRaf) {
-            cancelAnimationFrame(el.__diariErrorRaf);
-            el.__diariErrorRaf = null;
-        }
+        clearInlineErrorTimers(el);
+        el.classList.remove('diari-error-hiding');
+        el.style.maxHeight = '';
         el.__diariErrorRaf = requestAnimationFrame(function () {
             el.__diariErrorRaf = null;
             el.classList.add('show');
         });
+    }
+
+    function hideInlineError(el) {
+        if (!el) return;
+        clearInlineErrorTimers(el);
+        if (!el.classList.contains('show')) return;
+        el.style.maxHeight = el.scrollHeight + 'px';
+        el.classList.add('diari-error-hiding');
+        el.classList.remove('show');
+        el.__diariHideT = setTimeout(function () {
+            el.__diariHideT = null;
+            el.classList.remove('diari-error-hiding');
+            el.style.maxHeight = '';
+        }, INLINE_ERROR_FADE_MS + 60);
     }
 
     global.DiariSecurity = {
@@ -174,5 +200,6 @@
         apiFetch,
         apiGet,
         showInlineError,
+        hideInlineError,
     };
 })(typeof window !== 'undefined' ? window : globalThis);

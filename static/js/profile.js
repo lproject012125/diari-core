@@ -384,7 +384,7 @@ function hydratePersonalInfoPanel() {
         if (f) {
             f.classList.remove('error', 'success');
             var err = document.getElementById(`${fid}-error`);
-            if (err) err.classList.remove('show');
+            if (err) DiariSecurity.hideInlineError(err);
         }
     });
     [
@@ -455,7 +455,7 @@ function profilePersonalShowSuccess(inputElement) {
     inputElement.classList.remove('error');
     inputElement.classList.add('success');
     const customError = document.getElementById(`${inputElement.id}-error`);
-    if (customError) customError.classList.remove('show');
+    if (customError) DiariSecurity.hideInlineError(customError);
 }
 
 function profilePersonalIsValidEmail(email) {
@@ -751,7 +751,7 @@ function clearSecurityForm() {
     const err = document.getElementById('profileSecPwCommonErr');
     if (err) {
         err.textContent = '';
-        err.classList.remove('show');
+        DiariSecurity.hideInlineError(err);
     }
     if (profileSecPwLiveInst && typeof profileSecPwLiveInst.refresh === 'function') {
         profileSecPwLiveInst.refresh();

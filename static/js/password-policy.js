@@ -361,7 +361,7 @@
                     DiariSecurity.showInlineError(commonErrorEl, blockMsg);
                 }
             } else if (commonErrorEl && ready) {
-                commonErrorEl.classList.remove('show');
+                DiariSecurity.hideInlineError(commonErrorEl);
             }
             return { state: state, score: score, ready: ready };
         }
@@ -376,13 +376,13 @@
                     );
                 }
             } else if (commonErrorEl) {
-                commonErrorEl.classList.remove('show');
+                DiariSecurity.hideInlineError(commonErrorEl);
             }
         }
 
         function onInput() {
             if (commonErrorEl && !P.isCommonPassword(passwordEl.value)) {
-                commonErrorEl.classList.remove('show');
+                DiariSecurity.hideInlineError(commonErrorEl);
             }
             refresh();
         }

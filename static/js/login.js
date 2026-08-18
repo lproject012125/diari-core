@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function hideOtpError() {
         if (!otpCodeError) return;
-        otpCodeError.classList.remove('show');
+        DiariSecurity.hideInlineError(otpCodeError);
     }
 
     function getOtpCode() {
@@ -875,12 +875,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const customError = document.getElementById(`${inputElement.id}-error`);
         if (customError) {
-            customError.classList.remove('show');
+            DiariSecurity.hideInlineError(customError);
         }
 
         const errorDiv = inputElement.parentElement.nextElementSibling;
         if (errorDiv && errorDiv.classList.contains('error-message')) {
-            errorDiv.classList.remove('show');
+            DiariSecurity.hideInlineError(errorDiv);
         }
     }
     
@@ -889,11 +889,11 @@ document.addEventListener('DOMContentLoaded', function() {
         inputElement.classList.remove('error', 'success');
         const customError = document.getElementById(`${inputElement.id}-error`);
         if (customError) {
-            customError.classList.remove('show');
+            DiariSecurity.hideInlineError(customError);
         }
         const errorDiv = inputElement.parentElement.nextElementSibling;
         if (errorDiv && errorDiv.classList.contains('error-message')) {
-            errorDiv.classList.remove('show');
+            DiariSecurity.hideInlineError(errorDiv);
         }
     }
 
@@ -1242,7 +1242,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 usernameField.classList.add('error');
                                 usernameField.classList.remove('success');
                                 const usernameError = document.getElementById('email-error');
-                                if (usernameError) usernameError.classList.remove('show');
+                                if (usernameError) DiariSecurity.hideInlineError(usernameError);
                             }
                             if (passwordField) {
                                 passwordField.value = '';
@@ -2202,7 +2202,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                             const newPasswordCustomError = document.getElementById('resetNewPassword-error');
                             if (newPasswordCustomError) {
-                                newPasswordCustomError.classList.remove('show');
+                                DiariSecurity.hideInlineError(newPasswordCustomError);
                             }
                             showError(resetConfirmPasswordInput, errorMessage);
                         } else if (data.field === 'resetNewPassword' && resetNewPasswordInput) {

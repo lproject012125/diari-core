@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
         inputElement.classList.remove('error');
         inputElement.classList.add('success');
         const customError = document.getElementById(`${inputElement.id}-error`);
-        if (customError) customError.classList.remove('show');
+        if (customError) DiariSecurity.hideInlineError(customError);
     }
 
     function showNotification(message, type = 'info') {
