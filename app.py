@@ -205,7 +205,7 @@ if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("FLASK_ENV") == "prod
 _RATE_LOGIN = (60, 900.0)
 _RATE_REGISTER = (8, 3600.0)
 _RATE_OTP = (10, 900.0)
-_RATE_FORGOT = (6, 3600.0)
+_RATE_FORGOT = (30, 3600.0)
 _RATE_ANALYZE = (40, 60.0)
 _RATE_UPLOAD = (25, 60.0)
 
