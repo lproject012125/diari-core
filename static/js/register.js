@@ -34,8 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
         inputElement.classList.remove('success');
         const customError = document.getElementById(`${inputElement.id}-error`);
         if (customError) {
-            customError.textContent = message;
-            customError.classList.add('show');
+            DiariSecurity.showInlineError(customError, message);
         }
     }
 
@@ -439,8 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         personal
                     ) || 'Please meet all password requirements before signing up.';
                 if (signUpPwCommonErr) {
-                    signUpPwCommonErr.textContent = blockMsg;
-                    signUpPwCommonErr.classList.add('show');
+                    DiariSecurity.showInlineError(signUpPwCommonErr, blockMsg);
                 }
                 if (signUpPwLive) {
                     signUpPwLive.hidden = false;

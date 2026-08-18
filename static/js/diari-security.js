@@ -144,6 +144,21 @@
         return apiFetch(url, { method: 'GET', credentials: 'same-origin' });
     }
 
+    function showInlineError(el, message) {
+        if (!el) return;
+        if (typeof message === 'string') {
+            el.textContent = message;
+        }
+        if (el.__diariErrorRaf) {
+            cancelAnimationFrame(el.__diariErrorRaf);
+            el.__diariErrorRaf = null;
+        }
+        el.__diariErrorRaf = requestAnimationFrame(function () {
+            el.__diariErrorRaf = null;
+            el.classList.add('show');
+        });
+    }
+
     global.DiariSecurity = {
         escapeHtml,
         stripAngleBrackets,
@@ -158,5 +173,6 @@
         clearUserScopedLocalData,
         apiFetch,
         apiGet,
+        showInlineError,
     };
 })(typeof window !== 'undefined' ? window : globalThis);

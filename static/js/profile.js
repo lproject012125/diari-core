@@ -446,8 +446,7 @@ function profilePersonalShowError(inputElement, message) {
     inputElement.classList.remove('success');
     const customError = document.getElementById(`${inputElement.id}-error`);
     if (customError) {
-        customError.textContent = message;
-        customError.classList.add('show');
+        DiariSecurity.showInlineError(customError, message);
     }
 }
 
@@ -2201,8 +2200,7 @@ async function submitProfilePasswordChangeRequest(isResend) {
             if (data.field === 'profileSecNewPassword' && data.error) {
                 const err = document.getElementById('profileSecPwCommonErr');
                 if (err) {
-                    err.textContent = data.error;
-                    err.classList.add('show');
+                    DiariSecurity.showInlineError(err, data.error);
                 } else {
                     showNotification(data.error, 'warning');
                 }

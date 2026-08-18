@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginTotpCodeError) {
             loginTotpCodeError.textContent = message || 'Invalid code.';
             loginTotpCodeError.removeAttribute('hidden');
-            loginTotpCodeError.classList.add('show');
+            DiariSecurity.showInlineError(loginTotpCodeError);
         }
         if (loginTotpDigitsWrap) loginTotpDigitsWrap.classList.add('has-error');
     }
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginRecoveryCodeError) {
             loginRecoveryCodeError.textContent = message || 'Invalid code.';
             loginRecoveryCodeError.removeAttribute('hidden');
-            loginRecoveryCodeError.classList.add('show');
+            DiariSecurity.showInlineError(loginRecoveryCodeError);
         }
         if (loginRecoveryDigitsWrap) loginRecoveryDigitsWrap.classList.add('has-error');
     }
@@ -719,8 +719,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showOtpError(message) {
         if (!otpCodeError) return;
-        otpCodeError.textContent = message;
-        otpCodeError.classList.add('show');
+        DiariSecurity.showInlineError(otpCodeError, message);
     }
 
     function hideOtpError() {
@@ -855,8 +854,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const customError = document.getElementById(`${inputElement.id}-error`);
         if (customError) {
-            customError.textContent = message;
-            customError.classList.add('show');
+            DiariSecurity.showInlineError(customError, message);
             return;
         }
 
@@ -867,8 +865,7 @@ document.addEventListener('DOMContentLoaded', function() {
             inputElement.parentElement.after(errorDiv);
         }
 
-        errorDiv.textContent = message;
-        errorDiv.classList.add('show');
+        DiariSecurity.showInlineError(errorDiv, message);
     }
     
     // Show success state
