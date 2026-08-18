@@ -144,7 +144,7 @@
         return apiFetch(url, { method: 'GET', credentials: 'same-origin' });
     }
 
-    var INLINE_ERROR_FADE_MS = 220;
+    var INLINE_ERROR_FADE_MS = 260;
 
     function clearInlineErrorTimers(el) {
         if (el.__diariErrorRaf) {
@@ -163,10 +163,9 @@
             el.textContent = message;
         }
         clearInlineErrorTimers(el);
-        el.classList.remove('diari-error-hiding');
-        el.style.maxHeight = '';
         el.__diariErrorRaf = requestAnimationFrame(function () {
             el.__diariErrorRaf = null;
+            el.style.maxHeight = el.scrollHeight + 4 + 'px';
             el.classList.add('show');
         });
     }
@@ -175,14 +174,12 @@
         if (!el) return;
         clearInlineErrorTimers(el);
         if (!el.classList.contains('show')) return;
-        el.style.maxHeight = el.scrollHeight + 'px';
-        el.classList.add('diari-error-hiding');
+        el.style.maxHeight = el.scrollHeight + 4 + 'px';
         el.classList.remove('show');
         el.__diariHideT = setTimeout(function () {
             el.__diariHideT = null;
-            el.classList.remove('diari-error-hiding');
             el.style.maxHeight = '';
-        }, INLINE_ERROR_FADE_MS + 60);
+        }, INLINE_ERROR_FADE_MS);
     }
 
     global.DiariSecurity = {

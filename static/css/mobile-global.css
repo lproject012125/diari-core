@@ -142,24 +142,21 @@
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
     }
 
-    /* Inline validation messages: keep appear/disappear smooth on mobile. */
-    /* Animating layout properties (max-height, margin-top, padding) every
-       frame is invisible on a fast PC/F12 but causes visible jank on a real
-       phone. On mobile animate ONLY GPU-composited opacity + transform; the
-       height change happens instantly while the box is transparent (fade-in)
-       or after it has already faded (fade-out via .diari-error-hiding, which
-       holds the height during the fade, set inline by hideInlineError). */
+    /* Inline validation messages: smooth appear/disappear on mobile. */
+    /* The box height is animated with an EXACT max-height (set inline by
+       showInlineError/hideInlineError from scrollHeight), so the collapse
+       tracks the fade continuously instead of pausing at the full 80px then
+       snapping shut (the dead-time that read as lag on a real phone). */
     .custom-error,
     .profile-account-detail-form .custom-error,
     .profile-account-detail-card--security .custom-error,
     .login-totp-step .custom-error,
     .login-totp-recovery-card__error.custom-error {
-        transition: opacity 0.18s ease, transform 0.18s ease !important;
-    }
-
-    .custom-error.diari-error-hiding {
-        opacity: 0;
-        transform: translateY(-4px);
-        transition: opacity 0.18s ease, transform 0.18s ease !important;
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease,
+            max-height 0.2s ease,
+            margin-top 0.2s ease,
+            padding 0.2s ease !important;
     }
 }
