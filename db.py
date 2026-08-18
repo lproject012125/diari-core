@@ -219,30 +219,44 @@ def _ensure_login_lockouts_table(cur):
         )
 
 
-def _ensure_otp_resend_limits_table(cur):
-    """Persist OTP resend rate limits so they survive restarts and deploys."""
-    if USE_POSTGRES:
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS otp_resend_limits (
-                account_key VARCHAR(256) PRIMARY KEY,
-                attempts_json TEXT NOT NULL DEFAULT '[]',
-                locked_until TEXT,
-                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-            """
-        )
-    else:
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS otp_resend_limits (
-                account_key TEXT PRIMARY KEY,
-                attempts_json TEXT NOT NULL DEFAULT '[]',
-                locked_until TEXT,
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-            """
-        )
+OTP_RESEND_LIMIT_TABLES = {
+    "register_resend": "otp_resend_limits_register_resend",
+    "login_recovery": "otp_resend_limits_login_recovery",
+    "email_change": "otp_resend_limits_email_change",
+    "password_change": "otp_resend_limits_password_change",
+    "forgot": "otp_resend_limits_forgot",
+}
+
+
+def _resolve_otp_resend_limit_table(flow: str) -> str:
+    return OTP_RESEND_LIMIT_TABLES.get(str(flow or ""), "otp_resend_limits")
+
+
+def _ensure_otp_resend_limits_tables(cur):
+    """Persist per-flow OTP resend rate limits so they survive restarts and deploys."""
+    for table_name in OTP_RESEND_LIMIT_TABLES.values():
+        if USE_POSTGRES:
+            cur.execute(
+                f"""
+                CREATE TABLE IF NOT EXISTS {table_name} (
+                    account_key VARCHAR(256) PRIMARY KEY,
+                    attempts_json TEXT NOT NULL DEFAULT '[]',
+                    locked_until TEXT,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+        else:
+            cur.execute(
+                f"""
+                CREATE TABLE IF NOT EXISTS {table_name} (
+                    account_key TEXT PRIMARY KEY,
+                    attempts_json TEXT NOT NULL DEFAULT '[]',
+                    locked_until TEXT,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
 
 
 def _ensure_login_totp_recovery_otps_table(cur):
@@ -634,7 +648,7 @@ def init_db():
         _ensure_user_totp_columns(cur)
         _ensure_login_totp_challenges_table(cur)
         _ensure_login_lockouts_table(cur)
-        _ensure_otp_resend_limits_table(cur)
+        _ensure_otp_resend_limits_tables(cur)
         _ensure_login_totp_recovery_otps_table(cur)
         _ensure_user_password_change_challenges_table(cur)
         _ensure_user_profile_email_change_challenges_table(cur)
@@ -945,13 +959,14 @@ def clear_login_lockout(account_key: str) -> None:
         conn.close()
 
 
-def get_otp_resend_limit(account_key: str):
+def get_otp_resend_limit(flow: str, account_key: str):
     conn = get_conn()
     cur = conn.cursor()
     try:
+        table_name = _resolve_otp_resend_limit_table(flow)
         placeholder = "%s" if USE_POSTGRES else "?"
         cur.execute(
-            f"SELECT attempts_json, locked_until FROM otp_resend_limits WHERE account_key = {placeholder}",
+            f"SELECT attempts_json, locked_until FROM {table_name} WHERE account_key = {placeholder}",
             (account_key,),
         )
         row = row_to_dict(cur.fetchone())
@@ -967,16 +982,17 @@ def get_otp_resend_limit(account_key: str):
         conn.close()
 
 
-def save_otp_resend_limit(account_key: str, attempts: list[str], locked_until) -> bool:
+def save_otp_resend_limit(flow: str, account_key: str, attempts: list[str], locked_until) -> bool:
     conn = get_conn()
     cur = conn.cursor()
     try:
+        table_name = _resolve_otp_resend_limit_table(flow)
         attempts_json = json.dumps(attempts, separators=(",", ":"))
         locked_value = locked_until.isoformat() if locked_until else None
         if USE_POSTGRES:
             cur.execute(
-                """
-                INSERT INTO otp_resend_limits (account_key, attempts_json, locked_until, updated_at)
+                f"""
+                INSERT INTO {table_name} (account_key, attempts_json, locked_until, updated_at)
                 VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
                 ON CONFLICT (account_key) DO UPDATE SET
                     attempts_json = EXCLUDED.attempts_json,
@@ -987,8 +1003,8 @@ def save_otp_resend_limit(account_key: str, attempts: list[str], locked_until) -
             )
         else:
             cur.execute(
-                """
-                INSERT INTO otp_resend_limits (account_key, attempts_json, locked_until, updated_at)
+                f"""
+                INSERT INTO {table_name} (account_key, attempts_json, locked_until, updated_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(account_key) DO UPDATE SET
                     attempts_json = excluded.attempts_json,

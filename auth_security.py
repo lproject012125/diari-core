@@ -23,6 +23,13 @@ OTP_RATE_WINDOW_SECONDS = 900.0  # 15 minutes
 OTP_RATE_LOCKOUT_SECONDS = 900.0  # 15 minutes
 OTP_RATE_LIMIT_MESSAGE = "Too many OTP requests. Please try again later."
 
+# Each OTP-bearing flow keeps its own independent rate limiter + storage.
+FLOW_REGISTER_RESEND = "register_resend"
+FLOW_LOGIN_RECOVERY = "login_recovery"
+FLOW_EMAIL_CHANGE = "email_change"
+FLOW_PASSWORD_CHANGE = "password_change"
+FLOW_FORGOT = "forgot"
+
 
 def client_ip(request) -> str:
     if request is None:
@@ -132,24 +139,24 @@ def clear_login_failures(request, identifier: str) -> None:
         db.clear_login_lockout(k)
 
 
-def check_otp_resend_limit(account_key: str) -> tuple[bool, int]:
-    """Return (is_locked, remaining_seconds) for the OTP resend rate limit."""
-    _, locked_until = db.get_otp_resend_limit(account_key)
+def check_otp_resend_limit(flow: str, account_key: str) -> tuple[bool, int]:
+    """Return (is_locked, remaining_seconds) for the OTP resend rate limit of a flow."""
+    _, locked_until = db.get_otp_resend_limit(flow, account_key)
     now = datetime.now(timezone.utc)
     if locked_until and locked_until > now:
         return True, int((locked_until - now).total_seconds()) + 1
     return False, 0
 
 
-def record_otp_resend(account_key: str) -> tuple[bool, int, str]:
+def record_otp_resend(flow: str, account_key: str) -> tuple[bool, int, str]:
     """
-    Record an OTP request for an account, enforcing 5 requests per 15 minutes.
-    The 6th request within the window locks the account for 15 minutes.
+    Record an OTP request for a flow + account, enforcing 5 requests per 15 minutes.
+    The 6th request within the window locks that flow + account for 15 minutes.
     Returns (is_locked, remaining_seconds, message).
     """
     now = datetime.now(timezone.utc)
     window_start = now - timedelta(seconds=OTP_RATE_WINDOW_SECONDS)
-    attempts, locked_until = db.get_otp_resend_limit(account_key)
+    attempts, locked_until = db.get_otp_resend_limit(flow, account_key)
 
     if locked_until and locked_until > now:
         return True, int((locked_until - now).total_seconds()) + 1, OTP_RATE_LIMIT_MESSAGE
@@ -166,11 +173,11 @@ def record_otp_resend(account_key: str) -> tuple[bool, int, str]:
 
     if len(recent) >= MAX_OTP_REQUESTS:
         locked_until = now + timedelta(seconds=OTP_RATE_LOCKOUT_SECONDS)
-        db.save_otp_resend_limit(account_key, [], locked_until)
+        db.save_otp_resend_limit(flow, account_key, [], locked_until)
         return True, int(OTP_RATE_LOCKOUT_SECONDS), OTP_RATE_LIMIT_MESSAGE
 
     recent.append(now)
-    db.save_otp_resend_limit(account_key, [ts.isoformat() for ts in recent], None)
+    db.save_otp_resend_limit(flow, account_key, [ts.isoformat() for ts in recent], None)
     return False, 0, ""
 
 

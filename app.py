@@ -814,7 +814,7 @@ def api_register_resend():
     if not email:
         return jsonify({"success": False, "error": "Email is required."}), 400
 
-    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(db.get_login_lockout_key(email))
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(authsec.FLOW_REGISTER_RESEND, db.get_login_lockout_key(email))
     if is_locked:
         return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
@@ -937,7 +937,7 @@ def api_login_totp_recovery_request():
     if not user_id:
         return jsonify({"success": False, "error": "Unable to send recovery email."}), 400
 
-    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(f"user:{user_id}")
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(authsec.FLOW_LOGIN_RECOVERY, f"user:{user_id}")
     if is_locked:
         return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
@@ -1530,7 +1530,7 @@ def api_user_profile_email_change_resend():
     if auth_err:
         return auth_err
 
-    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(f"user:{user_id}")
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(authsec.FLOW_EMAIL_CHANGE, f"user:{user_id}")
     if is_locked:
         return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
@@ -1696,7 +1696,7 @@ def api_user_password_change_request():
     if new_password != confirm_password:
         return jsonify({"success": False, "error": "New password and confirmation do not match."}), 400
 
-    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(f"user:{user_id}")
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(authsec.FLOW_PASSWORD_CHANGE, f"user:{user_id}")
     if is_locked:
         return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
@@ -1799,7 +1799,7 @@ def api_password_forgot():
         return jsonify({"success": False, "error": err_email or "Please enter a valid email."}), 400
     email = email.lower()
 
-    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(db.get_login_lockout_key(email))
+    is_locked, rem_sec, limit_msg = authsec.record_otp_resend(authsec.FLOW_FORGOT, db.get_login_lockout_key(email))
     if is_locked:
         return jsonify({"success": False, "error": limit_msg, "retryAfterSeconds": rem_sec}), 429
 
