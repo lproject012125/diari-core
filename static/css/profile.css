@@ -2009,6 +2009,12 @@ html.theme-dark .profile-security-status span {
 }
 
 @media (min-width: 769px) {
+    /* Security: password indicator error box width based on text content (PC Platform only) */
+    body.page-profile .profile-account-detail-card--security .custom-error {
+        width: fit-content !important;
+        max-width: 100% !important;
+    }
+
     body.page-profile .profile-content {
         display: flex;
         flex-direction: column;
