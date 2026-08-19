@@ -3889,7 +3889,7 @@ html.theme-dark .profile-totp-setup-stepper__dotCell.is-done .profile-totp-setup
 .profile-pwd-change-otp-alert {
     box-sizing: border-box;
     width: 100%;
-    margin: 8px 0 6px;
+    margin: 0.9rem 0 0.55rem;
     padding: 8px 10px;
     border-radius: 8px;
     font-size: 13px;

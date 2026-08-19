@@ -1575,22 +1575,23 @@ html.theme-dark .lockout-countdown {
 }
 
 .login-totp-step .form-group .custom-error {
-    margin-top: 0.85rem;
+    margin-top: 0.9rem;
     text-align: center;
 }
 
 .login-totp-step .custom-error.show {
-    margin-top: 0.85rem;
-    margin-bottom: 0.2rem;
+    margin-top: 0.9rem;
+    margin-bottom: 0.7rem;
     max-height: 72px;
 }
 
-/* Inline OTP error shown below the VERIFY & CONTINUE button */
-.login-totp-step__error.custom-error {
-    margin-top: 0.25rem;
+/* Recovery card invalid-code error: balance spacing around it */
+.login-totp-step .login-totp-recovery-card__error.custom-error.show {
+    margin-top: 0.85rem;
+    margin-bottom: 0.75rem;
 }
 
-/* Feedback shown below the Verify Code button (forgot password) */
+/* Feedback shown below the forgot-password code inputs */
 .reset-otp-feedback {
     box-sizing: border-box;
     display: flex;
@@ -1598,8 +1599,7 @@ html.theme-dark .lockout-countdown {
     justify-content: space-between;
     gap: 0.75rem;
     width: 100%;
-    margin-top: 0.25rem;
-    margin-bottom: 0.5rem;
+    margin: 0.9rem 0 0;
     padding: 8px 10px;
     border-radius: 8px;
     font-size: 13px;
@@ -1644,7 +1644,7 @@ html.theme-dark .lockout-countdown {
     background: rgba(0, 0, 0, 0.06);
 }
 
-/* Recovery card dismissible feedback below the submit button */
+/* Recovery card dismissible feedback below the recovery code inputs */
 .login-totp-recovery-card__feedback {
     box-sizing: border-box;
     display: flex;
@@ -1652,7 +1652,7 @@ html.theme-dark .lockout-countdown {
     justify-content: space-between;
     gap: 0.75rem;
     width: 100%;
-    margin: 0.65rem 0 0;
+    margin: 0.85rem 0 0.75rem;
     padding: 8px 10px;
     border-radius: 8px;
     font-size: 13px;
