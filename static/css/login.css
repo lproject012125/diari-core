@@ -942,6 +942,20 @@ html.theme-dark .lockout-countdown {
         background-color: #ffffff !important;
         background-size: 100% auto !important;
     }
+
+    /* The 329 KB white-panel SVGs must be repainted while validation changes
+       this panel's layout. Their CSS-equivalent surface keeps the same panel
+       shape, radius, shadow, and form styling without mobile paint jank. */
+    .login-left-panel,
+    html.auth-phase-upper-bg .login-left-panel,
+    .login-left-panel:has(#loginTotpStep:not([hidden])),
+    .login-left-panel:has(#resetConfirmForm:not([hidden])),
+    .login-left-panel:has(#resetPasswordForm:not([hidden])),
+    .login-container.signup-mode .login-left-panel,
+    .login-left-panel:has(.signup-section:not([hidden])) {
+        background-image: none !important;
+        background-color: #ffffff !important;
+    }
     
     .login-logo {
         width: 60px;
