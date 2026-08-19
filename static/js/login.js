@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetCloseBtn = document.getElementById('resetCloseBtn');
     const signinMainFormHeader = document.getElementById('signinMainFormHeader');
     const resetAlert = document.getElementById('resetAlert');
+    const resetOtpFeedback = document.getElementById('resetOtpFeedback');
+    const resetOtpFeedbackText = document.getElementById('resetOtpFeedbackText');
+    const resetOtpFeedbackClose = document.getElementById('resetOtpFeedbackClose');
     const resetRequestForm = document.getElementById('resetRequestForm');
     const resetConfirmForm = document.getElementById('resetConfirmForm');
     const resetIdentifierInput = document.getElementById('resetIdentifier');
@@ -93,6 +96,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginTotpShowRecovery = document.getElementById('loginTotpShowRecovery');
     const loginTotpRecoverySend = document.getElementById('loginTotpRecoverySend');
     const loginTotpRecoveryVerifyMessage = document.getElementById('loginTotpRecoveryVerifyMessage');
+    const loginTotpRecoveryVerifyMessageText = document.getElementById('loginTotpRecoveryVerifyMessageText');
+    const loginTotpRecoveryVerifyMessageClose = document.getElementById('loginTotpRecoveryVerifyMessageClose');
     const loginTotpRecoveryRequestCard = document.getElementById('loginTotpRecoveryRequestCard');
     const loginTotpRecoveryVerifyCard = document.getElementById('loginTotpRecoveryVerifyCard');
     const loginTotpRecoveryCodeExpire = document.getElementById('loginTotpRecoveryCodeExpire');
@@ -271,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginTotpRecoveryResendTimer) loginTotpRecoveryResendTimer.textContent = '';
         if (loginTotpRecoveryVerifyMessage) {
             loginTotpRecoveryVerifyMessage.hidden = true;
-            loginTotpRecoveryVerifyMessage.textContent = '';
+            if (loginTotpRecoveryVerifyMessageText) loginTotpRecoveryVerifyMessageText.textContent = '';
         }
         clearLoginRecoveryDigits();
         clearLoginRecoveryErrorState();
@@ -309,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginTotpRecoveryResendTimer) loginTotpRecoveryResendTimer.textContent = '';
         if (loginTotpRecoveryVerifyMessage) {
             loginTotpRecoveryVerifyMessage.hidden = true;
-            loginTotpRecoveryVerifyMessage.textContent = '';
+            if (loginTotpRecoveryVerifyMessageText) loginTotpRecoveryVerifyMessageText.textContent = '';
         }
         clearLoginRecoveryDigits();
         clearLoginRecoveryErrorState();
@@ -418,8 +423,10 @@ document.addEventListener('DOMContentLoaded', function() {
         startRecoveryResendCooldown(56);
         startRecoveryCodeExpiryCountdown();
         if (loginTotpRecoveryVerifyMessage) {
-            loginTotpRecoveryVerifyMessage.textContent =
-                'We sent a 6-digit recovery code to your registered email address. Enter it below to sign in.';
+            if (loginTotpRecoveryVerifyMessageText) {
+                loginTotpRecoveryVerifyMessageText.textContent =
+                    'We sent a 6-digit recovery code to your registered email address. Enter it below to sign in.';
+            }
             loginTotpRecoveryVerifyMessage.hidden = false;
         }
         if (!triggeredByResend) {
@@ -1727,6 +1734,27 @@ document.addEventListener('DOMContentLoaded', function() {
         resetAlert.className = 'reset-alert';
     }
 
+    function setResetOtpFeedback(message, type) {
+        if (!resetOtpFeedback || !resetOtpFeedbackText) return;
+        resetOtpFeedbackText.textContent = message;
+        resetOtpFeedback.className =
+            'reset-otp-feedback' + (type === 'success' ? ' reset-otp-feedback--success' : ' reset-otp-feedback--error');
+        resetOtpFeedback.hidden = false;
+    }
+
+    function clearResetOtpFeedback() {
+        if (!resetOtpFeedback) return;
+        resetOtpFeedback.hidden = true;
+        resetOtpFeedbackText.textContent = '';
+        resetOtpFeedback.className = 'reset-otp-feedback';
+    }
+
+    function clearResetOtpErrorFeedback() {
+        if (!resetOtpFeedback || resetOtpFeedback.hidden) return;
+        if (resetOtpFeedback.classList.contains('reset-otp-feedback--success')) return;
+        clearResetOtpFeedback();
+    }
+
     function clearForgotPasswordOtpInputs() {
         if (resetAutoVerifyTimeout) {
             clearTimeout(resetAutoVerifyTimeout);
@@ -1778,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (resetVerifyInProgress) return;
         const code = getResetOtpCode();
         if (code.length !== 6) {
-            setResetAlert('Please enter the 6-digit reset code.');
+            setResetOtpFeedback('Please enter the 6-digit reset code.', 'error');
             return;
         }
 
@@ -1793,7 +1821,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
             .then(({ ok, data }) => {
                 if (!ok || !data.success) {
-                    setResetAlert(data.error || 'Invalid or expired reset code.');
+                    setResetOtpFeedback(data.error || 'Invalid or expired reset code.', 'error');
                     return;
                 }
                 verifiedResetCode = code;
@@ -1802,10 +1830,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (resetPasswordForm) showResetStep(resetPasswordForm);
                 if (resetTitle) resetTitle.textContent = 'Reset Password';
                 if (resetSubtitle) resetSubtitle.textContent = 'Please choose a new password that is different from your old one.';
+                clearResetOtpFeedback();
                 setResetAlert('Code verified. Set your new password.', 'success');
                 initResetPasswordLive();
             })
-            .catch(() => setResetAlert('Could not reach the server. Please try again.'))
+            .catch(() => setResetOtpFeedback('Could not reach the server. Please try again.', 'error'))
             .finally(() => {
                 resetVerifyInProgress = false;
                 setVerifyResetButtonLoading(false);
@@ -1893,6 +1922,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetIdentifier = '';
         verifiedResetCode = '';
         clearResetAlert();
+        clearResetOtpFeedback();
         if (resetRequestForm) showResetStep(resetRequestForm);
         if (resetConfirmForm) resetConfirmForm.hidden = true;
         if (resetPasswordForm) resetPasswordForm.hidden = true;
@@ -1930,6 +1960,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resetIdentifier = '';
         verifiedResetCode = '';
         clearResetAlert();
+        clearResetOtpFeedback();
         if (resetResendInterval) {
             clearInterval(resetResendInterval);
             resetResendInterval = null;
@@ -2018,6 +2049,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (resetTitle) resetTitle.textContent = 'Verification';
                     if (resetSubtitle) resetSubtitle.textContent = 'Thank you for verifying. Kindly check your email for the code.';
                     clearResetAlert();
+                    clearResetOtpFeedback();
                     startResetResendCooldown(60);
                     if (resetOtpDigits[0]) resetOtpDigits[0].focus();
                 })
@@ -2035,6 +2067,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetVerifyBackBtn) {
         resetVerifyBackBtn.addEventListener('click', function () {
             clearResetAlert();
+            clearResetOtpFeedback();
             saveAuthPhaseState('forgot_password');
             destroyResetPasswordLive();
             if (resetConfirmForm) resetConfirmForm.hidden = true;
@@ -2052,6 +2085,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resetPasswordBackBtn) {
         resetPasswordBackBtn.addEventListener('click', function () {
             clearResetAlert();
+            clearResetOtpFeedback();
             saveAuthPhaseState('forgot_verify', { resetIdentifier });
             destroyResetPasswordLive();
             if (resetPasswordForm) resetPasswordForm.hidden = true;
@@ -2068,6 +2102,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const v = e.target.value.replace(/\D/g, '').slice(-1);
                 e.target.value = v;
                 clearResetAlert();
+                clearResetOtpErrorFeedback();
                 if (v && idx < resetOtpDigits.length - 1) {
                     resetOtpDigits[idx + 1].focus();
                 }
@@ -2097,6 +2132,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     d.value = digits[i] || '';
                 });
                 clearResetAlert();
+                clearResetOtpErrorFeedback();
                 if (getResetOtpCode().length === 6) {
                     if (resetAutoVerifyTimeout) clearTimeout(resetAutoVerifyTimeout);
                     resetAutoVerifyTimeout = setTimeout(() => {
@@ -2109,10 +2145,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    if (resetOtpFeedbackClose) {
+        resetOtpFeedbackClose.addEventListener('click', () => {
+            clearResetOtpFeedback();
+        });
+    }
+
+    if (loginTotpRecoveryVerifyMessageClose) {
+        loginTotpRecoveryVerifyMessageClose.addEventListener('click', () => {
+            if (loginTotpRecoveryVerifyMessage) loginTotpRecoveryVerifyMessage.hidden = true;
+        });
+    }
+
     if (resendResetCodeBtn) {
         resendResetCodeBtn.addEventListener('click', () => {
             if (!resetIdentifier || resendResetCodeBtn.disabled) return;
             clearResetAlert();
+            clearResetOtpFeedback();
             resendResetCodeBtn.disabled = true;
             resendResetCodeBtn.classList.add('is-loading');
             fetch('/api/password/forgot', {
@@ -2123,18 +2172,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
                 .then(({ ok, data }) => {
                     if (!ok || !data.success) {
-                        setResetAlert(data.error || 'Failed to resend reset code.');
+                        setResetOtpFeedback(data.error || 'Failed to resend reset code.', 'error');
                         resendResetCodeBtn.classList.remove('is-loading');
                         resendResetCodeBtn.disabled = false;
                         return;
                     }
-                    setResetAlert('Verification code has been resent to your email.', 'success');
+                    setResetOtpFeedback('Verification code has been resent to your email.', 'success');
                     clearForgotPasswordOtpInputs();
                     startResetResendCooldown(60);
                     resendResetCodeBtn.classList.remove('is-loading');
                 })
                 .catch(() => {
-                    setResetAlert('Could not reach the server. Please try again.');
+                    setResetOtpFeedback('Could not reach the server. Please try again.', 'error');
                     resendResetCodeBtn.classList.remove('is-loading');
                     resendResetCodeBtn.disabled = false;
                 });

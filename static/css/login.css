@@ -1563,6 +1563,141 @@ html.theme-dark .lockout-countdown {
     max-height: 72px;
 }
 
+/* Inline OTP error shown below the VERIFY & CONTINUE button */
+.login-totp-step__error.custom-error {
+    margin-top: 0.25rem;
+}
+
+/* Feedback shown below the Verify Code button (forgot password) */
+.reset-otp-feedback {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: left;
+    background: #fef2f2;
+    border: 1px solid #f8b4bf;
+    color: #b84252;
+}
+
+.reset-otp-feedback[hidden] {
+    display: none !important;
+}
+
+.reset-otp-feedback--success {
+    background: #f0faf3;
+    border-color: #b9e4c6;
+    color: #2f7a45;
+}
+
+.reset-otp-feedback__text {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+}
+
+.reset-otp-feedback__close {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.reset-otp-feedback__close:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Recovery card dismissible feedback below the submit button */
+.login-totp-recovery-card__feedback {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    margin: 0.65rem 0 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: left;
+    background: #f0faf3;
+    border: 1px solid #b9e4c6;
+    color: #2f7a45;
+}
+
+.login-totp-recovery-card__feedback[hidden] {
+    display: none !important;
+}
+
+.login-totp-recovery-card__feedback-text {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+}
+
+.login-totp-recovery-card__feedback-close {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.login-totp-recovery-card__feedback-close:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+html.theme-dark .reset-otp-feedback {
+    background: rgba(80, 56, 58, 0.5);
+    border-color: rgba(248, 180, 191, 0.35);
+    color: #f3b3bd;
+}
+
+html.theme-dark .reset-otp-feedback--success {
+    background: rgba(42, 74, 54, 0.5);
+    border-color: rgba(185, 228, 198, 0.35);
+    color: #a8d8b6;
+}
+
+html.theme-dark .reset-otp-feedback__close:hover,
+html.theme-dark .login-totp-recovery-card__feedback-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+html.theme-dark .login-totp-recovery-card__feedback {
+    background: rgba(42, 74, 54, 0.5);
+    border-color: rgba(185, 228, 198, 0.35);
+    color: #a8d8b6;
+}
+
+html.theme-dark .login-totp-step__error.custom-error {
+    background: rgba(80, 56, 58, 0.5);
+    border-color: rgba(248, 180, 191, 0.35);
+    color: #f3b3bd;
+}
+
 .login-totp-step__verify.btn-signin {
     width: 100%;
     margin-top: 1.15rem;
