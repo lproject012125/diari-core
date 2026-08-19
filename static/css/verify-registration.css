@@ -505,13 +505,47 @@ body {
 @media (max-width: 768px) {
     body {
         padding: 0 !important;
-        background: url('/mobile-green-panel-login.svg') top center / cover no-repeat !important;
+        background: #6f8f7f !important;
+        background-image: none !important;
         animation: none !important;
+        position: relative;
+        min-height: 100vh;
+        min-height: 100dvh;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+        pointer-events: none;
+        min-height: 100vh;
+        min-height: 100dvh;
+        min-height: 100svh;
+        background-color: #6f8f7f;
+        background-image: url('/mobile-green-panel-login.svg');
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: cover;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        contain: paint;
     }
 
     .page {
         padding: 0 !important;
         min-height: 100vh !important;
+        min-height: 100dvh !important;
+        width: 100%;
+        align-items: stretch !important;
         justify-content: flex-start !important;
     }
 
@@ -521,12 +555,14 @@ body {
         grid-template-columns: 1fr !important;
         max-width: 100% !important;
         min-height: 100vh !important;
+        min-height: 100dvh !important;
         background: transparent !important;
         box-shadow: none !important;
         border-radius: 0 !important;
         opacity: 1 !important;
         transform: none !important;
         animation: none !important;
+        overflow: visible !important;
     }
 
     .verify-side {
@@ -543,12 +579,37 @@ body {
         min-height: 60vh !important;
         align-self: unset !important;
         height: auto !important;
-        background: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg') top center / cover no-repeat !important;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background: #ffffff !important;
+        background-image: none !important;
         background-attachment: local !important;
         border-radius: 30px 30px 0 0 !important;
         padding: 2rem !important;
         margin: 0 !important;
         box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-color: #ffffff;
+        background-image: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg');
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: cover;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        contain: paint;
+    }
+
+    .card > * {
+        position: relative;
+        z-index: 1;
     }
 }
 

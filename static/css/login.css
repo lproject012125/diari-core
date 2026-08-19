@@ -896,15 +896,34 @@ html.theme-dark .lockout-countdown {
         background-image: none !important;
         animation: none;
         position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        height: auto;
     }
 
     body::before {
         content: '';
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         z-index: -1;
         pointer-events: none;
-        background: url('/mobile-green-panel-login.svg') top center / cover no-repeat;
+        /* Cover the visual viewport, including the Android/iOS home inset,
+           and keep the bottom foliage/book in frame (not cropped at top). */
+        min-height: 100vh;
+        min-height: 100dvh;
+        min-height: 100svh;
+        background-color: #6f8f7f;
+        background-image: url('/mobile-green-panel-login.svg');
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: cover;
         transform: translateZ(0);
         backface-visibility: hidden;
         contain: paint;
@@ -912,11 +931,17 @@ html.theme-dark .lockout-countdown {
     
     .login-container {
         flex-direction: column;
+        align-self: stretch;
+        width: 100%;
         max-width: 100%;
         min-height: 100vh;
+        min-height: 100dvh;
         background: transparent;
         box-shadow: none;
         border-radius: 0;
+        /* Default card overflow:hidden clips the tall sign-up form and the
+           green SVG that sits under the footer on phones/PWA. */
+        overflow: visible;
     }
     
     .login-right-panel {
@@ -946,19 +971,16 @@ html.theme-dark .lockout-countdown {
     .login-left-panel::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
+        inset: 0;
         width: 100%;
-        /* Viewport-tied height: stays stable while .custom-error animates. */
-        height: 100vh;
-        height: 100dvh;
+        height: auto;
         z-index: 0;
         pointer-events: none;
         background-color: #ffffff;
         background-image: url('/mobile=white-panel-login.svg');
         background-repeat: no-repeat;
-        background-position: top center;
-        background-size: 100% auto;
+        background-position: center bottom;
+        background-size: cover;
         transform: translateZ(0);
         backface-visibility: hidden;
         contain: paint;
@@ -984,8 +1006,8 @@ html.theme-dark .lockout-countdown {
     .login-left-panel:has(#resetPasswordForm:not([hidden]))::before {
         background-image: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg');
         background-repeat: no-repeat;
-        background-position: top center;
-        background-size: 100% auto;
+        background-position: center bottom;
+        background-size: cover;
     }
 
     /* Create Account / Sign-Up Form Panel Background (Mobile/PWA Platform only) */
@@ -999,8 +1021,8 @@ html.theme-dark .lockout-countdown {
     .login-left-panel:has(.signup-section:not([hidden]))::before {
         background-image: url('/mobile-white-panel-login%28create-account%29.svg');
         background-repeat: no-repeat;
-        background-position: top center;
-        background-size: 100% auto;
+        background-position: center bottom;
+        background-size: cover;
     }
     
     .login-logo {
