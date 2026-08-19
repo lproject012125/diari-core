@@ -1881,10 +1881,16 @@ def disable_totp_for_user(user_id: int) -> bool:
 
 
 def verify_login(identifier: str, password: str):
-    """Returns (True, user_dict) or (False, error_message)."""
+    """Returns (True, user_dict, None) or (False, error_message, reason).
+
+    reason is one of 'not_found', 'bad_password', 'disabled', or None on success.
+    Only 'bad_password' should count toward the failed-attempt lockout, so callers
+    can show the attempt counter for real accounts while keeping a plain message
+    for usernames/emails that do not exist.
+    """
     raw = (identifier or "").strip()
     if not raw:
-        return False, "Invalid username or password."
+        return False, "Incorrect username or password.", "not_found"
 
     user = None
     if "@" in raw:
@@ -1892,13 +1898,13 @@ def verify_login(identifier: str, password: str):
     if not user:
         user = get_user_by_username(raw)
     if not user:
-        return False, "Invalid username or password."
+        return False, "Incorrect username or password.", "not_found"
     if not check_password_hash(user["password_hash"], password):
-        return False, "Invalid username or password."
+        return False, "Incorrect username or password.", "bad_password"
     if user.get("is_disabled") in (True, 1, "true", "1"):
-        return False, "Your account has been deactivated by an administrator."
+        return False, "Your account has been deactivated by an administrator.", "disabled"
     out = {k: v for k, v in user.items() if k != "password_hash"}
-    return True, out
+    return True, out, None
 
 
 def store_password_reset(email: str, reset_code: str, expires_at):

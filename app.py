@@ -856,23 +856,28 @@ def api_login():
     if rl:
         return jsonify({"success": False, "error": rl}), 429
 
-    ok, result = db.verify_login(username, password)
+    ok, result, fail_reason = db.verify_login(username, password)
     if not ok:
-        is_locked_now, rem_sec, attempts_left, fail_msg = authsec.record_login_failure(request, username)
-        if is_locked_now:
+        # Only real accounts with a wrong password build up the failed-attempt
+        # counter. Unknown usernames/emails get the plain message and no attempt
+        # is recorded, so the "attempts remaining" text never appears for them.
+        if fail_reason == "bad_password":
+            is_locked_now, rem_sec, attempts_left, fail_msg = authsec.record_login_failure(request, username)
+            if is_locked_now:
+                return jsonify({
+                    "success": False,
+                    "error": fail_msg,
+                    "locked": True,
+                    "retryAfter": rem_sec,
+                    "lockoutSeconds": rem_sec,
+                }), 429
             return jsonify({
                 "success": False,
                 "error": fail_msg,
-                "locked": True,
-                "retryAfter": rem_sec,
-                "lockoutSeconds": rem_sec,
-            }), 429
-        return jsonify({
-            "success": False,
-            "error": fail_msg,
-            "attemptsLeft": attempts_left,
-            "maxAttempts": authsec.MAX_LOGIN_ATTEMPTS,
-        }), 401
+                "attemptsLeft": attempts_left,
+                "maxAttempts": authsec.MAX_LOGIN_ATTEMPTS,
+            }), 401
+        return jsonify({"success": False, "error": result}), 401
 
     # Login succeeded: clear failed attempt tracker for input, username, and email
     authsec.clear_login_failures(request, username)
