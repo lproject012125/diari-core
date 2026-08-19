@@ -358,11 +358,10 @@
             if (commonErrorEl && p.length > 0 && !ready && !P.isCommonPassword(p)) {
                 var blockMsg = P.getPasswordBlockMessage(p, c, personal);
                 if (blockMsg) {
-                    commonErrorEl.textContent = blockMsg;
-                    commonErrorEl.classList.add('show');
+                    DiariSecurity.showInlineError(commonErrorEl, blockMsg);
                 }
             } else if (commonErrorEl && ready) {
-                commonErrorEl.classList.remove('show');
+                DiariSecurity.hideInlineError(commonErrorEl);
             }
             return { state: state, score: score, ready: ready };
         }
@@ -371,18 +370,19 @@
             var p = passwordEl.value;
             if (p.length > 0 && P.isCommonPassword(p)) {
                 if (commonErrorEl) {
-                    commonErrorEl.textContent =
-                        'This password is too common. Choose a less predictable password.';
-                    commonErrorEl.classList.add('show');
+                    DiariSecurity.showInlineError(
+                        commonErrorEl,
+                        'This password is too common. Choose a less predictable password.'
+                    );
                 }
             } else if (commonErrorEl) {
-                commonErrorEl.classList.remove('show');
+                DiariSecurity.hideInlineError(commonErrorEl);
             }
         }
 
         function onInput() {
             if (commonErrorEl && !P.isCommonPassword(passwordEl.value)) {
-                commonErrorEl.classList.remove('show');
+                DiariSecurity.hideInlineError(commonErrorEl);
             }
             refresh();
         }
