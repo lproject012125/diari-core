@@ -4,12 +4,13 @@
  */
 
 @media (max-width: 768px) {
+    /* overflow-x: clip clips horizontal overflow on the root WITHOUT turning it
+       into a scroll container. `hidden` on html/body makes the root the scroller,
+       so every layout change (e.g. an inline message appearing) forces a full
+       page composite reflow on phones. */
     html {
         overflow-x: hidden;
-    }
-
-    body {
-        overflow-x: hidden;
+        overflow-x: clip;
     }
 
     /* Top-level app shells: allow flex children to shrink instead of forcing min-content width */
