@@ -888,10 +888,26 @@ html.theme-dark .lockout-countdown {
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    /* Paint the green SVG on a viewport-fixed layer. A body background
+       re-rasters on every height change from inline validation. */
     body {
         padding: 0;
-        background: url('/mobile-green-panel-login.svg') top center / cover no-repeat !important;
+        background: #6f8f7f !important;
+        background-image: none !important;
         animation: none;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: url('/mobile-green-panel-login.svg') top center / cover no-repeat;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        contain: paint;
     }
     
     .login-container {
@@ -913,16 +929,44 @@ html.theme-dark .lockout-countdown {
     .login-left-panel {
         order: 2;
         flex: 1 !important;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
         min-height: 60vh;
-        background: url('/mobile=white-panel-login.svg') top center / cover no-repeat !important;
-        /* Keep the SVG raster tied to the stable panel width, not the form
-           height that changes while inline messages animate. */
-        background-color: #ffffff !important;
-        background-size: 100% auto !important;
+        /* Solid fill only — SVG lives on ::before so panel growth from
+           inline validation does not re-rasterize the illustration. */
+        background: #ffffff !important;
+        background-image: none !important;
         border-radius: 30px 30px 0 0;
         padding: 2rem;
         margin: 0 !important;
         box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .login-left-panel::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        /* Viewport-tied height: stays stable while .custom-error animates. */
+        height: 100vh;
+        height: 100dvh;
+        z-index: 0;
+        pointer-events: none;
+        background-color: #ffffff;
+        background-image: url('/mobile=white-panel-login.svg');
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: 100% auto;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        contain: paint;
+    }
+
+    .login-left-panel > * {
+        position: relative;
+        z-index: 1;
     }
 
     /* Reset Password & Verification Phase Background (Mobile/PWA Platform only) */
@@ -930,17 +974,33 @@ html.theme-dark .lockout-countdown {
     .login-left-panel:has(#loginTotpStep:not([hidden])),
     .login-left-panel:has(#resetConfirmForm:not([hidden])),
     .login-left-panel:has(#resetPasswordForm:not([hidden])) {
-        background: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg') top center / cover no-repeat !important;
-        background-color: #ffffff !important;
-        background-size: 100% auto !important;
+        background: #ffffff !important;
+        background-image: none !important;
+    }
+
+    html.auth-phase-upper-bg .login-left-panel::before,
+    .login-left-panel:has(#loginTotpStep:not([hidden]))::before,
+    .login-left-panel:has(#resetConfirmForm:not([hidden]))::before,
+    .login-left-panel:has(#resetPasswordForm:not([hidden]))::before {
+        background-image: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg');
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: 100% auto;
     }
 
     /* Create Account / Sign-Up Form Panel Background (Mobile/PWA Platform only) */
     .login-container.signup-mode .login-left-panel,
     .login-left-panel:has(.signup-section:not([hidden])) {
-        background: url('/mobile-white-panel-login%28create-account%29.svg') top center / cover no-repeat !important;
-        background-color: #ffffff !important;
-        background-size: 100% auto !important;
+        background: #ffffff !important;
+        background-image: none !important;
+    }
+
+    .login-container.signup-mode .login-left-panel::before,
+    .login-left-panel:has(.signup-section:not([hidden]))::before {
+        background-image: url('/mobile-white-panel-login%28create-account%29.svg');
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: 100% auto;
     }
     
     .login-logo {
