@@ -1278,6 +1278,26 @@ html.theme-dark .entry-img-spinner__bytes {
         min-height: 10rem;
         padding: 1rem 0.85rem;
         font-size: 15px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(120, 128, 136, 0.55) rgba(120, 128, 136, 0.12);
+    }
+
+    .journal-textarea::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .journal-textarea::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .journal-textarea::-webkit-scrollbar-thumb {
+        background-color: rgba(120, 128, 136, 0.55);
+        border-radius: 999px;
+    }
+
+    .journal-textarea::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(120, 128, 136, 0.75);
     }
 
     /* Fixed bottom Cancel / Save Entry (replaces duplicate header Save) */

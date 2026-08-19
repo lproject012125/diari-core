@@ -128,6 +128,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     const OFFLINE_DB_STORE = 'pendingEntries';
     const MAX_IMAGE_WARN = 10;
 
+    // Mobile/PWA only: once a journal exceeds this many words, the textarea stops
+    // growing downward and scrolls internally instead (PC keeps its own behavior).
+    const JOURNAL_SCROLL_WORD_LIMIT = 200;
+    let journalScrollWordCount = 0;
+    let journalScrollLockPx = 0;
+
     async function filterImageUploadFiles(fileList) {
         const files = [];
         const skipped = [];
@@ -466,6 +472,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         };
     }
 
+    function captureJournalScrollLock() {
+        const jt = document.getElementById('journalText');
+        if (!jt) return;
+        const min = parseFloat(jt.style.minHeight) || 96;
+        const count = countEntryWords(jt.value);
+        if (count <= JOURNAL_SCROLL_WORD_LIMIT) return;
+        jt.style.height = 'auto';
+        const naturalPx = Math.max(jt.scrollHeight, min);
+        // Approximate the height the box would have at exactly the word limit so a
+        // large paste does not freeze the container at a tiny height.
+        journalScrollLockPx = Math.max(min, Math.round((JOURNAL_SCROLL_WORD_LIMIT / count) * naturalPx));
+    }
+
     function autoAdjustJournalTextarea() {
         const jt = document.getElementById('journalText');
         if (!jt) return;
@@ -482,8 +501,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
             jt.style.minHeight = `${Math.round(minPx)}px`;
         }
-        jt.style.height = 'auto';
         const min = parseFloat(jt.style.minHeight) || 96;
+
+        if (isWriteEntryMobileLayout() && journalScrollWordCount > JOURNAL_SCROLL_WORD_LIMIT && journalScrollLockPx > 0) {
+            jt.style.height = `${journalScrollLockPx}px`;
+            jt.style.overflowY = 'auto';
+            return;
+        }
+
+        journalScrollLockPx = 0;
+        jt.style.overflowY = 'hidden';
+        jt.style.height = 'auto';
         jt.style.height = `${Math.max(jt.scrollHeight, min)}px`;
     }
     window.__diariAdjustWriteJournal = autoAdjustJournalTextarea;
@@ -1861,12 +1889,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function updateJournalWordCounter() {
-        if (!journalText || !wordCountEl) return;
+        if (!journalText || !wordCountEl) return 0;
         const count = countEntryWords(journalText.value);
         wordCountEl.textContent = String(count);
-        if (!journalWordCounter) return;
+        if (!journalWordCounter) return count;
         journalWordCounter.classList.toggle('is-over-limit', count > ENTRY_WORD_MAX);
         journalWordCounter.classList.toggle('is-near-limit', count > ENTRY_WORD_NEAR && count <= ENTRY_WORD_MAX);
+        return count;
     }
     const journalDateTimeBtn = document.getElementById('journalDateTimeBtn');
     const journalDateTimeInput = document.getElementById('journalDateTimeInput');
@@ -2007,10 +2036,21 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     journalText.addEventListener('input', function() {
-        updateJournalWordCounter();
+        const count = updateJournalWordCounter();
+        if (isWriteEntryMobileLayout()) {
+            const wasOverLimit = journalScrollWordCount > JOURNAL_SCROLL_WORD_LIMIT;
+            journalScrollWordCount = count;
+            if (!wasOverLimit && count > JOURNAL_SCROLL_WORD_LIMIT) {
+                captureJournalScrollLock();
+            }
+        }
         autoAdjustJournalTextarea();
     });
-    updateJournalWordCounter();
+    const initJournalWordCount = updateJournalWordCounter();
+    if (isWriteEntryMobileLayout() && initJournalWordCount > JOURNAL_SCROLL_WORD_LIMIT) {
+        journalScrollWordCount = initJournalWordCount;
+        captureJournalScrollLock();
+    }
 
     const VOICE_TO_WRITE_STORAGE_KEY = 'diariCoreVoiceDraftForWrite';
 
