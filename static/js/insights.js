@@ -136,6 +136,11 @@ function bindMoodByTagChartInteractions(chart) {
     if (canvas.dataset.diariMoodByTagBound === '1') return;
     canvas.dataset.diariMoodByTagBound = '1';
 
+    // On mobile a single tap fires touchend AND a synthesized click. Without a guard
+    // the tooltip is shown by touchend then instantly dismissed by the click, so the
+    // Emotion-by-Tag info never appears — unlike the consistency chart (click only).
+    let lastTouchEndAt = 0;
+
     const handlePointer = (e) => {
         if (insightsTryHandleChartLegendClick(chart, e)) return;
         if (!insightsIsMobileChartUi()) return;
@@ -148,12 +153,18 @@ function bindMoodByTagChartInteractions(chart) {
         insightsBarChartOnClick(chart, elements);
     };
 
-    canvas.addEventListener('click', handlePointer);
+    const handleClick = (e) => {
+        if (insightsIsMobileChartUi() && Date.now() - lastTouchEndAt < 350) return;
+        handlePointer(e);
+    };
+
+    canvas.addEventListener('click', handleClick);
     canvas.addEventListener(
         'touchend',
         (e) => {
             const touch = e.changedTouches?.[0];
             if (!touch) return;
+            lastTouchEndAt = Date.now();
             handlePointer({
                 clientX: touch.clientX,
                 clientY: touch.clientY,
@@ -161,8 +172,9 @@ function bindMoodByTagChartInteractions(chart) {
                 preventDefault: () => {},
                 stopPropagation: () => {},
             });
+            if (typeof e.preventDefault === 'function') e.preventDefault();
         },
-        { passive: true }
+        { passive: false }
     );
 }
 
