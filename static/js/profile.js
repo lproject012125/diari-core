@@ -384,7 +384,7 @@ function hydratePersonalInfoPanel() {
         if (f) {
             f.classList.remove('error', 'success');
             var err = document.getElementById(`${fid}-error`);
-            if (err) DiariSecurity.hideInlineError(err);
+            if (err) err.classList.remove('show');
         }
     });
     [
@@ -446,7 +446,8 @@ function profilePersonalShowError(inputElement, message) {
     inputElement.classList.remove('success');
     const customError = document.getElementById(`${inputElement.id}-error`);
     if (customError) {
-        DiariSecurity.showInlineError(customError, message);
+        customError.textContent = message;
+        customError.classList.add('show');
     }
 }
 
@@ -455,7 +456,7 @@ function profilePersonalShowSuccess(inputElement) {
     inputElement.classList.remove('error');
     inputElement.classList.add('success');
     const customError = document.getElementById(`${inputElement.id}-error`);
-    if (customError) DiariSecurity.hideInlineError(customError);
+    if (customError) customError.classList.remove('show');
 }
 
 function profilePersonalIsValidEmail(email) {
@@ -751,7 +752,7 @@ function clearSecurityForm() {
     const err = document.getElementById('profileSecPwCommonErr');
     if (err) {
         err.textContent = '';
-        DiariSecurity.hideInlineError(err);
+        err.classList.remove('show');
     }
     if (profileSecPwLiveInst && typeof profileSecPwLiveInst.refresh === 'function') {
         profileSecPwLiveInst.refresh();
@@ -2200,7 +2201,8 @@ async function submitProfilePasswordChangeRequest(isResend) {
             if (data.field === 'profileSecNewPassword' && data.error) {
                 const err = document.getElementById('profileSecPwCommonErr');
                 if (err) {
-                    DiariSecurity.showInlineError(err, data.error);
+                    err.textContent = data.error;
+                    err.classList.add('show');
                 } else {
                     showNotification(data.error, 'warning');
                 }

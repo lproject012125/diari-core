@@ -4,12 +4,12 @@
  */
 
 @media (max-width: 768px) {
-    /* overflow-x: clip on the root clips horizontal overflow WITHOUT turning the
-       root into a scroll container. 'hidden' on html/body makes the root the
-       scroller, forcing per-frame composited reflow of the whole page on phones. */
     html {
         overflow-x: hidden;
-        overflow-x: clip;
+    }
+
+    body {
+        overflow-x: hidden;
     }
 
     /* Top-level app shells: allow flex children to shrink instead of forcing min-content width */
@@ -140,101 +140,5 @@
         background: #1B2620 !important;
         color: #FFFFFF !important;
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    }
-
-    /* Inline validation messages: smooth appear/disappear on mobile. */
-    /* The box height is animated with an EXACT max-height (set inline by
-       showInlineError/hideInlineError from scrollHeight), so the collapse
-       tracks the fade continuously instead of pausing at the full 80px then
-       snapping shut (the dead-time that read as lag on a real phone). */
-    .custom-error,
-    .profile-account-detail-form .custom-error,
-    .profile-account-detail-card--security .custom-error,
-    .login-totp-step .custom-error,
-    .login-totp-recovery-card__error.custom-error {
-        transition:
-            opacity 0.2s ease,
-            transform 0.2s ease,
-            max-height 0.2s ease,
-            margin-top 0.2s ease,
-            padding 0.2s ease !important;
-    }
-
-    /* ------------------------------------------------------------------ */
-    /* Mobile performance: eliminate constant per-frame rendering cost.    */
-    /* ------------------------------------------------------------------ */
-
-    /* Charts: chart-flow.js skips the continuous requestAnimationFrame
-       redraw + shimmer on mobile. These are safety nets in case the flow
-       classes are present. */
-    .chart-container--flow::after {
-        display: none !important;
-    }
-    .weekly-sparkline-area--flow {
-        animation: none !important;
-    }
-
-    /* Infinite decorative floats on chrome/logos/CTAs: harmless on desktop,
-       but keeping them running on the fixed mobile topbar and auth pages
-       taxes low-end phone GPUs. These are transform-only animations; we just
-       stop them, the elements stay in place. */
-    .mobile-app-topbar__brand-logo,
-    .insights-mobile-tab-fab__trigger,
-    .floating-streak-book__motion,
-    .login-logo,
-    .verify-logo,
-    .entry-view-actions .mood-analysis-btn--solid {
-        animation: none !important;
-        will-change: auto !important;
-    }
-
-    /* The TOTP verify button runs a :hover shimmer (animates `left`, i.e.
-       layout) that stays stuck on after the first tap on a touch screen. */
-    .login-totp-step__verify.btn-signin:hover:not(:disabled)::before {
-        animation: none !important;
-    }
-
-    /* OTP digit floats: the original keyframes animate box-shadow every frame
-       (full repaint per digit). Redefine the SAME keyframe names with a
-       transform-only version so stagger delays, :focus, and reduced-motion
-       handling all keep working untouched. */
-    @keyframes registrationOtpDigitFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-    }
-    @keyframes loginTotpDigitFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
-    }
-    @keyframes profileTotpDigitFloat {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-4px); }
-    }
-
-    /* Voice recording pulse: the original spreads box-shadow out 20-25px
-       every frame. Replace with a compositor-only opacity pulse. */
-    @keyframes pulse {
-        0%, 70%, 100% { opacity: 1; }
-        35% { opacity: 0.85; }
-    }
-    @keyframes recordingPulse {
-        0%, 70%, 100% { opacity: 1; }
-        35% { opacity: 0.85; }
-    }
-
-    /* Full-screen modal backdrop blur is one of the most expensive effects on
-       phone GPUs. The dim overlay background alone reads fine. */
-    .modal-backdrop,
-    .admin-sidebar-backdrop,
-    .profile-totp-modal__backdrop,
-    .entry-delete-dialog__backdrop,
-    .voice-entry-notice-modal__backdrop,
-    .voice-tips-modal__backdrop,
-    .mood-analysis-overlay,
-    .custom-tag-modal__backdrop,
-    .write-flow-modal__backdrop,
-    .entry-view-actions {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
     }
 }

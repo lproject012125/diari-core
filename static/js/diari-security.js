@@ -144,44 +144,6 @@
         return apiFetch(url, { method: 'GET', credentials: 'same-origin' });
     }
 
-    var INLINE_ERROR_FADE_MS = 260;
-
-    function clearInlineErrorTimers(el) {
-        if (el.__diariErrorRaf) {
-            cancelAnimationFrame(el.__diariErrorRaf);
-            el.__diariErrorRaf = null;
-        }
-        if (el.__diariHideT) {
-            clearTimeout(el.__diariHideT);
-            el.__diariHideT = null;
-        }
-    }
-
-    function showInlineError(el, message) {
-        if (!el) return;
-        if (typeof message === 'string') {
-            el.textContent = message;
-        }
-        clearInlineErrorTimers(el);
-        el.__diariErrorRaf = requestAnimationFrame(function () {
-            el.__diariErrorRaf = null;
-            el.style.maxHeight = el.scrollHeight + 4 + 'px';
-            el.classList.add('show');
-        });
-    }
-
-    function hideInlineError(el) {
-        if (!el) return;
-        clearInlineErrorTimers(el);
-        if (!el.classList.contains('show')) return;
-        el.style.maxHeight = el.scrollHeight + 4 + 'px';
-        el.classList.remove('show');
-        el.__diariHideT = setTimeout(function () {
-            el.__diariHideT = null;
-            el.style.maxHeight = '';
-        }, INLINE_ERROR_FADE_MS);
-    }
-
     global.DiariSecurity = {
         escapeHtml,
         stripAngleBrackets,
@@ -196,7 +158,5 @@
         clearUserScopedLocalData,
         apiFetch,
         apiGet,
-        showInlineError,
-        hideInlineError,
     };
 })(typeof window !== 'undefined' ? window : globalThis);
