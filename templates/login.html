@@ -47,7 +47,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="login.css?v=20260820c" rel="stylesheet">
     <link href="password-live.css?v=20260808a" rel="stylesheet">
-    <link href="theme.css" rel="stylesheet">
+    <link href="theme.css?v=20260820d" rel="stylesheet">
     <link href="mobile-global.css" rel="stylesheet">
     <script src="theme.js"></script>
     <link href="pwa.css" rel="stylesheet">
@@ -140,7 +140,13 @@
                                 <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="login-totp-digit" data-login-totp-idx="4" aria-label="Digit 5 of 6" autocomplete="off">
                                 <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="login-totp-digit" data-login-totp-idx="5" aria-label="Digit 6 of 6" autocomplete="off">
                             </div>
-                            <div class="custom-error login-totp-step__error" id="loginTotpCodeError" hidden>Invalid code.</div>
+                            <div class="custom-error login-totp-step__error otp-msg otp-msg--error" id="loginTotpCodeError" hidden>
+                                <span class="otp-msg__left">
+                                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                    <span class="otp-msg__text" data-inline-error-text>Invalid code.</span>
+                                </span>
+                                <button type="button" class="otp-msg__close" id="loginTotpCodeErrorClose" aria-label="Close">&times;</button>
+                            </div>
                         </div>
                         <button type="button" class="btn-signin login-totp-step__verify" id="loginTotpSubmit">VERIFY &amp; CONTINUE</button>
                         <button type="button" class="login-totp-step__recovery-link" id="loginTotpShowRecovery">Lost access to your authenticator?</button>
@@ -185,11 +191,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="login-totp-recovery-card__feedback" id="loginTotpRecoveryVerifyMessage" hidden role="status">
-                                <span class="login-totp-recovery-card__feedback-text" id="loginTotpRecoveryVerifyMessageText"></span>
-                                <button type="button" class="login-totp-recovery-card__feedback-close" id="loginTotpRecoveryVerifyMessageClose" aria-label="Dismiss message">&times;</button>
+                            <div class="login-totp-recovery-card__feedback otp-msg otp-msg--success" id="loginTotpRecoveryVerifyMessage" hidden role="status">
+                                <span class="otp-msg__left">
+                                    <i class="bi bi-check-circle" aria-hidden="true"></i>
+                                    <span class="otp-msg__text" id="loginTotpRecoveryVerifyMessageText"></span>
+                                </span>
+                                <button type="button" class="otp-msg__close" id="loginTotpRecoveryVerifyMessageClose" aria-label="Dismiss message">&times;</button>
                             </div>
-                            <div class="custom-error login-totp-recovery-card__error" id="loginRecoveryCodeError" hidden>Invalid code.</div>
+                            <div class="custom-error login-totp-recovery-card__error otp-msg otp-msg--error" id="loginRecoveryCodeError" hidden>
+                                <span class="otp-msg__left">
+                                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                    <span class="otp-msg__text" data-inline-error-text>Invalid code.</span>
+                                </span>
+                                <button type="button" class="otp-msg__close" id="loginRecoveryCodeErrorClose" aria-label="Close">&times;</button>
+                            </div>
                             <button type="button" class="login-totp-recovery-card__primary login-totp-recovery-card__primary--wide" id="loginRecoverySubmit">
                                 <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
                                 <span>Use email code &amp; sign in</span>
@@ -239,9 +254,12 @@
                                 <input class="login-totp-digit" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 5">
                                 <input class="login-totp-digit" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 6">
                             </div>
-                            <div class="reset-otp-feedback" id="resetOtpFeedback" hidden role="status">
-                                <span class="reset-otp-feedback__text" id="resetOtpFeedbackText"></span>
-                                <button type="button" class="reset-otp-feedback__close" id="resetOtpFeedbackClose" aria-label="Dismiss feedback">&times;</button>
+                            <div class="reset-otp-feedback otp-msg otp-msg--error" id="resetOtpFeedback" hidden role="status">
+                                <span class="otp-msg__left">
+                                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                    <span class="otp-msg__text" id="resetOtpFeedbackText"></span>
+                                </span>
+                                <button type="button" class="otp-msg__close" id="resetOtpFeedbackClose" aria-label="Dismiss feedback">&times;</button>
                             </div>
                         </div>
                         <button type="submit" class="btn-signin login-totp-step__verify" id="verifyResetCodeBtn">Verify Code</button>
@@ -300,6 +318,6 @@
     <script src="diari-security.js"></script>    <script src="diari-offline.js"></script>
     <script src="diari-shell.js"></script>
     <script src="password-policy.js"></script>
-    <script src="login.js?v=20260820a"></script>
+    <script src="login.js?v=20260820d"></script>
 </body>
 </html>

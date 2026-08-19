@@ -179,7 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearLoginTotpErrorState() {
         if (loginTotpCodeError) {
             DiariSecurity.hideInlineError(loginTotpCodeError, { restoreHidden: true });
-            loginTotpCodeError.textContent = 'Invalid code.';
+            const t = loginTotpCodeError.querySelector('[data-inline-error-text]');
+            if (t) t.textContent = 'Invalid code.';
         }
         if (loginTotpDigitsWrap) loginTotpDigitsWrap.classList.remove('has-error');
     }
@@ -210,7 +211,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearLoginRecoveryErrorState() {
         if (loginRecoveryCodeError) {
             DiariSecurity.hideInlineError(loginRecoveryCodeError, { restoreHidden: true });
-            loginRecoveryCodeError.textContent = 'Invalid code.';
+            const t = loginRecoveryCodeError.querySelector('[data-inline-error-text]');
+            if (t) t.textContent = 'Invalid code.';
         }
         if (loginRecoveryDigitsWrap) loginRecoveryDigitsWrap.classList.remove('has-error');
     }
@@ -275,6 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (loginTotpRecoveryResendTimer) loginTotpRecoveryResendTimer.textContent = '';
         if (loginTotpRecoveryVerifyMessage) {
+            loginTotpRecoveryVerifyMessage.classList.remove('show');
             loginTotpRecoveryVerifyMessage.hidden = true;
             if (loginTotpRecoveryVerifyMessageText) loginTotpRecoveryVerifyMessageText.textContent = '';
         }
@@ -313,6 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (loginTotpRecoveryResendTimer) loginTotpRecoveryResendTimer.textContent = '';
         if (loginTotpRecoveryVerifyMessage) {
+            loginTotpRecoveryVerifyMessage.classList.remove('show');
             loginTotpRecoveryVerifyMessage.hidden = true;
             if (loginTotpRecoveryVerifyMessageText) loginTotpRecoveryVerifyMessageText.textContent = '';
         }
@@ -428,6 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'We sent a 6-digit recovery code to your registered email address. Enter it below to sign in.';
             }
             loginTotpRecoveryVerifyMessage.hidden = false;
+            requestAnimationFrame(() => loginTotpRecoveryVerifyMessage.classList.add('show'));
         }
         if (!triggeredByResend) {
             clearLoginRecoveryDigits();
@@ -1738,20 +1743,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!resetOtpFeedback || !resetOtpFeedbackText) return;
         resetOtpFeedbackText.textContent = message;
         resetOtpFeedback.className =
-            'reset-otp-feedback' + (type === 'success' ? ' reset-otp-feedback--success' : ' reset-otp-feedback--error');
+            'reset-otp-feedback otp-msg otp-msg--' + (type === 'success' ? 'success' : 'error');
         resetOtpFeedback.hidden = false;
+        requestAnimationFrame(() => resetOtpFeedback.classList.add('show'));
     }
 
     function clearResetOtpFeedback() {
         if (!resetOtpFeedback) return;
+        resetOtpFeedback.classList.remove('show');
         resetOtpFeedback.hidden = true;
         resetOtpFeedbackText.textContent = '';
-        resetOtpFeedback.className = 'reset-otp-feedback';
+        resetOtpFeedback.className = 'reset-otp-feedback otp-msg';
     }
 
     function clearResetOtpErrorFeedback() {
         if (!resetOtpFeedback || resetOtpFeedback.hidden) return;
-        if (resetOtpFeedback.classList.contains('reset-otp-feedback--success')) return;
+        if (resetOtpFeedback.classList.contains('otp-msg--success')) return;
         clearResetOtpFeedback();
     }
 
@@ -2153,7 +2160,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (loginTotpRecoveryVerifyMessageClose) {
         loginTotpRecoveryVerifyMessageClose.addEventListener('click', () => {
-            if (loginTotpRecoveryVerifyMessage) loginTotpRecoveryVerifyMessage.hidden = true;
+            if (loginTotpRecoveryVerifyMessage) {
+                loginTotpRecoveryVerifyMessage.classList.remove('show');
+                loginTotpRecoveryVerifyMessage.hidden = true;
+            }
+        });
+    }
+
+    const loginTotpCodeErrorClose = document.getElementById('loginTotpCodeErrorClose');
+    if (loginTotpCodeErrorClose) {
+        loginTotpCodeErrorClose.addEventListener('click', () => {
+            clearLoginTotpErrorState();
+        });
+    }
+
+    const loginRecoveryCodeErrorClose = document.getElementById('loginRecoveryCodeErrorClose');
+    if (loginRecoveryCodeErrorClose) {
+        loginRecoveryCodeErrorClose.addEventListener('click', () => {
+            clearLoginRecoveryErrorState();
         });
     }
 

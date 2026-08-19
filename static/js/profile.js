@@ -1430,8 +1430,10 @@ function setProfileEmailChangeOtpError(message) {
     if (message) {
         text.textContent = message;
         wrap.hidden = false;
+        requestAnimationFrame(() => wrap.classList.add('show'));
     } else {
         text.textContent = '';
+        wrap.classList.remove('show');
         wrap.hidden = true;
     }
 }
@@ -1715,6 +1717,13 @@ function wireProfileEmailChangeOtpFlow() {
             void submitProfileEmailChangeResend();
         });
     }
+    const errorClose = document.getElementById('profileEmailChangeOtpErrorClose');
+    if (errorClose && !errorClose.dataset.emailChangeOtpErrorCloseWired) {
+        errorClose.dataset.emailChangeOtpErrorCloseWired = '1';
+        errorClose.addEventListener('click', function () {
+            setProfileEmailChangeOtpError('');
+        });
+    }
 }
 
 function savePersonalInfoForm() {
@@ -1893,8 +1902,10 @@ function setProfilePwdChangeOtpError(message) {
     if (message) {
         text.textContent = message;
         wrap.hidden = false;
+        requestAnimationFrame(() => wrap.classList.add('show'));
     } else {
         text.textContent = '';
+        wrap.classList.remove('show');
         wrap.hidden = true;
     }
 }
@@ -2368,6 +2379,13 @@ function wireProfilePasswordChangeFlow() {
         resendBtn.dataset.pwdChangeResendWired = '1';
         resendBtn.addEventListener('click', function () {
             void submitProfilePasswordChangeRequest(true);
+        });
+    }
+    const errorClose = document.getElementById('profilePwdChangeOtpErrorClose');
+    if (errorClose && !errorClose.dataset.pwdChangeOtpErrorCloseWired) {
+        errorClose.dataset.pwdChangeOtpErrorCloseWired = '1';
+        errorClose.addEventListener('click', function () {
+            setProfilePwdChangeOtpError('');
         });
     }
 }

@@ -12,7 +12,7 @@
     <link href="side-bar.css" rel="stylesheet">
     <link href="profile.css?v=20260820c" rel="stylesheet">
     <link href="password-live.css" rel="stylesheet">
-    <link href="theme.css" rel="stylesheet">
+    <link href="theme.css?v=20260820d" rel="stylesheet">
     <link href="mobile-global.css" rel="stylesheet">
     <script src="theme.js"></script>
     <link href="pwa.css" rel="stylesheet">
@@ -652,8 +652,12 @@
                         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="profile-totp-digit profile-pwd-change-otp-modal__digit" data-profile-pwd-change-otp="5" aria-label="Digit 6 of 6" autocomplete="off">
                     </div>
                 </div>
-                <div class="profile-pwd-change-otp-alert" id="profilePwdChangeOtpError" hidden role="alert">
-                    <span class="profile-pwd-change-otp-alert__text" id="profilePwdChangeOtpErrorText"></span>
+                <div class="profile-pwd-change-otp-alert otp-msg otp-msg--error" id="profilePwdChangeOtpError" hidden role="alert">
+                    <span class="otp-msg__left">
+                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                        <span class="otp-msg__text" id="profilePwdChangeOtpErrorText"></span>
+                    </span>
+                    <button type="button" class="otp-msg__close" id="profilePwdChangeOtpErrorClose" aria-label="Close">&times;</button>
                 </div>
                 <div class="profile-pwd-change-otp-modal__meta">
                     <p class="profile-pwd-change-otp-modal__resend" id="profilePwdChangeOtpResendRow">
@@ -698,8 +702,12 @@
                         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="profile-totp-digit profile-pwd-change-otp-modal__digit" data-profile-email-change-otp="5" aria-label="Digit 6 of 6" autocomplete="off">
                     </div>
                 </div>
-                <div class="profile-pwd-change-otp-alert" id="profileEmailChangeOtpError" hidden role="alert">
-                    <span class="profile-pwd-change-otp-alert__text" id="profileEmailChangeOtpErrorText"></span>
+                <div class="profile-pwd-change-otp-alert otp-msg otp-msg--error" id="profileEmailChangeOtpError" hidden role="alert">
+                    <span class="otp-msg__left">
+                        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                        <span class="otp-msg__text" id="profileEmailChangeOtpErrorText"></span>
+                    </span>
+                    <button type="button" class="otp-msg__close" id="profileEmailChangeOtpErrorClose" aria-label="Close">&times;</button>
                 </div>
                 <div class="profile-pwd-change-otp-modal__meta">
                     <p class="profile-pwd-change-otp-modal__resend" id="profileEmailChangeOtpResendRow">

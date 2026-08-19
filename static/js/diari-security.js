@@ -78,7 +78,11 @@
     /** Match the established inline-error behavior used by the PC experience. */
     function showInlineError(el, message) {
         if (!el) return;
-        if (typeof message === 'string') el.textContent = message;
+        const textNode = el.querySelector('[data-inline-error-text]');
+        if (typeof message === 'string') {
+            if (textNode) textNode.textContent = message;
+            else el.textContent = message;
+        }
         el.removeAttribute('hidden');
         el.classList.add('show');
     }
