@@ -915,7 +915,6 @@ html.theme-dark .lockout-countdown {
         flex: 1 !important;
         min-height: 60vh;
         background: url('/mobile=white-panel-login.svg') top center / cover no-repeat !important;
-        background-attachment: local !important;
         border-radius: 30px 30px 0 0;
         padding: 2rem;
         margin: 0 !important;
@@ -928,14 +927,12 @@ html.theme-dark .lockout-countdown {
     .login-left-panel:has(#resetConfirmForm:not([hidden])),
     .login-left-panel:has(#resetPasswordForm:not([hidden])) {
         background: url('/mobile%3Dwhite-panel-login%28v2%20for%20reset%20password%20phase%29.svg') top center / cover no-repeat !important;
-        background-attachment: local !important;
     }
 
     /* Create Account / Sign-Up Form Panel Background (Mobile/PWA Platform only) */
     .login-container.signup-mode .login-left-panel,
     .login-left-panel:has(.signup-section:not([hidden])) {
         background: url('/mobile-white-panel-login%28create-account%29.svg') top center / cover no-repeat !important;
-        background-attachment: local !important;
     }
     
     .login-logo {
