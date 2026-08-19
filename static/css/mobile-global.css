@@ -143,21 +143,6 @@
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
     }
 
-    /* Inline validation messages on mobile/PWA: animate height, margins, opacity
-       AND transform together, otherwise the input/button below the message jumps
-       instantly while the message fades (reads as lag). The exact max-height is
-       pinned inline by DiariSecurity.showInlineError/hideInlineError. */
-    .custom-error,
-    .login-totp-step .form-group .custom-error,
-    .login-totp-recovery-card__error.custom-error {
-        transition:
-            opacity 0.16s cubic-bezier(0.22, 1, 0.36, 1),
-            transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
-            max-height 0.16s cubic-bezier(0.22, 1, 0.36, 1),
-            margin-top 0.16s cubic-bezier(0.22, 1, 0.36, 1),
-            margin-bottom 0.16s cubic-bezier(0.22, 1, 0.36, 1) !important;
-    }
-
     /* Login panels: the desktop `transition: all 0.6s` animates height and
        background changes, so an error line growing the form drags the whole
        white panel + SVG behind the message. The mobile signup swap only uses

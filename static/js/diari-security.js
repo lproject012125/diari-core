@@ -75,52 +75,19 @@
         return Boolean(window.matchMedia && window.matchMedia(MOBILE_LAYOUT_QUERY).matches);
     }
 
-    /**
-     * Smoothly reveal an inline validation message.
-     * Mobile/PWA: defers the .show toggle to the next frame so the first
-     * appearance transitions instead of snapping, and pins max-height to the
-     * exact content height so the collapse has no dead time.
-     * Desktop (>768px): behaves exactly as before (synchronous .show toggle).
-     */
+    /** Match the established inline-error behavior used by the PC experience. */
     function showInlineError(el, message) {
         if (!el) return;
         if (typeof message === 'string') el.textContent = message;
         el.removeAttribute('hidden');
-        if (isMobileLayout()) {
-            if (el.classList.contains('show')) {
-                el.style.maxHeight = el.scrollHeight + 4 + 'px';
-                return;
-            }
-            el.style.maxHeight = '0px';
-            requestAnimationFrame(function () {
-                el.style.maxHeight = el.scrollHeight + 4 + 'px';
-                el.classList.add('show');
-            });
-        } else {
-            el.classList.add('show');
-        }
+        el.classList.add('show');
     }
 
-    /**
-     * Smoothly collapse an inline validation message.
-     * Mobile/PWA: lets the transition run back to the base state.
-     * Desktop (>768px): behaves exactly as before.
-     * opts.restoreHidden: re-add the hidden attribute on mobile after the
-     * collapse finishes (for elements that ship with hidden in the markup).
-     */
+    /** Match the established inline-error behavior used by the PC experience. */
     function hideInlineError(el, opts) {
         if (!el) return;
-        if (isMobileLayout()) {
-            el.classList.remove('show');
-            el.style.maxHeight = '';
-            if (opts && opts.restoreHidden) {
-                setTimeout(function () {
-                    if (!el.classList.contains('show')) el.setAttribute('hidden', '');
-                }, 200);
-            }
-        } else {
-            el.classList.remove('show');
-        }
+        el.classList.remove('show');
+        if (opts && opts.restoreHidden) el.setAttribute('hidden', '');
     }
 
     function getCsrfToken() {
