@@ -116,7 +116,7 @@
             if (opts && opts.restoreHidden) {
                 setTimeout(function () {
                     if (!el.classList.contains('show')) el.setAttribute('hidden', '');
-                }, 260);
+                }, 160);
             }
         } else {
             el.classList.remove('show');

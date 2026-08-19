@@ -150,10 +150,10 @@
     .login-totp-step .form-group .custom-error,
     .login-totp-recovery-card__error.custom-error {
         transition:
-            opacity 0.2s ease,
-            transform 0.2s ease,
-            max-height 0.2s ease,
-            margin-top 0.2s ease,
-            margin-bottom 0.2s ease !important;
+            opacity 0.12s ease-out,
+            transform 0.12s ease-out,
+            max-height 0.12s ease-out,
+            margin-top 0.12s ease-out,
+            margin-bottom 0.12s ease-out !important;
     }
 }
