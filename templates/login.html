@@ -140,9 +140,9 @@
                                 <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="login-totp-digit" data-login-totp-idx="4" aria-label="Digit 5 of 6" autocomplete="off">
                                 <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="login-totp-digit" data-login-totp-idx="5" aria-label="Digit 6 of 6" autocomplete="off">
                             </div>
+                            <div class="custom-error login-totp-step__error" id="loginTotpCodeError" hidden>Invalid code.</div>
                         </div>
                         <button type="button" class="btn-signin login-totp-step__verify" id="loginTotpSubmit">VERIFY &amp; CONTINUE</button>
-                        <div class="custom-error login-totp-step__error" id="loginTotpCodeError" hidden>Invalid code.</div>
                         <button type="button" class="login-totp-step__recovery-link" id="loginTotpShowRecovery">Lost access to your authenticator?</button>
                     </div>
                     <div id="loginTotpRecoveryPanel" class="login-totp-recovery-panel" hidden>
@@ -185,15 +185,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="login-totp-recovery-card__primary login-totp-recovery-card__primary--wide" id="loginRecoverySubmit">
-                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
-                                <span>Use email code &amp; sign in</span>
-                            </button>
                             <div class="login-totp-recovery-card__feedback" id="loginTotpRecoveryVerifyMessage" hidden role="status">
                                 <span class="login-totp-recovery-card__feedback-text" id="loginTotpRecoveryVerifyMessageText"></span>
                                 <button type="button" class="login-totp-recovery-card__feedback-close" id="loginTotpRecoveryVerifyMessageClose" aria-label="Dismiss message">&times;</button>
                             </div>
                             <div class="custom-error login-totp-recovery-card__error" id="loginRecoveryCodeError" hidden>Invalid code.</div>
+                            <button type="button" class="login-totp-recovery-card__primary login-totp-recovery-card__primary--wide" id="loginRecoverySubmit">
+                                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                                <span>Use email code &amp; sign in</span>
+                            </button>
                             <p class="login-totp-recovery__resend-line" id="loginTotpRecoveryResendLine">
                                 <span class="login-totp-recovery__resend-prefix">Didn't receive the code?</span>
                                 <button type="button" class="login-totp-recovery__resend-action" id="loginTotpRecoveryResendBtn">Resend Code</button>
@@ -239,12 +239,12 @@
                                 <input class="login-totp-digit" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 5">
                                 <input class="login-totp-digit" inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 6">
                             </div>
+                            <div class="reset-otp-feedback" id="resetOtpFeedback" hidden role="status">
+                                <span class="reset-otp-feedback__text" id="resetOtpFeedbackText"></span>
+                                <button type="button" class="reset-otp-feedback__close" id="resetOtpFeedbackClose" aria-label="Dismiss feedback">&times;</button>
+                            </div>
                         </div>
                         <button type="submit" class="btn-signin login-totp-step__verify" id="verifyResetCodeBtn">Verify Code</button>
-                        <div class="reset-otp-feedback" id="resetOtpFeedback" hidden role="status">
-                            <span class="reset-otp-feedback__text" id="resetOtpFeedbackText"></span>
-                            <button type="button" class="reset-otp-feedback__close" id="resetOtpFeedbackClose" aria-label="Dismiss feedback">&times;</button>
-                        </div>
                         <div class="login-reset-step__meta">
                             <span class="login-reset-step__meta-text">Didn't receive the code?</span>
                             <button type="button" class="login-reset-step__link-btn" id="resendResetCodeBtn">Resend OTP</button>
