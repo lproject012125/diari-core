@@ -46,6 +46,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (customError) customError.classList.remove('show');
     }
 
+    function clearValidation(inputElement) {
+        inputElement.classList.remove('error', 'success');
+        const customError = document.getElementById(`${inputElement.id}-error`);
+        if (customError) customError.classList.remove('show');
+    }
+
     function showNotification(message, type = 'info') {
         if (window.DiariToast && typeof window.DiariToast.show === 'function') {
             window.DiariToast.show(message, type, 3000);
