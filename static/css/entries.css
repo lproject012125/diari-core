@@ -516,6 +516,32 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
     }
 }
 
+/* Entries mobile/PWA: keep the empty state and month header inside the viewport. */
+@media (max-width: 768px) {
+    body.page-entries .entries-content--no-journal-entries #entriesMainSection,
+    body.page-entries .entries-content--no-journal-entries #entriesMonthHeader {
+        display: none !important;
+    }
+
+    body.page-entries .entries-section.entries-section--main > .month-header.entries-month-header {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* The header already has a full-width border; the old 100vw pseudo-line overflowed phones. */
+    body.page-entries .entries-section.entries-section--main > .month-header.entries-month-header::after {
+        display: none !important;
+    }
+
+    body.page-entries .search-filter-container,
+    body.page-entries .search-bar,
+    body.page-entries .search-input {
+        min-width: 0;
+        max-width: 100%;
+    }
+}
+
 .entries-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
