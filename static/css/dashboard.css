@@ -175,16 +175,18 @@ body {
     overflow: visible;
 }
 
-.floating-streak-book:hover {
+.floating-streak-book:hover,
+.floating-streak[data-inside="1"] .floating-streak-book,
+.floating-streak[data-click-open="1"] .floating-streak-book {
     background: linear-gradient(
         160deg,
-        color-mix(in srgb, var(--primary-light) 65%, #ffffff) 0%,
-        color-mix(in srgb, var(--primary-color) 32%, var(--card-background, #ffffff)) 100%
+        #ffffff 0%,
+        #e9f2ed 100%
     );
-    border-color: rgba(var(--primary-rgb), 0.38);
+    border-color: rgba(35, 78, 63, 0.48);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        0 6px 20px rgba(var(--primary-rgb), 0.28);
+        0 6px 20px rgba(27, 65, 52, 0.24);
     transform: translateY(-1px);
 }
 
@@ -252,6 +254,18 @@ body {
     display: block;
     pointer-events: none;
     filter: drop-shadow(0 2px 4px rgba(34, 52, 44, 0.22));
+}
+
+/* Keep the animated/open teal book distinct from every configurable accent. */
+.floating-streak-book:hover .floating-streak-book__lottie,
+.floating-streak[data-inside="1"] .floating-streak-book__lottie,
+.floating-streak[data-click-open="1"] .floating-streak-book__lottie {
+    filter:
+        brightness(0.78)
+        contrast(1.3)
+        saturate(0.92)
+        drop-shadow(0 1px 0 rgba(255, 255, 255, 0.72))
+        drop-shadow(0 2px 2px rgba(20, 57, 45, 0.48));
 }
 
 .floating-streak-book__lottie svg {
