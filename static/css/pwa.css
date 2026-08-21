@@ -123,14 +123,42 @@ html.theme-dark .pwa-install-banner__inner {
 }
 
 @media (max-width: 520px) {
+    .pwa-install-banner {
+        left: 0.75rem;
+        right: 0.75rem;
+        width: auto;
+        transform: none;
+        bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
     .pwa-install-banner__inner {
         flex-wrap: wrap;
+        gap: 0.65rem;
+        padding: 0.9rem 1rem;
+    }
+
+    .pwa-install-banner__icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .pwa-install-banner__text {
+        flex: 1;
+        min-width: 0;
     }
 
     .pwa-install-banner__actions {
         flex-direction: row;
         width: 100%;
-        justify-content: flex-end;
+        gap: 0.5rem;
+        padding-top: 0.25rem;
+        border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.06));
+    }
+
+    .pwa-install-banner__btn {
+        flex: 1;
+        text-align: center;
+        padding: 0.55rem 0;
     }
 }
 
