@@ -1871,7 +1871,7 @@
         function moodOptions(overlay) {
             return {
                 onSaveExit() {
-                    overlay.hidden = true;
+                    global.DiariMoodAnalysis.hideAnalysisOverlay(overlay);
                     if (afterMetadataSaveToEntries) {
                         afterMetadataSaveToEntries();
                         return;
@@ -1934,19 +1934,19 @@
                         offlineEstimate: true,
                         footerCloseLabel: 'Close',
                         onSaveExit() {
-                            overlay.hidden = true;
+                            global.DiariMoodAnalysis.hideAnalysisOverlay(overlay);
                         },
                     });
                 } catch (e) {
                     console.error(e);
-                    overlay.hidden = true;
+                    global.DiariMoodAnalysis.hideAnalysisOverlay(overlay);
                     window.alert('Could not show offline analysis preview.');
                 }
                 return;
             }
 
             if (!isOnline()) {
-                overlay.hidden = true;
+                global.DiariMoodAnalysis.hideAnalysisOverlay(overlay);
                 window.alert('Connect to the internet to run analysis.');
                 return;
             }
@@ -1974,12 +1974,12 @@
                     fetchRerunAnalysis: mo.fetchRerunAnalysis,
                     footerCloseLabel: 'Close',
                     onSaveExit() {
-                        overlay.hidden = true;
+                        global.DiariMoodAnalysis.hideAnalysisOverlay(overlay);
                     },
                 });
             } catch (e) {
                 console.error(e);
-                overlay.hidden = true;
+                global.DiariMoodAnalysis.hideAnalysisOverlay(overlay);
                 window.alert(e.message || 'Could not analyze this entry.');
             }
         }
