@@ -92,19 +92,25 @@
         manifest.href = MANIFEST_HREF;
         head.appendChild(manifest);
 
-        let theme = document.querySelector('meta[name="theme-color"]');
-        if (!theme) {
-            theme = document.createElement('meta');
-            theme.name = 'theme-color';
-            head.appendChild(theme);
-        }
-        try {
-            const primary = getComputedStyle(document.documentElement)
-                .getPropertyValue('--primary-color')
-                .trim();
-            theme.content = primary || THEME_COLOR;
-        } catch (_) {
-            theme.content = THEME_COLOR;
+        const path = String(window.location.pathname || '').replace(/\\/g, '/').toLowerCase();
+        const base = path.split('/').pop() || '';
+        const isSplash = base === 'pwa-splash.html';
+
+        if (!isSplash) {
+            let theme = document.querySelector('meta[name="theme-color"]');
+            if (!theme) {
+                theme = document.createElement('meta');
+                theme.name = 'theme-color';
+                head.appendChild(theme);
+            }
+            try {
+                const primary = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--primary-color')
+                    .trim();
+                theme.content = primary || THEME_COLOR;
+            } catch (_) {
+                theme.content = THEME_COLOR;
+            }
         }
 
         const appleCapable = document.createElement('meta');
@@ -482,6 +488,9 @@
 
     function syncThemeColorMeta() {
         try {
+            const path = String(window.location.pathname || '').replace(/\\/g, '/').toLowerCase();
+            const base = path.split('/').pop() || '';
+            if (base === 'pwa-splash.html') return;
             const primary = getComputedStyle(document.documentElement)
                 .getPropertyValue('--primary-color')
                 .trim();
