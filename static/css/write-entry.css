@@ -3222,3 +3222,18 @@ html.theme-dark .custom-tag-inline-alert__pill {
     border-color: rgba(252, 165, 165, 0.4);
     color: #fecaca;
 }
+
+/* Mobile/PWA: analysis result modal always looks like a centered card, never full-screen. */
+@media (max-width: 768px) {
+    .mood-analysis-overlay.mood-analysis-overlay {
+        padding: 1.25rem;
+        align-items: center;
+        background: rgba(16, 22, 26, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .mood-analysis-card.mood-analysis-card--result {
+        max-height: min(80vh, 640px);
+    }
+}
