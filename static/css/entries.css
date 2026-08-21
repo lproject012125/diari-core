@@ -541,7 +541,6 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
     body.page-entries .entries-content,
     body.page-entries .main-content,
     body.page-entries .entries-container,
-    body.page-entries .search-filter-container,
     body.page-entries .search-input {
         min-width: 0 !important;
         max-width: 100% !important;
