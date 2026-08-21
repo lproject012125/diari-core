@@ -516,29 +516,38 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
     }
 }
 
-/* Entries mobile/PWA: keep the empty state and month header inside the viewport. */
+/* Entries mobile/PWA: keep everything inside the viewport. PC (>768px) is untouched. */
 @media (max-width: 768px) {
+    /* Hide the no-entries "empty state" shell when it is not needed (JS toggles this). */
     body.page-entries .entries-content--no-journal-entries #entriesMainSection,
     body.page-entries .entries-content--no-journal-entries #entriesMonthHeader {
         display: none !important;
     }
 
-    body.page-entries .entries-section.entries-section--main > .month-header.entries-month-header {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
-
-    /* The header already has a full-width border; the old 100vw pseudo-line overflowed phones. */
-    body.page-entries .entries-section.entries-section--main > .month-header.entries-month-header::after {
+    /* Kill every decorative month-header ::after line — the 100vw calc overflowed phones. */
+    body.page-entries .month-header::after {
         display: none !important;
     }
 
+    /* Month header must fill the row so its content stays inside the viewport. */
+    body.page-entries .entries-section .month-header {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        position: static !important;
+    }
+
+    /* Prevent any child from stretching the page wider than the viewport. */
+    body.page-entries .entries-content,
+    body.page-entries .main-content,
+    body.page-entries .entries-container,
     body.page-entries .search-filter-container,
     body.page-entries .search-bar,
-    body.page-entries .search-input {
-        min-width: 0;
-        max-width: 100%;
+    body.page-entries .search-input,
+    body.page-entries .filter-menu {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
     }
 }
 
