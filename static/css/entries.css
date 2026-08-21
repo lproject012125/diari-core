@@ -541,6 +541,8 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
     body.page-entries .entries-content,
     body.page-entries .main-content,
     body.page-entries .entries-container,
+    body.page-entries .search-filter-container,
+    body.page-entries .search-bar,
     body.page-entries .search-input {
         min-width: 0 !important;
         max-width: 100% !important;
@@ -1883,15 +1885,16 @@ html.theme-dark .entry-edited-pill {
         background-size: 0.72rem !important;
     }
 
-    /* Compact filter popover — fixed positioning to escape overflow clipping from ancestors */
+    /* Compact filter popover (match desktop: anchored, narrow) — not full-bleed fixed sheet */
     body.page-entries .search-filter-section .filter-dropdown {
         position: relative;
     }
 
     body.page-entries .search-filter-section .filter-menu.show {
-        position: fixed !important;
-        top: calc(env(safe-area-inset-top, 0px) + 5rem) !important;
-        right: 0.75rem !important;
+        position: absolute !important;
+        top: calc(100% + 0.45rem) !important;
+        left: auto !important;
+        right: 0 !important;
         width: min(228px, calc(100vw - 1.25rem)) !important;
         min-width: 0 !important;
         max-width: min(228px, calc(100vw - 1.25rem)) !important;
