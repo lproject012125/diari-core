@@ -2,7 +2,7 @@
  * DiariCore PWA service worker — offline app shell + cached static assets.
  * API routes are never cached (session/auth stay fresh).
  */
-const CACHE_NAME = 'diaricore-pwa-v137';
+const CACHE_NAME = 'diaricore-pwa-v138';
 const PWA_PUSH_NOTIF_ICON = '/diariclogo-pwa-notif-192.png';
 const PWA_PUSH_NOTIF_BADGE = '/diariclogo.png';
 const PWA_CACHE_PREFIX = 'diaricore-pwa-';
@@ -205,47 +205,23 @@ self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const rawUrl = event.notification?.data?.url || '/dashboard.html';
     const url = rawUrl.startsWith('http') ? rawUrl : self.location.origin + rawUrl;
-    const scope = self.registration.scope;
     event.waitUntil(
         (async function () {
-            try {
-                const list = await self.clients.matchAll({
-                    type: 'window',
-                    includeUncontrolled: true,
-                });
-                for (const c of list) {
-                    if (c.url.startsWith(scope) && 'focus' in c) {
-                        try {
-                            if ('navigate' in c) {
-                                await c.navigate(url);
-                            }
-                        } catch (_) {
-                            /* navigate may fail cross-origin, that's fine */
-                        }
-                        return c.focus();
-                    }
-                }
-            } catch (_) {
-                /* matchAll failed, proceed to openWindow */
-            }
-            try {
-                const w = await self.clients.openWindow(scope);
-                if (w) {
+            const list = await self.clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true,
+            });
+            for (const c of list) {
+                if (c.url.includes(self.location.origin) && 'focus' in c) {
                     try {
-                        await w.navigate(url);
+                        if ('navigate' in c) await c.navigate(url);
                     } catch (_) {
                         /* ignore */
                     }
-                    return w.focus();
-                }
-            } catch (_) {
-                /* openWindow failed — try absolute URL as last resort */
-                try {
-                    return await self.clients.openWindow(url);
-                } catch (_) {
-                    /* nothing we can do */
+                    return c.focus();
                 }
             }
+            return self.clients.openWindow(url);
         })()
     );
 });
