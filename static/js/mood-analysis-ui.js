@@ -304,7 +304,6 @@
 
         footer.style.display = 'none';
         overlay.hidden = false;
-        lockOverlayScroll();
         moodAnalysisLoadingShownAt = Date.now();
 
         const totalMs = MOOD_ANALYSIS_TOTAL_MS;
@@ -433,7 +432,6 @@
 
         if (footer) footer.style.display = 'none';
         overlay.hidden = false;
-        lockOverlayScroll();
         entryUpdateLoadingShownAt = Date.now();
 
         const totalMs = ENTRY_UPDATE_TOTAL_MS;
@@ -471,7 +469,6 @@
         parkMoodAnalysisBookMount();
         parkEntryUpdateEditingMount();
         ov.hidden = true;
-        unlockOverlayScroll();
     }
 
     async function delayUntilMoodAnalysisGate() {
