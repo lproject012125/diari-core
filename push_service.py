@@ -997,7 +997,7 @@ def send_web_push(
         if dead_sub and endpoint:
             fail_count = db.increment_push_subscription_fcm_failures(endpoint)
             recently = _subscription_recently_registered(subscription)
-            if recently and fail_count < 2:
+            if recently:
                 print(
                     f"[diari-push-send] FAIL tag={tag} target={ep_hint} "
                     f"expired but kept (registered <{PUSH_SUBSCRIPTION_GRACE_SECONDS}s, fcm_fail={fail_count})",
