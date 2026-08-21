@@ -27,32 +27,30 @@
     let entryUpdateEditingData = null;
     let entryUpdateProgressSnap = null;
 
-    /* ---------- mobile scroll lock (prevents page scroll behind overlay without changing vh) ---------- */
+    /* ---------- mobile scroll lock (freeze body in place without changing vh) ---------- */
     let overlayScrollLocked = false;
-    let overlayTouchHandler = null;
+    let overlaySavedScrollY = 0;
 
     function lockOverlayScroll() {
         if (overlayScrollLocked) return;
         overlayScrollLocked = true;
-        overlayTouchHandler = function (e) {
-            const card = document.querySelector('.mood-analysis-overlay:not([hidden]) .mood-analysis-card');
-            if (!card) { e.preventDefault(); return; }
-            const target = e.target;
-            if (card.contains(target)) return;
-            e.preventDefault();
-        };
-        document.addEventListener('touchmove', overlayTouchHandler, { passive: false });
-        document.addEventListener('wheel', overlayTouchHandler, { passive: false });
+        overlaySavedScrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.style.position = 'fixed';
+        document.body.style.top = '-' + overlaySavedScrollY + 'px';
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
     }
 
     function unlockOverlayScroll() {
         if (!overlayScrollLocked) return;
         overlayScrollLocked = false;
-        if (overlayTouchHandler) {
-            document.removeEventListener('touchmove', overlayTouchHandler);
-            document.removeEventListener('wheel', overlayTouchHandler);
-            overlayTouchHandler = null;
-        }
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        window.scrollTo(0, overlaySavedScrollY);
     }
 
     function clearMoodAnalysisProgressTimer() {
