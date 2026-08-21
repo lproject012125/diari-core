@@ -1883,19 +1883,19 @@ html.theme-dark .entry-edited-pill {
         background-size: 0.72rem !important;
     }
 
-    /* Compact filter popover (match desktop: anchored, narrow) — not full-bleed fixed sheet */
+    /* Compact filter popover — fixed positioning to escape overflow clipping from ancestors */
     body.page-entries .search-filter-section .filter-dropdown {
         position: relative;
     }
 
     body.page-entries .search-filter-section .filter-menu.show {
-        position: absolute !important;
-        top: calc(100% + 0.45rem) !important;
-        left: auto !important;
-        right: 0 !important;
-        width: min(228px, calc(100vw - 1.25rem)) !important;
+        position: fixed !important;
+        top: calc(env(safe-area-inset-top, 0px) + 5.25rem) !important;
+        left: 0.75rem !important;
+        right: 0.75rem !important;
+        width: auto !important;
         min-width: 0 !important;
-        max-width: min(228px, calc(100vw - 1.25rem)) !important;
+        max-width: none !important;
         max-height: min(72vh, 520px) !important;
         overflow-y: auto !important;
         z-index: 1200 !important;
