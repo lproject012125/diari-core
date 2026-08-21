@@ -36,6 +36,15 @@
                 document.body.style.backgroundColor = '#ffffff';
             }
             var head = document.head || html;
+            var metaTc = head.querySelector('meta[name="theme-color"]');
+            if (metaTc) {
+                metaTc.setAttribute('content', '#ffffff');
+            } else {
+                metaTc = document.createElement('meta');
+                metaTc.name = 'theme-color';
+                metaTc.content = '#ffffff';
+                head.appendChild(metaTc);
+            }
             if (!document.getElementById('diari-pwa-launch-critical')) {
                 var critical = document.createElement('style');
                 critical.id = 'diari-pwa-launch-critical';

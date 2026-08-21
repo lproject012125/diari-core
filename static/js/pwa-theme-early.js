@@ -121,6 +121,8 @@
         }
 
         let meta = g.document.querySelector('meta[name="theme-color"]');
+        const base = String(g.location.pathname || '').split('/').pop() || '';
+        if (base === 'pwa-splash.html') return;
         if (!meta) {
             meta = g.document.createElement('meta');
             meta.setAttribute('name', 'theme-color');
