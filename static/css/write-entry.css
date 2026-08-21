@@ -3236,8 +3236,4 @@ html.theme-dark .custom-tag-inline-alert__pill {
     .mood-analysis-card.mood-analysis-card--result {
         max-height: min(80vh, 640px);
     }
-
-    body:has(.mood-analysis-overlay:not([hidden])) .action-buttons-section {
-        visibility: hidden !important;
-    }
 }
