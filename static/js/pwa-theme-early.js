@@ -120,15 +120,21 @@
             g.document.body.classList.toggle(DARK_CLASS, isDark);
         }
 
-        let meta = g.document.querySelector('meta[name="theme-color"]');
-        const base = String(g.location.pathname || '').split('/').pop() || '';
-        if (base === 'pwa-splash.html') return;
-        if (!meta) {
-            meta = g.document.createElement('meta');
-            meta.setAttribute('name', 'theme-color');
-            g.document.head.appendChild(meta);
+        let launchPending = false;
+        try {
+            launchPending = g.sessionStorage.getItem('diariPwaLaunchDone') !== '1';
+        } catch (_) {
+            /* ignore */
         }
-        meta.setAttribute('content', isDark ? '#11171a' : primary);
+        if (!launchPending) {
+            let meta = g.document.querySelector('meta[name="theme-color"]');
+            if (!meta) {
+                meta = g.document.createElement('meta');
+                meta.setAttribute('name', 'theme-color');
+                g.document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', isDark ? '#11171a' : primary);
+        }
         root.classList.add('diari-pwa-theme-early');
     }
 

@@ -109,6 +109,11 @@
         }
         overlayEl = null;
         resolveFinishWaiters();
+        try {
+            g.dispatchEvent(new CustomEvent('diari-palette-changed'));
+        } catch (_) {
+            /* ignore */
+        }
         if (isSplashEntryPage()) {
             return;
         }
