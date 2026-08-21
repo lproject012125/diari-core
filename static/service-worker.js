@@ -85,7 +85,7 @@ const PRECACHE_URLS = [
  * when scheduler scripts fail to load or an older cached bundle is active.
  */
 self.addEventListener('push', (event) => {
-    let payload = { title: 'DiariCore', body: '', url: '/write-entry.html', tag: 'diari-web-push' };
+    let payload = { title: 'DiariCore', body: '', url: '/dashboard.html', tag: 'diari-web-push' };
     try {
         if (event.data) {
             const parsed = event.data.json();
@@ -97,7 +97,7 @@ self.addEventListener('push', (event) => {
     const notifTag = payload.tag || 'diari-web-push';
     const title = payload.title || 'DiariCore';
     const body = payload.body || '';
-    const url = payload.url || '/write-entry.html';
+    const url = payload.url || '/dashboard.html';
 
     event.waitUntil(
         (async () => {

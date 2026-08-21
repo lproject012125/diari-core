@@ -650,7 +650,7 @@ def send_daily_test_push_to_user(user_id: int) -> dict:
         sub,
         "A gentle journal nudge",
         _build_daily_body(),
-        "/write-entry.html",
+        "/dashboard.html",
         tag="diari-daily-reminder-test",
     )
     needs_resubscribe = bool(
@@ -942,7 +942,7 @@ def send_web_push(
     subscription: dict,
     title: str,
     body: str,
-    url: str = "/write-entry.html",
+    url: str = "/dashboard.html",
     *,
     tag: str = "diari-web-push",
 ) -> tuple[bool, str | None]:
@@ -1270,7 +1270,7 @@ def dispatch_due_notifications(debug: bool = False) -> dict:
                             sub,
                             "A gentle journal nudge",
                             _build_daily_body(),
-                            "/write-entry.html",
+        "/dashboard.html",
                             tag="diari-daily-reminder",
                         )
                         if ok:
@@ -1316,7 +1316,7 @@ def dispatch_due_notifications(debug: bool = False) -> dict:
                     if _push_all(
                         "Your streak tonight",
                         _build_streak_body("1hr", streak),
-                        "/write-entry.html",
+                        "/dashboard.html",
                         tag="diari-streak-reminder",
                     )[0]:
                         state["lastStreak1hrDateKey"] = today_key
@@ -1329,7 +1329,7 @@ def dispatch_due_notifications(debug: bool = False) -> dict:
                     if _push_all(
                         "Before the day ends",
                         _build_streak_body("30min", streak),
-                        "/write-entry.html",
+                        "/dashboard.html",
                         tag="diari-streak-reminder",
                     )[0]:
                         state["lastStreak30minDateKey"] = today_key

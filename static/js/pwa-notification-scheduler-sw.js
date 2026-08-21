@@ -139,7 +139,7 @@ async function showLocalNotification(registration, title, body, tag, url) {
             renotify: true,
             icon: '/diariclogo-pwa-notif-192.png',
             badge: '/diariclogo.png',
-            data: { url: url || '/write-entry.html' },
+            data: { url: url || '/dashboard.html' },
         });
         return true;
     } catch (e) {
@@ -186,7 +186,7 @@ async function runNotificationChecks() {
             'A gentle journal nudge',
             body,
             CHECK_TAG_DAILY,
-            '/write-entry.html'
+            '/dashboard.html'
         );
         if (ok) {
             prefs.lastDailyReminderDateKey = todayKey;
@@ -210,7 +210,7 @@ async function runNotificationChecks() {
                     'Your streak tonight',
                     body1,
                     CHECK_TAG_STREAK_1HR,
-                    '/write-entry.html'
+                    '/dashboard.html'
                 );
                 if (ok1) {
                     prefs.lastStreak1hrDateKey = todayKey;
@@ -227,7 +227,7 @@ async function runNotificationChecks() {
                     'Before the day ends',
                     body2,
                     CHECK_TAG_STREAK_30MIN,
-                    '/write-entry.html'
+                    '/dashboard.html'
                 );
                 if (ok2) {
                     prefs.lastStreak30minDateKey = todayKey;
