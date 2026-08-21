@@ -304,6 +304,7 @@
 
         footer.style.display = 'none';
         overlay.hidden = false;
+        hideActionButtonsForOverlay();
         moodAnalysisLoadingShownAt = Date.now();
 
         const totalMs = MOOD_ANALYSIS_TOTAL_MS;
@@ -432,6 +433,7 @@
 
         if (footer) footer.style.display = 'none';
         overlay.hidden = false;
+        hideActionButtonsForOverlay();
         entryUpdateLoadingShownAt = Date.now();
 
         const totalMs = ENTRY_UPDATE_TOTAL_MS;
@@ -469,6 +471,27 @@
         parkMoodAnalysisBookMount();
         parkEntryUpdateEditingMount();
         ov.hidden = true;
+        restoreActionButtonsForOverlay();
+    }
+
+    /* --- hide/show write-entry action buttons behind the overlay on mobile --- */
+    const ACTION_BTN_SEL = '.action-buttons-section';
+    let savedActionBtnDisplay = '';
+
+    function hideActionButtonsForOverlay() {
+        if (window.innerWidth > 768) return;
+        const btns = document.querySelector(ACTION_BTN_SEL);
+        if (!btns) return;
+        savedActionBtnDisplay = btns.style.display;
+        btns.style.display = 'none';
+    }
+
+    function restoreActionButtonsForOverlay() {
+        if (window.innerWidth > 768) return;
+        const btns = document.querySelector(ACTION_BTN_SEL);
+        if (!btns) return;
+        btns.style.display = savedActionBtnDisplay || '';
+        savedActionBtnDisplay = '';
     }
 
     async function delayUntilMoodAnalysisGate() {
