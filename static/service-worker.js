@@ -2,7 +2,7 @@
  * DiariCore PWA service worker — offline app shell + cached static assets.
  * API routes are never cached (session/auth stay fresh).
  */
-const CACHE_NAME = 'diaricore-pwa-v135';
+const CACHE_NAME = 'diaricore-pwa-v136';
 const PWA_PUSH_NOTIF_ICON = '/diariclogo-pwa-notif-192.png';
 const PWA_PUSH_NOTIF_BADGE = '/diariclogo.png';
 const PWA_CACHE_PREFIX = 'diaricore-pwa-';
@@ -203,19 +203,23 @@ self.addEventListener('pushsubscriptionchange', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    const url = event.notification?.data?.url || '/dashboard.html';
+    const rawUrl = event.notification?.data?.url || '/dashboard.html';
+    const url = rawUrl.startsWith('http') ? rawUrl : self.location.origin + rawUrl;
     event.waitUntil(
-        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-            for (const c of list) {
-                if ('focus' in c) {
-                    if ('navigate' in c) {
-                        return c.navigate(url).then(() => c.focus());
+        self.clients
+            .matchAll({ type: 'window', includeUncontrolled: true })
+            .then((list) => {
+                for (const c of list) {
+                    if ('focus' in c) {
+                        if ('navigate' in c) {
+                            return c.navigate(url).then(() => c.focus());
+                        }
+                        return c.focus();
                     }
-                    return c.focus();
                 }
-            }
-            if (self.clients.openWindow) return self.clients.openWindow(url);
-        })
+                return self.clients.openWindow(url);
+            })
+            .catch(() => self.clients.openWindow(url))
     );
 });
 
