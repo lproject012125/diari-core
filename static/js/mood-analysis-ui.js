@@ -482,15 +482,15 @@
         if (window.innerWidth > 768) return;
         const btns = document.querySelector(ACTION_BTN_SEL);
         if (!btns) return;
-        savedActionBtnDisplay = btns.style.getPropertyValue('display');
-        btns.style.setProperty('display', 'none', 'important');
+        savedActionBtnDisplay = btns.style.display;
+        btns.style.display = 'none';
     }
 
     function restoreActionButtonsForOverlay() {
         if (window.innerWidth > 768) return;
         const btns = document.querySelector(ACTION_BTN_SEL);
         if (!btns) return;
-        btns.style.setProperty('display', savedActionBtnDisplay || '', 'important');
+        btns.style.display = savedActionBtnDisplay || '';
         savedActionBtnDisplay = '';
     }
 
