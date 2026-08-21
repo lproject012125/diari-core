@@ -2,7 +2,7 @@
  * DiariCore PWA service worker — offline app shell + cached static assets.
  * API routes are never cached (session/auth stay fresh).
  */
-const CACHE_NAME = 'diaricore-pwa-v138';
+const CACHE_NAME = 'diaricore-pwa-v139';
 const PWA_PUSH_NOTIF_ICON = '/diariclogo-pwa-notif-192.png';
 const PWA_PUSH_NOTIF_BADGE = '/diariclogo.png';
 const PWA_CACHE_PREFIX = 'diaricore-pwa-';
@@ -201,10 +201,32 @@ self.addEventListener('pushsubscriptionchange', (event) => {
     );
 });
 
+function notificationTargetUrl(rawUrl) {
+    const fallback = '/dashboard.html';
+    const path = rawUrl && typeof rawUrl === 'string' ? rawUrl : fallback;
+    try {
+        const u = new URL(path.startsWith('http') ? path : self.location.origin + path);
+        u.searchParams.set('pwa_fast', '1');
+        return u.href;
+    } catch (_) {
+        return self.location.origin + fallback + '?pwa_fast=1';
+    }
+}
+
+function sameAppPath(clientUrl, targetUrl) {
+    try {
+        const a = new URL(clientUrl);
+        const b = new URL(targetUrl);
+        return a.origin === b.origin && a.pathname === b.pathname;
+    } catch (_) {
+        return false;
+    }
+}
+
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     const rawUrl = event.notification?.data?.url || '/dashboard.html';
-    const url = rawUrl.startsWith('http') ? rawUrl : self.location.origin + rawUrl;
+    const url = notificationTargetUrl(rawUrl);
     event.waitUntil(
         (async function () {
             const list = await self.clients.matchAll({
@@ -212,14 +234,27 @@ self.addEventListener('notificationclick', (event) => {
                 includeUncontrolled: true,
             });
             for (const c of list) {
-                if (c.url.includes(self.location.origin) && 'focus' in c) {
-                    try {
-                        if ('navigate' in c) await c.navigate(url);
-                    } catch (_) {
-                        /* ignore */
-                    }
-                    return c.focus();
+                if (!c.url || c.url.indexOf(self.location.origin) !== 0 || !('focus' in c)) {
+                    continue;
                 }
+                /* Bring the existing PWA to the front immediately — do not wait for navigate. */
+                const focused = c.focus();
+                if (!sameAppPath(c.url, url)) {
+                    if ('navigate' in c) {
+                        try {
+                            c.navigate(url);
+                        } catch (_) {
+                            /* ignore */
+                        }
+                    } else {
+                        try {
+                            c.postMessage({ type: 'DIARI_NOTIFICATION_NAVIGATE', url });
+                        } catch (_) {
+                            /* ignore */
+                        }
+                    }
+                }
+                return focused;
             }
             return self.clients.openWindow(url);
         })()
@@ -287,22 +322,31 @@ self.addEventListener('fetch', (event) => {
 
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request)
-                .then((res) => {
-                    if (res.ok) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then((c) => c.put(request, copy));
-                    }
-                    return res;
-                })
-                .catch(async () => {
-                    const cached = await caches.match(request);
-                    if (cached) return cached;
-                    const fallback =
-                        (await caches.match('/dashboard.html')) ||
-                        (await caches.match('/login.html'));
-                    return fallback || Response.error();
-                })
+            (async () => {
+                const cached =
+                    (await caches.match(request)) ||
+                    (await caches.match(url.pathname)) ||
+                    (url.searchParams.get('pwa_fast') === '1'
+                        ? await caches.match('/dashboard.html')
+                        : null);
+                const network = fetch(request)
+                    .then((res) => {
+                        if (res.ok) {
+                            const copy = res.clone();
+                            caches.open(CACHE_NAME).then((c) => c.put(request, copy));
+                        }
+                        return res;
+                    })
+                    .catch(async () => {
+                        if (cached) return cached;
+                        const fallback =
+                            (await caches.match('/dashboard.html')) ||
+                            (await caches.match('/login.html'));
+                        return fallback || Response.error();
+                    });
+                /* Serve the app shell from cache first so notification taps paint immediately. */
+                return cached || network;
+            })()
         );
         return;
     }
@@ -314,23 +358,22 @@ self.addEventListener('fetch', (event) => {
 
     event.respondWith(
         (async () => {
-            /* ── Network-first (JS + CSS): always fetch fresh when online ── */
+            /* ── Stale-while-revalidate (JS + CSS): paint from cache, refresh in background ── */
             if (networkFirst) {
-                try {
-                    const res = await fetch(request);
-                    if (res.ok) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then((c) => c.put(path, copy));
-                    }
-                    return res;
-                } catch {
-                    /* Offline: look for any cached copy as fallback */
-                    const offlineFallback =
-                        (await caches.match(path)) ||
-                        (await caches.match(request)) ||
-                        (await caches.match('/' + path.split('/').pop()));
-                    return offlineFallback || Response.error();
-                }
+                const cachedJsCss =
+                    (await caches.match(path)) ||
+                    (await caches.match(request)) ||
+                    (await caches.match('/' + path.split('/').pop()));
+                const networkJsCss = fetch(request)
+                    .then((res) => {
+                        if (res.ok) {
+                            const copy = res.clone();
+                            caches.open(CACHE_NAME).then((c) => c.put(path, copy));
+                        }
+                        return res;
+                    })
+                    .catch(() => cachedJsCss || Response.error());
+                return cachedJsCss || networkJsCss;
             }
 
             /* ── Cache-first (images, fonts, other static) ── */

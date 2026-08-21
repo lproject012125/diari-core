@@ -55,9 +55,27 @@
         return base === 'pwa-splash.html';
     }
 
+    function isNotificationFastOpen() {
+        try {
+            const params = new URLSearchParams(g.location.search || '');
+            if (params.get('pwa_fast') === '1') return true;
+        } catch (_) {
+            /* ignore */
+        }
+        return false;
+    }
+
     function shouldRunLaunch() {
         if (!isPwaStandalone()) return false;
         if (isAuthPage()) return false;
+        if (isNotificationFastOpen()) {
+            try {
+                g.sessionStorage.setItem(SESSION_KEY, '1');
+            } catch (_) {
+                /* ignore */
+            }
+            return false;
+        }
         try {
             if (g.sessionStorage.getItem(SESSION_KEY) === '1') return false;
         } catch (_) {

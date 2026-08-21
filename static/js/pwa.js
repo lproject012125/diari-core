@@ -4,9 +4,31 @@
 (function () {
     'use strict';
 
+    function markNotificationFastOpen() {
+        try {
+            var u = new URL(window.location.href);
+            if (u.searchParams.get('pwa_fast') !== '1') return false;
+            try {
+                window.sessionStorage.setItem('diariPwaLaunchDone', '1');
+            } catch (_) {
+                /* ignore */
+            }
+            u.searchParams.delete('pwa_fast');
+            var qs = u.searchParams.toString();
+            var next = u.pathname + (qs ? '?' + qs : '') + u.hash;
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', next);
+            }
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
     /* PWA: white screen + hide in-app chrome before launch overlay mounts (prevents dashboard flash). */
     (function paintPwaLaunchWhiteFirst() {
         try {
+            if (markNotificationFastOpen()) return;
             var standalone =
                 (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
                 window.navigator.standalone === true;
@@ -449,6 +471,25 @@
             .catch(function (err) {
                 console.warn('[PWA] Service worker registration failed:', err);
             });
+        if (!navigator.serviceWorker.__diariNotifNavBound) {
+            navigator.serviceWorker.__diariNotifNavBound = true;
+            navigator.serviceWorker.addEventListener('message', function (event) {
+                var data = event.data;
+                if (!data || data.type !== 'DIARI_NOTIFICATION_NAVIGATE' || !data.url) return;
+                try {
+                    var target = new URL(data.url, window.location.origin);
+                    if (target.origin !== window.location.origin) return;
+                    target.searchParams.set('pwa_fast', '1');
+                    if (target.pathname === window.location.pathname) {
+                        markNotificationFastOpen();
+                        return;
+                    }
+                    window.location.replace(target.href);
+                } catch (_) {
+                    /* ignore */
+                }
+            });
+        }
     }
 
     function loadPwaNotificationStack() {

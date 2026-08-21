@@ -200,7 +200,18 @@
         root.setAttribute('data-diari-pwa', 'standalone');
     }
 
+    function markNotificationFastOpen() {
+        try {
+            const params = new URLSearchParams(g.location.search || '');
+            if (params.get('pwa_fast') !== '1') return;
+            g.sessionStorage.setItem('diariPwaLaunchDone', '1');
+        } catch (_) {
+            /* ignore */
+        }
+    }
+
     function applyEarlyAppearance() {
+        markNotificationFastOpen();
         markPwaStandaloneDocument();
         if (!isPwaStandalone()) return;
         if (isAuthPage()) {
