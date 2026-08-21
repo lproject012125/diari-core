@@ -2144,6 +2144,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             onSaveExit() {
                 analysisOverlay.hidden = true;
                 document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
                 window.location.href = 'dashboard.html';
             },
             fetchRerunAnalysis: async () => {
@@ -2240,6 +2241,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 } else if (analysisOverlay) {
                     analysisOverlay.hidden = true;
                     document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
                 }
                 const errMsg =
                     offlineErr && offlineErr.message
@@ -2349,6 +2351,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 } else {
                     analysisOverlay.hidden = true;
                     document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
                 }
                 const errMsg =
                     recoveryErr && recoveryErr.message

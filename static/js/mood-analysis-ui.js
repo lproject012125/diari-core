@@ -305,6 +305,7 @@
         footer.style.display = 'none';
         overlay.hidden = false;
         document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
         moodAnalysisLoadingShownAt = Date.now();
 
         const totalMs = MOOD_ANALYSIS_TOTAL_MS;
@@ -434,6 +435,7 @@
         if (footer) footer.style.display = 'none';
         overlay.hidden = false;
         document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
         entryUpdateLoadingShownAt = Date.now();
 
         const totalMs = ENTRY_UPDATE_TOTAL_MS;
@@ -472,6 +474,7 @@
         parkEntryUpdateEditingMount();
         ov.hidden = true;
         document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
     }
 
     async function delayUntilMoodAnalysisGate() {
