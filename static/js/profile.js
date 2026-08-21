@@ -2815,35 +2815,42 @@ function initializeReminderTimePreference() {
         if (window.DiariPwaNotifications?.syncPrefsToWorker) {
             void window.DiariPwaNotifications.syncPrefsToWorker();
         }
-        await syncPushNotificationPrefsToServerFromProfile();
-        if (window.DiariPwaWebPush?.syncNotificationPrefsToServer) {
-            await window.DiariPwaWebPush.syncNotificationPrefsToServer();
-        }
-        if (isPwaProfileContext() && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            const push = await ensureDiariPwaWebPushReady(8000);
-            if (push?.syncPushSubscriptionToServer) {
-                await push.syncPushSubscriptionToServer({ force: true });
-            } else {
-                await registerPushFromProfile({ quiet: true, force: true });
+        if (isPwaProfileContext()) {
+            document
+                .querySelectorAll('.diari-toast, .profile-notification')
+                .forEach(function (el) {
+                    el.remove();
+                });
+            if (window.DiariToast && typeof window.DiariToast.show === 'function') {
+                window.DiariToast.show('Reminder time set successfully.', 'success', 3500);
             }
-            if (!(await isPwaOfflineForUserActions())) {
-                const reminderSavedMsg = 'Reminder time set successfully.';
-                if (isPwaProfileContext()) {
-                    document
-                        .querySelectorAll('.diari-toast, .profile-notification')
-                        .forEach(function (el) {
-                            el.remove();
-                        });
-                    if (window.DiariToast && typeof window.DiariToast.show === 'function') {
-                        window.DiariToast.show(reminderSavedMsg, 'success', 3500);
+            void (async function () {
+                try {
+                    await syncPushNotificationPrefsToServerFromProfile();
+                    if (window.DiariPwaWebPush?.syncNotificationPrefsToServer) {
+                        await window.DiariPwaWebPush.syncNotificationPrefsToServer();
                     }
-                } else {
-                    showNotification(reminderSavedMsg, 'success', 3500);
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                        const push = await ensureDiariPwaWebPushReady(8000);
+                        if (push?.syncPushSubscriptionToServer) {
+                            await push.syncPushSubscriptionToServer({ force: true });
+                        } else {
+                            await registerPushFromProfile({ quiet: true, force: true });
+                        }
+                    }
+                } catch (_) { /* ignore */ }
+                if (window.DiariPwaWebPush?.syncNotificationPrefsToServerBeacon) {
+                    window.DiariPwaWebPush.syncNotificationPrefsToServerBeacon();
                 }
+            })();
+        } else {
+            await syncPushNotificationPrefsToServerFromProfile();
+            if (window.DiariPwaWebPush?.syncNotificationPrefsToServer) {
+                await window.DiariPwaWebPush.syncNotificationPrefsToServer();
             }
-        }
-        if (window.DiariPwaWebPush?.syncNotificationPrefsToServerBeacon) {
-            window.DiariPwaWebPush.syncNotificationPrefsToServerBeacon();
+            if (window.DiariPwaWebPush?.syncNotificationPrefsToServerBeacon) {
+                window.DiariPwaWebPush.syncNotificationPrefsToServerBeacon();
+            }
         }
     }
     input.addEventListener('change', onReminderTimeChanged);
