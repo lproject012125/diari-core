@@ -1883,20 +1883,21 @@ html.theme-dark .entry-edited-pill {
         background-size: 0.72rem !important;
     }
 
-    /* Compact filter popover (match desktop: anchored, narrow) — not full-bleed fixed sheet */
+    /* Compact filter popover — fixed positioning to escape ancestor overflow:hidden clipping */
     body.page-entries .search-filter-section .filter-dropdown {
         position: relative;
     }
 
     body.page-entries .search-filter-section .filter-menu.show {
-        position: absolute !important;
-        top: calc(100% + 0.45rem) !important;
-        left: auto !important;
-        right: 0 !important;
-        width: min(228px, calc(100vw - 1.25rem)) !important;
+        position: fixed !important;
+        top: calc(env(safe-area-inset-top, 0px) + 4.75rem) !important;
+        right: 0.75rem !important;
+        width: min(280px, calc(100vw - 1.5rem)) !important;
         min-width: 0 !important;
-        max-width: min(228px, calc(100vw - 1.25rem)) !important;
+        max-width: min(280px, calc(100vw - 1.5rem)) !important;
         max-height: min(72vh, 520px) !important;
+        display: flex !important;
+        flex-direction: column !important;
         overflow-y: auto !important;
         z-index: 1200 !important;
         transform: translateY(0) !important;
@@ -1905,10 +1906,16 @@ html.theme-dark .entry-edited-pill {
 
     body.page-entries .search-filter-section .filter-menu.show .filter-section {
         padding: 0.85rem 0.75rem !important;
+        flex: 0 0 auto !important;
     }
 
     body.page-entries .search-filter-section .filter-menu.show .filter-actions {
         padding: 0.65rem 0.75rem !important;
+        position: sticky !important;
+        bottom: 0 !important;
+        flex-shrink: 0 !important;
+        background-color: var(--card-background) !important;
+        margin-top: auto !important;
     }
 
     /* Stored list cards: match desktop hierarchy (date + icon, time, title, excerpt; mood + edited pills in a row). */
