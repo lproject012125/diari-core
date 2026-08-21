@@ -27,32 +27,6 @@
     let entryUpdateEditingData = null;
     let entryUpdateProgressSnap = null;
 
-    /* ---------- mobile scroll lock (freeze body in place without changing vh) ---------- */
-    let overlayScrollLocked = false;
-    let overlaySavedScrollY = 0;
-
-    function lockOverlayScroll() {
-        if (overlayScrollLocked) return;
-        overlayScrollLocked = true;
-        overlaySavedScrollY = window.scrollY || window.pageYOffset || 0;
-        document.body.style.position = 'fixed';
-        document.body.style.top = '-' + overlaySavedScrollY + 'px';
-        document.body.style.left = '0';
-        document.body.style.right = '0';
-        document.body.style.width = '100%';
-    }
-
-    function unlockOverlayScroll() {
-        if (!overlayScrollLocked) return;
-        overlayScrollLocked = false;
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.right = '';
-        document.body.style.width = '';
-        window.scrollTo(0, overlaySavedScrollY);
-    }
-
     function clearMoodAnalysisProgressTimer() {
         if (moodAnalysisProgressTimer != null) {
             clearInterval(moodAnalysisProgressTimer);
