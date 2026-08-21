@@ -542,9 +542,7 @@ html.entries-restore-detail #entriesDetailShell .entries-detail-loading-overlay 
     body.page-entries .main-content,
     body.page-entries .entries-container,
     body.page-entries .search-filter-container,
-    body.page-entries .search-bar,
-    body.page-entries .search-input,
-    body.page-entries .filter-menu {
+    body.page-entries .search-input {
         min-width: 0 !important;
         max-width: 100% !important;
         overflow: hidden !important;
