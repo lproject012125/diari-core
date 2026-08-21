@@ -274,7 +274,7 @@
 
         dismissBtn.addEventListener('click', () => {
             try {
-                localStorage.setItem('diariPwaInstallDismissed', String(Date.now()));
+                sessionStorage.setItem('diariPwaInstallDismissed', String(Date.now()));
             } catch (_) {
                 /* ignore */
             }
@@ -287,8 +287,8 @@
     function showInstallBanner() {
         if (isStandalone()) return;
         try {
-            const dismissed = Number(localStorage.getItem('diariPwaInstallDismissed') || 0);
-            if (dismissed && Date.now() - dismissed < 7 * 24 * 60 * 60 * 1000) return;
+            const dismissed = Number(sessionStorage.getItem('diariPwaInstallDismissed') || 0);
+            if (dismissed && Date.now() - dismissed < 60 * 1000) return;
         } catch (_) {
             /* ignore */
         }
