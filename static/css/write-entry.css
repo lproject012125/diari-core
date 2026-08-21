@@ -3231,6 +3231,7 @@ html.theme-dark .custom-tag-inline-alert__pill {
         background: rgba(16, 22, 26, 0.7);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
+        will-change: transform;
     }
 
     .mood-analysis-card.mood-analysis-card--result {
