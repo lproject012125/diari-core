@@ -474,17 +474,13 @@
         unlockPageScroll();
     }
 
-    /* --- lock page scroll behind overlay on mobile --- */
+    /* --- lock page scroll behind overlay on mobile via html class --- */
     function lockPageScroll() {
-        document.body.classList.add('diari-modal-open');
-        if (document.body.classList.contains('page-write-entry')) {
-            document.documentElement.style.overflow = 'hidden';
-        }
+        document.documentElement.classList.add('diari-modal-open');
     }
 
     function unlockPageScroll() {
-        document.body.classList.remove('diari-modal-open');
-        document.documentElement.style.overflow = '';
+        document.documentElement.classList.remove('diari-modal-open');
     }
 
     async function delayUntilMoodAnalysisGate() {

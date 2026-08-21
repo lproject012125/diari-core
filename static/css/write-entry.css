@@ -3239,7 +3239,8 @@ html.theme-dark .custom-tag-inline-alert__pill {
     }
 
     /* Lock page scroll when analysis overlay is open — only the modal card scrolls. */
-    body.page-write-entry.diari-modal-open {
+    html.diari-modal-open,
+    html.diari-modal-open body {
         overflow: hidden !important;
     }
 }
