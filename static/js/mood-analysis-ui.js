@@ -27,6 +27,34 @@
     let entryUpdateEditingData = null;
     let entryUpdateProgressSnap = null;
 
+    /* ---------- mobile scroll lock (prevents page scroll behind overlay without changing vh) ---------- */
+    let overlayScrollLocked = false;
+    let overlayTouchHandler = null;
+
+    function lockOverlayScroll() {
+        if (overlayScrollLocked) return;
+        overlayScrollLocked = true;
+        overlayTouchHandler = function (e) {
+            const card = document.querySelector('.mood-analysis-overlay:not([hidden]) .mood-analysis-card');
+            if (!card) { e.preventDefault(); return; }
+            const target = e.target;
+            if (card.contains(target)) return;
+            e.preventDefault();
+        };
+        document.addEventListener('touchmove', overlayTouchHandler, { passive: false });
+        document.addEventListener('wheel', overlayTouchHandler, { passive: false });
+    }
+
+    function unlockOverlayScroll() {
+        if (!overlayScrollLocked) return;
+        overlayScrollLocked = false;
+        if (overlayTouchHandler) {
+            document.removeEventListener('touchmove', overlayTouchHandler);
+            document.removeEventListener('wheel', overlayTouchHandler);
+            overlayTouchHandler = null;
+        }
+    }
+
     function clearMoodAnalysisProgressTimer() {
         if (moodAnalysisProgressTimer != null) {
             clearInterval(moodAnalysisProgressTimer);
@@ -304,8 +332,7 @@
 
         footer.style.display = 'none';
         overlay.hidden = false;
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
+        lockOverlayScroll();
         moodAnalysisLoadingShownAt = Date.now();
 
         const totalMs = MOOD_ANALYSIS_TOTAL_MS;
@@ -434,8 +461,7 @@
 
         if (footer) footer.style.display = 'none';
         overlay.hidden = false;
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
+        lockOverlayScroll();
         entryUpdateLoadingShownAt = Date.now();
 
         const totalMs = ENTRY_UPDATE_TOTAL_MS;
@@ -473,8 +499,7 @@
         parkMoodAnalysisBookMount();
         parkEntryUpdateEditingMount();
         ov.hidden = true;
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
+        unlockOverlayScroll();
     }
 
     async function delayUntilMoodAnalysisGate() {

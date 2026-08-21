@@ -2142,9 +2142,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const moodOptsForEntry = (savedEntry) => ({
             onSaveExit() {
-                analysisOverlay.hidden = true;
-                document.body.style.overflow = '';
-                document.documentElement.style.overflow = '';
+                window.DiariMoodAnalysis.hideAnalysisOverlay(analysisOverlay);
                 window.location.href = 'dashboard.html';
             },
             fetchRerunAnalysis: async () => {
@@ -2240,8 +2238,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     window.DiariMoodAnalysis.hideAnalysisOverlay(analysisOverlay);
                 } else if (analysisOverlay) {
                     analysisOverlay.hidden = true;
-                    document.body.style.overflow = '';
-                    document.documentElement.style.overflow = '';
                 }
                 const errMsg =
                     offlineErr && offlineErr.message
@@ -2350,8 +2346,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     window.DiariMoodAnalysis.hideAnalysisOverlay(analysisOverlay);
                 } else {
                     analysisOverlay.hidden = true;
-                    document.body.style.overflow = '';
-                    document.documentElement.style.overflow = '';
                 }
                 const errMsg =
                     recoveryErr && recoveryErr.message
