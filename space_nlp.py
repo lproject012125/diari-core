@@ -14,7 +14,7 @@ from typing import Dict
 
 import httpx
 
-SPACE_URL  = os.environ.get("SPACE_URL", "https://sseia-diaricore-inference.hf.space").rstrip("/")
+SPACE_URL  = os.environ.get("SPACE_URL", "https://lproject012125-diari-core.hf.space").rstrip("/")
 ALLOWED    = ("angry", "anxious", "happy", "neutral", "sad")
 
 
