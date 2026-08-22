@@ -1,8 +1,8 @@
 """
 space_nlp.py - Calls the DiariCore HuggingFace Space inference API.
 
-The Space (sseia/diaricore-inference) runs the FP32 ONNX model on
-HF's free 16GB CPU tier. Railway calls this over HTTP — no local model needed.
+The Space (lproject012125/diari-core) runs the ONNX model on
+HF's CPU tier. Railway calls this over HTTP — no local model needed.
 Falls back to keyword heuristic if the Space is unreachable.
 """
 
