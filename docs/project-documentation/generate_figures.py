@@ -17,7 +17,10 @@ DATASET = Path(
 
 plt.rcParams.update(
     {
-        "font.family": "Calibri",
+        # Arial avoids Calibri ligature glyphs (fi/fl/ti) that Matplotlib
+        # rendered as empty entity boxes on the ERD.
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial", "Segoe UI", "DejaVu Sans"],
         "axes.spines.top": False,
         "axes.spines.right": False,
         "axes.edgecolor": "#4A5568",
@@ -62,14 +65,17 @@ def dataset_charts():
     ax.set_ylim(0, max(counts.values) * 1.14)
     save(fig, "chart-label-distribution.png")
 
-    lang = df["language"].value_counts()
+    lang = df["language"].astype(str).str.strip().str.lower()
+    lang = lang[lang.isin(["english", "taglish", "filipino"])].value_counts().reindex(
+        ["english", "taglish", "filipino"]
+    )
     fig, ax = plt.subplots(figsize=(6.4, 3.8))
-    palette = ["#3D5A4C", "#6F8F7F", "#A3C1B0", "#CBD5D1"]
+    palette = ["#3D5A4C", "#6F8F7F", "#A3C1B0"]
     wedges, texts, autotexts = ax.pie(
         lang.values,
         labels=[str(x).title() for x in lang.index],
         autopct="%1.1f%%",
-        colors=palette[: len(lang)],
+        colors=palette,
         startangle=90,
         textprops={"fontsize": 9},
     )
@@ -91,17 +97,23 @@ def box(ax, x, y, w, h, text, fc="#F7FAF8", ec="#3D5A4C", fs=8.2, bold=False):
         edgecolor=ec,
     )
     ax.add_patch(p)
-    ax.text(
-        x + w / 2,
-        y + h / 2,
-        text,
-        ha="center",
-        va="center",
-        fontsize=fs,
-        fontweight="bold" if bold else "normal",
-        wrap=True,
-        color="#1A202C",
-    )
+    lines = [ln for ln in str(text).split("\n") if ln != ""]
+    n = max(len(lines), 1)
+    line_h = min(0.24, (h * 0.78) / n)
+    start = y + h / 2 + ((n - 1) * line_h) / 2
+    for i, line in enumerate(lines):
+        ax.text(
+            x + w / 2,
+            start - i * line_h,
+            line,
+            ha="center",
+            va="center",
+            fontsize=fs,
+            fontweight="bold" if bold else "normal",
+            color="#1A202C",
+            fontfamily="sans-serif",
+            clip_on=True,
+        )
     return p
 
 
@@ -172,25 +184,115 @@ def ml_pipeline():
 
 
 def erd():
-    fig, ax = plt.subplots(figsize=(10.2, 6.8))
-    ax.set_xlim(0, 10.2)
-    ax.set_ylim(0, 6.8)
+    fig, ax = plt.subplots(figsize=(11.2, 7.4))
+    ax.set_xlim(0, 11.2)
+    ax.set_ylim(0, 7.4)
     ax.axis("off")
-    ax.set_title("Logical data model (simplified)", fontsize=13, pad=6, loc="left")
+    ax.set_title("Logical data model (simplified)", fontsize=13, pad=8, loc="left")
 
-    tables = [
-        (0.2, 4.55, 3.1, 2.05, "users\nPK id\nnickname, email, password_hash\nprofile fields, avatar\ntotp_*, ui_preferences_json\nis_disabled, last_login"),
-        (3.6, 4.85, 3.15, 1.75, "journal_entries\nPK id   FK user_id\ntitle, text_content, tags_json\nemotion/sentiment scores\nall_probs_json, image_urls_json\nentry_datetime_utc"),
-        (7.05, 5.05, 2.9, 1.55, "user_tags\nPK (user_id, tag)\nicon_name"),
-        (0.2, 2.55, 3.1, 1.55, "pending_registrations\nPK email\notp_code, otp_expires_at"),
-        (3.6, 2.55, 3.15, 1.55, "password_resets\nPK email\nreset_code, expires_at"),
-        (7.05, 2.55, 2.9, 1.55, "push_subscriptions\nPK id   FK user_id\nendpoint, subscription_json"),
-        (0.2, 0.35, 3.1, 1.75, "login_lockouts\notp_resend_limits_*\n(per-flow rate tables)"),
-        (3.6, 0.35, 3.15, 1.75, "login_totp_challenges\nlogin_totp_recovery_otps\nemail/password change challenges"),
-        (7.05, 0.35, 2.9, 1.75, "admin_audit_logs\nsystem_settings"),
-    ]
-    for x, y, w, h, t in tables:
-        box(ax, x, y, w, h, t, fs=7.4, fc="#FAFCFB")
+    def entity(x, y, w, h, title, fields):
+        header_h = 0.38
+        body = FancyBboxPatch(
+            (x, y),
+            w,
+            h,
+            boxstyle="round,pad=0.01,rounding_size=0.06",
+            linewidth=1.15,
+            facecolor="#FAFCFB",
+            edgecolor="#3D5A4C",
+        )
+        ax.add_patch(body)
+        header = FancyBboxPatch(
+            (x, y + h - header_h),
+            w,
+            header_h,
+            boxstyle="round,pad=0.01,rounding_size=0.06",
+            linewidth=0,
+            facecolor="#3D5A4C",
+            edgecolor="#3D5A4C",
+        )
+        ax.add_patch(header)
+        ax.text(
+            x + w / 2,
+            y + h - header_h / 2,
+            title,
+            ha="center",
+            va="center",
+            fontsize=8.4,
+            fontweight="bold",
+            color="white",
+            fontfamily="sans-serif",
+        )
+        n = len(fields)
+        usable = h - header_h - 0.12
+        line_h = usable / max(n, 1)
+        top = y + h - header_h - 0.08
+        for i, field in enumerate(fields):
+            ax.text(
+                x + 0.12,
+                top - i * line_h,
+                field,
+                ha="left",
+                va="top",
+                fontsize=7.2,
+                color="#1A202C",
+                fontfamily="sans-serif",
+            )
+
+    entity(0.2, 4.55, 3.45, 2.55, "users", [
+        "PK  id",
+        "nickname, email, password_hash",
+        "profile fields, avatar_data_url",
+        "totp_secret, totp_enabled",
+        "ui_preferences_json",
+        "is_disabled, last_login",
+        "privacy_agreed_at",
+    ])
+    entity(3.85, 4.55, 3.55, 2.55, "journal_entries", [
+        "PK  id",
+        "FK  user_id  →  users.id",
+        "title, text_content, tags_json",
+        "emotion / sentiment labels & scores",
+        "all_probs_json, image_urls_json",
+        "entry_datetime_utc, timestamps",
+    ])
+    entity(7.6, 5.15, 3.35, 1.95, "user_tags", [
+        "PK  (user_id, tag)",
+        "FK  user_id  →  users.id",
+        "icon_name",
+    ])
+    entity(0.2, 2.35, 3.45, 1.9, "pending_registrations", [
+        "PK  email",
+        "otp_code, otp_expires_at",
+        "profile fields pending verify",
+    ])
+    entity(3.85, 2.35, 3.55, 1.9, "password_resets", [
+        "PK  email",
+        "reset_code, expires_at",
+    ])
+    entity(7.6, 2.35, 3.35, 1.9, "push_subscriptions", [
+        "PK  id",
+        "FK  user_id  →  users.id",
+        "endpoint, subscription_json",
+    ])
+    entity(0.2, 0.2, 3.45, 1.85, "login_lockouts", [
+        "account key, failed attempts",
+        "lock expiry",
+        "otp_resend_limits_* (per flow)",
+    ])
+    entity(3.85, 0.2, 3.55, 1.85, "2FA / OTP challenges", [
+        "login_totp_challenges",
+        "login_totp_recovery_otps",
+        "email / password change OTPs",
+    ])
+    entity(7.6, 0.2, 3.35, 1.85, "admin & settings", [
+        "admin_audit_logs",
+        "system_settings",
+    ])
+
+    ax.annotate("", xy=(3.85, 6.0), xytext=(3.65, 6.0), arrowprops=dict(arrowstyle="-|>", color="#4A5568", lw=1.1))
+    ax.annotate("", xy=(7.6, 6.35), xytext=(7.4, 6.35), arrowprops=dict(arrowstyle="-|>", color="#4A5568", lw=1.1))
+    ax.annotate("", xy=(9.27, 4.25), xytext=(9.27, 5.15), arrowprops=dict(arrowstyle="-|>", color="#4A5568", lw=1.1))
     save(fig, "diagram-erd.png")
 
 

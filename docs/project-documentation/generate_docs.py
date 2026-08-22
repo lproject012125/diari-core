@@ -196,10 +196,8 @@ def build():
     story.append(Paragraph("Technical record of the current implemented system", s["CoverMeta"]))
     story.append(Paragraph("August 2026", s["CoverMeta"]))
     story.append(Spacer(1, 14 * mm))
-    story.append(Paragraph("Project members", s["CoverMeta"]))
+    story.append(Paragraph("Author", s["CoverMeta"]))
     story.append(Paragraph("<b>Tolentino, Lawrence Dave P.</b>", s["CoverMeta"]))
-    story.append(Paragraph("<b>Tolentino, Cathlene A.</b>", s["CoverMeta"]))
-    story.append(Paragraph("<b>Valenzuela, John Oliver R.</b>", s["CoverMeta"]))
     story.append(Spacer(1, 16 * mm))
     story.append(Paragraph("Live application: https://diaricore.up.railway.app/", s["CoverMeta"]))
     story.append(Paragraph("GitHub (workspace origin): https://github.com/lproject012125/diari-core", s["CoverMeta"]))
@@ -234,6 +232,7 @@ def build():
         "22. Lessons Learned",
         "23. Future Improvements",
         "24. Project Links",
+        "25. Acknowledgements",
     ]
     for item in toc:
         story.append(Paragraph(item, s["TOC1"]))
@@ -242,7 +241,7 @@ def build():
     # 1
     story.append(Paragraph("1. Project Overview", s["H1"]))
     story.append(hrule())
-    story.append(p(s, s["BodyJ"], "DiariCore is a private, account-based journaling Progressive Web App (PWA). Users write dated journal entries with optional titles, tags, and photos, then receive emotion and sentiment labels produced by a fine-tuned XLM-RoBERTa-Base transformer model. The labels are stored with each entry and drive dashboard summaries, insights charts, smart suggestions, and journaling streaks. The product is a self-reflection tool. It is not a medical or diagnostic system."))
+    story.append(p(s, s["BodyJ"], "DiariCore is a private, account-based journaling Progressive Web App (PWA). Users write dated journal entries with optional titles, tags, and photos, then receive emotion and sentiment labels produced by a fine-tuned XLM-RoBERTa-Base transformer model. The labels are stored with each entry and drive dashboard summaries, insights charts, and journaling streaks. A Suggestions page is included for supportive reading; its content is currently static. The product is a self-reflection tool. It is not a medical or diagnostic system."))
     story.append(p(s, s["BodyJ"], "The problem the system addresses is that generic notes apps and social platforms do not combine private journaling, structured tags, mood pattern visualization, installable mobile-like behavior, and security controls suitable for personal writing. DiariCore focuses that workflow in one application that can be used in a browser or installed to the home screen."))
     story.append(table(
         s,
@@ -291,17 +290,17 @@ def build():
     story.append(Paragraph("3.2 Authenticated journal users", s["H2"]))
     story.append(bullets(s, [
         "Dashboard: today’s emotion, weekly average, insight line, mood chart, recent entries, search, streak book.",
-        "Write Entry: tags, title, body (default 300-word cap), date/time, photos, voice shortcut, save with analysis, optional re-analysis.",
+        "Write Entry: tags, title, body (default 300-word cap, aligned with the training-set length limit and planned for later expansion), date/time, photos, voice shortcut, save with analysis, optional re-analysis.",
         "Voice Entry: microphone capture, live captions where the browser supports Web Speech, on-device Whisper fallback, hand-off into Write Entry.",
         "Entries: month navigation, filters, search, open/edit/delete.",
         "Entry view: full entry, mood UI, edit and delete.",
         "Insights: weekly trend, emotion breakdown, emotion-by-tag, triggers, weekly snapshot, consistency metrics.",
-        "Suggestions: supportive copy and activity ideas based on recent emotion patterns (not clinical advice).",
+        "Suggestions: a page of currently static support copy and activity ideas (not clinical advice). Personalization is planned as a later improvement.",
         "Profile: avatar, personal fields, email change OTP, password change OTP, TOTP, theme palettes, dark mode, notification time, privacy copy, logout.",
         "PWA install, splash/launch overlay, offline draft queue, and push subscription when installed and permitted.",
     ]))
     story.append(Paragraph("3.3 Administrator", s["H2"]))
-    story.append(p(s, s["BodyJ"], "A user whose email matches DIARI_ADMIN_EMAIL can open /admin. The admin UI includes user listing and disable/delete, service health (email and AI test actions), audit logs, and settings. Admin is a configured operator role, not a public self-serve role."))
+    story.append(p(s, s["BodyJ"], "A user whose email matches DIARI_ADMIN_EMAIL can open /admin. The current admin UI includes a user list with a read-only detail view, service health (email and AI test actions), audit logs, and settings. Account disable and delete controls are not present on the admin interface. Admin is a configured operator role, not a public self-serve role."))
     story.append(Paragraph("3.4 Cross-cutting platform behavior", s["H2"]))
     story.append(bullets(s, [
         "Session cookies (HTTP-only, SameSite=Lax, 14-day lifetime; Secure on Railway/production).",
@@ -381,6 +380,7 @@ def build():
     story.append(p(s, s["BodyJ"], "POST /api/login checks IP rate limits and persistent login lockouts, then verifies username/email and password. Disabled accounts are rejected. If TOTP is not enabled, a session and CSRF token are established. If TOTP is enabled, the API returns a short-lived login_totp_challenges token instead of a session. The client then posts the six-digit authenticator code to POST /api/login/totp. pyotp verifies the code with a ±1 step window. Success creates the session and clears lockout counters. Failed passwords increment lockouts: five failures in 15 minutes lock the identifier for 15 minutes."))
     story.append(Paragraph("6.3 Journal save and emotion prediction", s["H2"]))
     story.append(p(s, s["BodyJ"], "On Save, the client posts to POST /api/entries. The server normalizes text (strip, remove null bytes and angle brackets), enforces the word cap (ENTRY_WORD_MAX, default 300), stores tags and image URLs, then calls space_nlp.analyze(text). That function POSTs {\"text\": ...} to SPACE_URL/predict. A 200 response with emotionLabel is stored (emotion, sentiment, scores, all_probs_json). Non-200, timeout, or malformed JSON triggers a keyword fallback in space_nlp.py so the save still completes, with engine reported as fallback. Re-analysis of existing text uses POST /api/entries/analyze-text (rate-limited) or PATCH when the entry is updated."))
+    story.append(p(s, s["BodyJ"], "The 300-word default cap is a dataset-driven constraint, not a product-design ceiling. Training texts in 1500_dataset_expanded.xlsx were prepared around this length (Colab word-count summaries show maxima near 300 words). The live journal field follows that limit so inference stays close to the fine-tuning distribution. Raising or removing the cap is recorded as a future improvement once the training set covers longer entries."))
     story.append(Paragraph("6.4 Voice input", s["H2"]))
     story.append(p(s, s["BodyJ"], "Write Entry’s microphone control opens voice-entry.html. The page requests getUserMedia, shows a waveform, and starts Web Speech Recognition when the constructor exists (Chrome/Edge). Audio is also recorded. If live captions are weak, the client can run on-device Whisper (transformers.js). The transcript is stored in session storage and injected into the Write Entry textarea. Server-side POST /api/voice/transcribe exists as an authenticated fallback using the Hugging Face Inference API when a token is configured."))
     story.append(Paragraph("6.5 Image attachment", s["H2"]))
@@ -453,7 +453,7 @@ def build():
         ("8.5 Write Entry (write-entry.html)",
          "Signed-in users.",
          "Compose a new journal entry and request emotion analysis on save.",
-         "Tag chips (School, Home, Friends, Work, Family, Health, Money, plus user tags and Add Tag), title, textarea, date/time picker, mic button, photo picker, word counter, Save.",
+         "Tag chips (School, Home, Friends, Work, Family, Health, Money, plus user tags and Add Tag), title, textarea (default 300-word cap from the training-set length limit), date/time picker, mic button, photo picker, word counter, Save.",
          "Select tags; attach up to 10 images; open Voice Entry; save; after save, view mood UI; re-analyze text when implemented on the client via /api/entries/analyze-text.",
          "POST /api/entries, POST /api/uploads/image, POST /api/tags, POST /api/entries/analyze-text.",
          "Write Entry"),
@@ -487,10 +487,10 @@ def build():
          "Insights"),
         ("8.10 Suggestions (suggestions.html)",
          "Signed-in users.",
-         "Show supportive phrases and activity ideas based on recent labels. This is coaching-style copy, not therapy.",
-         "Emotional Support section and recommendation cards driven by suggestions.js.",
-         "Read suggestions; navigate back to write or insights.",
-         "Client logic over cached/server entries; no separate clinical model.",
+         "Present supportive reading and activity ideas. This is coaching-style copy, not therapy. Page content is currently static and is planned for later improvement.",
+         "Emotional Support section and recommendation / activity cards defined in suggestions.html. A short support line may change among a few pre-written sentences; the cards, activities, and tips themselves are authored in the template rather than generated per user.",
+         "Read the static suggestions; navigate back to write or insights.",
+         "No dedicated recommendation API or model. suggestions.js attaches click handlers and a small localStorage-based support-line swap. Expanding this into personalized, dynamic suggestions is a future improvement.",
          "Suggestions"),
         ("8.11 Profile (profile.html)",
          "Signed-in users.",
@@ -502,8 +502,8 @@ def build():
         ("8.12 Admin (admin.html at /admin)",
          "Signed-in user whose email equals DIARI_ADMIN_EMAIL.",
          "Operate the deployment: users, service tests, audit logs, settings.",
-         "Dashboard overview, User Management, Mindful Analytics, AI & External Services, Audit Logs, settings forms.",
-         "Disable or delete users; test email; test AI; view logs; save settings (including optional token fields stored in system_settings).",
+         "Dashboard overview, User Management (list and read-only detail modal), Mindful Analytics, AI & External Services, Audit Logs, settings forms.",
+         "View users and aggregated journal metrics; test email; test AI; view logs; save settings (including optional token fields stored in system_settings). The admin UI does not provide disable-account or delete-account actions.",
          "/api/admin/* endpoints.",
          "Admin dashboard"),
         ("8.13 PWA splash (pwa-splash.html)",
@@ -589,7 +589,7 @@ def build():
         [50 * mm, 50 * mm, 74 * mm],
     ))
     story.append(fig(FIG / "chart-label-distribution.png", "Figure 3. Emotion label counts in the training workbook (n = 1,593).", s, max_h=70 * mm))
-    story.append(fig(FIG / "chart-language-distribution.png", "Figure 4. Language field distribution (english / taglish / filipino, plus one anomalous “neutral” language value).", s, max_h=70 * mm))
+    story.append(fig(FIG / "chart-language-distribution.png", "Figure 4. Language field distribution for english, taglish, and filipino. One workbook row with language = “neutral” (a data quirk, n = 1) is omitted from this chart so it is not shown as a language class.", s, max_h=70 * mm))
     story.append(p(s, s["Note"], "Whole-row examples from the spreadsheet are omitted here. Many training sentences are long personal-style narratives; reproducing them would add little and risks copying sensitive-style content. The text field is the only content passed into tokenization."))
     story.append(fig(FIG / "ref-colab-eda.png", "Figure 5. Reference: Google Colab exploratory analysis of the uploaded workbook.", s))
     story.append(fig(FIG / "ref-colab-split.png", "Figure 6. Reference: train/validation/test split cell in Colab.", s))
@@ -683,7 +683,7 @@ def build():
             ["DISABLE_INTERNAL_PUSH_CRON", "Skip in-process minute loop", "push_scheduler.py", "Operator", "Set only if using external cron"],
             ["UPLOADS_DIR", "Persistent image directory", "app.py", "Railway volume mount path", "Set to the mounted volume"],
             ["DIARI_ADMIN_EMAIL", "Admin UI allow-list", "app.py", "Operator", "Railway Variables"],
-            ["ENTRY_WORD_MAX", "Journal word cap (default 300)", "app.py", "Operator", "Optional"],
+            ["ENTRY_WORD_MAX", "Journal word cap (default 300; dataset-aligned; planned to raise later)", "app.py", "Operator", "Optional"],
             ["RAILWAY_ENVIRONMENT", "Enables Secure cookies", "app.py", "Railway", "Set by platform"],
             ["DIARI_DISABLE_CSP", "Disable CSP header", "app.py", "Operator", "Only if a needed third-party script is blocked"],
             ["HF_MODEL_ID", "Hub repo for weights", "hf_space/app.py", "Hugging Face Hub", "Space variables"],
@@ -743,7 +743,8 @@ def build():
             ["PWA install", "Standalone display, SW registered", "Chrome/Edge/Android strong; iOS manual A2HS", "Operational — Known Limitations"],
             ["Offline drafts", "Queue then sync", "Local estimate mood until Space analysis", "Operational — Known Limitations"],
             ["Push notifications", "Reminders on installed PWA", "Needs VAPID, permission, dispatcher or cron", "Operational — Known Limitations"],
-            ["Admin", "Configured email reaches /admin", "DIARI_ADMIN_EMAIL allow-list", "Operational"],
+            ["Admin", "Configured email reaches /admin; users can be viewed", "DIARI_ADMIN_EMAIL allow-list; no disable/delete controls in the current UI", "Operational"],
+            ["Suggestions page", "Supportive activities and copy", "Static template content; not a personalized recommender", "Operational — Known Limitations"],
             ["Live Railway app", "HTTPS site serves login and APIs", "Documented at diaricore.up.railway.app", "Operational"],
         ],
         [38 * mm, 42 * mm, 52 * mm, 42 * mm],
@@ -768,6 +769,8 @@ def build():
             ["CSP", "May need DIARI_DISABLE_CSP if a required CDN is blocked"],
             ["EC2 README URL", "HTTP URL listed; PWA/push/secure cookies are weaker without HTTPS"],
             ["ML as health advice", "Explicitly out of scope — suggestions are not treatment"],
+            ["Journal word cap", "Default 300 words, matching the training-set length limit; planned to expand with a longer dataset"],
+            ["Suggestions page", "Functional, but content is currently static; personalization is a future improvement"],
         ],
         [55 * mm, 119 * mm],
     ))
@@ -798,6 +801,8 @@ def build():
         "Automated API and browser tests in CI.",
         "Accessibility pass (keyboard, contrast, screen readers) beyond current ARIA on selected controls.",
         "HTTPS and a custom domain if the EC2 deployment is still used.",
+        "Raise or remove the 300-word journal cap after the training dataset covers longer entries.",
+        "Replace the currently static Suggestions page with personalized, dynamically generated support and activity content.",
         "Expand training data for mixed Taglish journals and the weaker sad class.",
         "Optional stronger session policies (shorter TTL, device list).",
         "Documented runbooks for paused Spaces and exhausted Railway credits.",
@@ -824,6 +829,12 @@ def build():
     story.append(Spacer(1, 8 * mm))
     story.append(p(s, s["BodyL"], "This document describes DiariCore as an integrated system: a Railway-hosted PWA and PostgreSQL application, a Colab-trained XLM-RoBERTa-Base emotion classifier served from Hugging Face, Brevo mail for OTP flows, device TOTP, and a minute-level push dispatcher. Features that work with limitations are listed as such so the record stays accurate for repository readers, portfolio reviewers, and future maintainers."))
 
+    story.append(PageBreak())
+    story.append(Paragraph("25. Acknowledgements", s["H1"]))
+    story.append(hrule())
+    story.append(p(s, s["BodyJ"], "DiariCore is documented here as a single-author project. The implementation, deployment, and this technical record are the work of Tolentino, Lawrence Dave P."))
+    story.append(p(s, s["BodyJ"], "Special mention is due to Jen Issa Mari B. Dimayacyac. She provided substantial assistance on the machine-learning side of the system—including guidance around the emotion-classification work, training workflow, and related model decisions—at a stage when that part of the project needed focused help. The author is sincerely grateful for that support and for the time, patience, and technical insight she contributed. Her involvement is acknowledged here as that of an important person whose help materially strengthened the ML component of DiariCore."))
+
     os.makedirs(OUT_PDF.parent, exist_ok=True)
     doc = SimpleDocTemplate(
         str(OUT_PDF),
@@ -833,7 +844,7 @@ def build():
         topMargin=18 * mm,
         bottomMargin=18 * mm,
         title="DiariCore Comprehensive System Documentation",
-        author="DiariCore project team",
+        author="Tolentino, Lawrence Dave P.",
     )
     doc.build(story, onFirstPage=header_footer, onLaterPages=header_footer)
     print("wrote", OUT_PDF, "pages~", doc.page)
