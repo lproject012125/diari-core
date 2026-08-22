@@ -1,56 +1,65 @@
 # DiariCore
 
-**DiariCore** is a Progressive Web App (PWA) for mindful journaling. Users write private journal entries, tag their thoughts, and receive **machine learning–based emotion and sentiment analysis** to help them reflect on patterns in their wellbeing over time. The system combines secure account management, PostgreSQL storage, interactive insights charts, and personalized suggestions—without treating ML output as medical diagnosis.
+**DiariCore** is a Progressive Web App (PWA) for mindful journaling. Users write private journal entries, tag their thoughts, optionally attach photos or dictate with voice, and receive **machine learning–based emotion and sentiment analysis** to help them notice patterns over time.
+
+The system combines secure account management, PostgreSQL storage, interactive insights charts, and a suggestions page. ML output is a reflection aid. It is **not** a medical diagnosis.
+
+**Author:** Tolentino, Lawrence Dave P.
 
 ---
 
 ## Key Features
 
-- **Journal Entry Management:** Create, view, edit, and delete entries with title, body text, custom tags, photos, and entry date/time.
-- **Custom Tags:** Build personalized tags with icons from a searchable library to categorize entries beyond defaults.
-- **Emotion & Sentiment Analysis:** Fine-tuned **XLM-RoBERTa** classifier (5 classes: angry, anxious, happy, neutral, sad) with confidence scores, valence, and energy summaries.
-- **Dashboard & Insights:** Weekly mood trends, emotion breakdown charts, tag-based correlations, and journaling consistency metrics.
-- **Smart Suggestions:** Supportive messages and activity recommendations based on recent emotional patterns.
-- **Secure Authentication:** Registration with privacy consent, email OTP (Brevo), password reset, optional TOTP two-factor authentication, and session-based login.
-- **Progressive Web App (PWA):** Installable on desktop and mobile with offline draft support and optional push reminders (installed PWA).
-- **Admin Tools:** System settings and operational controls for authorized administrators.
+- **Journal entry management:** Create, view, edit, and delete entries with title, body text, custom tags, photos, and entry date/time. Body length defaults to a **300-word cap** so live text stays close to the training-set length; raising that cap is a planned improvement after the dataset covers longer entries.
+- **Custom tags:** Personalized tags with icons from a searchable library, plus default categories.
+- **Emotion and sentiment analysis:** Fine-tuned **XLM-RoBERTa-Base** classifier (five classes: angry, anxious, happy, neutral, sad) with confidence scores. Inference runs on Hugging Face, not inside the Railway web process.
+- **Dashboard and Insights:** Weekly mood trends, emotion breakdown charts, tag-based correlations, and journaling consistency metrics.
+- **Suggestions:** Supportive copy and activity ideas. **Page content is currently static** (not a personalized recommender) and is planned for later improvement.
+- **Voice entry:** Microphone capture with Web Speech and/or on-device Whisper, then hand-off into Write Entry. Reliable enough for normal use; recognition is not perfect.
+- **Secure authentication:** Registration with privacy consent, email OTP (Brevo), password reset, optional Google Authenticator TOTP, login lockouts, and session-based login.
+- **Progressive Web App:** Installable on desktop and mobile, service-worker caching, offline-tolerant drafts, and optional Web Push reminders when installed.
+- **Admin tools:** Operator dashboard for a configured admin email (user listing, service tests, audit logs, settings). The current admin UI does **not** include disable-account or delete-account actions.
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6+), Bootstrap 5, Chart.js, Lottie animations
-- **Backend:** Python 3, Flask, Gunicorn
-- **Database:** PostgreSQL (Railway / AWS EC2 production), SQLite (local development)
-- **Machine Learning:** Fine-tuned XLM-RoBERTa (ONNX), served via **Hugging Face Space** (see below)
-- **Email:** Brevo API (OTP verification, password reset, 2FA recovery)
-- **Deployment:** [Railway](https://diaricore.up.railway.app/) (managed), [AWS EC2](http://16.176.11.240/login.html) (self-managed)
-- **Version Control:** GitHub
+- **Frontend:** HTML5, CSS3, vanilla JavaScript (ES6+), Bootstrap 5, Chart.js, Lottie
+- **Backend:** Python 3.10+ (3.12 recommended), Flask, Gunicorn
+- **Database:** PostgreSQL on Railway (production); SQLite when `DATABASE_URL` is unset (local)
+- **Machine learning:** Fine-tuned XLM-RoBERTa-Base (transformer), exported to ONNX, served via Hugging Face Space
+- **Email / OTP:** Brevo transactional API
+- **Two-factor authentication:** TOTP (Google Authenticator–compatible)
+- **PWA:** Web App Manifest, service worker, Cache Storage, Web Push (VAPID)
+- **Deployment:** [Railway](https://diari-core.up.railway.app/) (Flask + Gunicorn + PostgreSQL)
+- **Version control:** [GitHub](https://github.com/lproject012125/diari-core)
 
 ---
 
 ## How It Works
 
-1. **Write & Save:** The user composes a journal entry in the web app. Tags and optional images are stored with the entry in PostgreSQL.
-2. **Mood Inference:** On **Save & Analyze**, the Flask backend (`space_nlp.py`) sends the entry text to the **Hugging Face Space** inference API—not to a model loaded on Railway or EC2.
-3. **ML Processing:** The Space loads the exported **ONNX** model from [sseia/diari-core-mood](https://huggingface.co/sseia/diari-core-mood) and returns emotion labels, sentiment, scores, and probability distributions.
-4. **Storage & Analytics:** Results are saved in the `journal_entries` table and power the Entries list, Dashboard, Insights, and Smart Suggestions modules.
-5. **Fallback:** If the Space is cold-starting or unreachable, a lightweight keyword fallback in `space_nlp.py` keeps the app responsive (less accurate than the trained model).
+1. **Write and save:** The user composes a journal entry. Tags and optional images are stored with the entry in PostgreSQL.
+2. **Mood inference:** On save (or re-analyze), Flask (`space_nlp.py`) POSTs the entry text to the Hugging Face Space `POST /predict` endpoint. The model is **not** loaded on Railway.
+3. **ML processing:** The Space loads the exported **ONNX** model from [sseia/diari-core-mood](https://huggingface.co/sseia/diari-core-mood) and returns emotion labels, sentiment, scores, and probability distributions.
+4. **Storage and analytics:** Results are saved on `journal_entries` and power Dashboard, Entries, and Insights. The Suggestions page is a separate static UI, not generated from a second model.
+5. **Fallback:** If the Space is cold-starting or unreachable, a keyword fallback in `space_nlp.py` still completes the save (less accurate than the trained model).
 
 ### Why Hugging Face (not on the web server)?
 
-Railway and EC2 **free tiers** have limited RAM and CPU. Loading a ~1 GB PyTorch/ONNX model on the same instance as Gunicorn + PostgreSQL would cause slow deploys, out-of-memory crashes, and poor response times. The group therefore:
+Railway **free-tier** RAM and CPU are not enough to run XLM-RoBERTa-Base (about 1 GB of weights plus tokenizer) next to Gunicorn and the app. Hosting inference on the same dyno would cause slow deploys, out-of-memory failures, and poor response times.
 
-- **Trained** the model in **Google Colab** (`FinalProject_Resources/DiariCore_Model_Final_Cleaned.ipynb`)
-- **Published** weights to [Hugging Face Hub — diari-core-mood](https://huggingface.co/sseia/diari-core-mood/tree/main) (`model.onnx`, `pytorch_model.bin`, tokenizer files)
-- **Deployed** inference as a separate [HF Space — diaricore-inference](https://huggingface.co/spaces/sseia/diaricore-inference/tree/main) (FastAPI + ONNX Runtime)
+The workflow is:
 
-The live web app stays lightweight; only HTTP calls to the Space are needed for ML at runtime.
+- **Train / fine-tune** in **Google Colab** (`FinalProject_Resources/DiariCore_Model_Final_Cleaned.ipynb`)
+- **Publish** artifacts to [Hugging Face Hub — diari-core-mood](https://huggingface.co/sseia/diari-core-mood/tree/main) (`model.onnx`, `model_quantized.onnx`, `pytorch_model.bin`, tokenizer files)
+- **Serve** inference as a separate [HF Space — diaricore-inference](https://huggingface.co/spaces/sseia/diaricore-inference) (FastAPI + ONNX Runtime)
+
+The live web app stays lightweight and only calls the Space over HTTP at runtime.
 
 | Resource | Link |
 |----------|------|
-| **Model (Hub)** | https://huggingface.co/sseia/diari-core-mood/tree/main |
-| **Inference Space** | https://huggingface.co/spaces/sseia/diaricore-inference/tree/main |
+| **Model (Hub)** | https://huggingface.co/sseia/diari-core-mood |
+| **Inference Space** | https://huggingface.co/spaces/sseia/diaricore-inference |
 
 ---
 
@@ -65,8 +74,8 @@ The live web app stays lightweight; only HTTP calls to the Space are needed for 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/0323-3621-cell/diaricore.git
-cd diaricore
+git clone https://github.com/lproject012125/diari-core.git
+cd diari-core
 ```
 
 ### 2. Create a virtual environment and install dependencies
@@ -89,18 +98,23 @@ pip install -r requirements.txt
 
 ### 3. Configure environment (optional for local dev)
 
-For local development, SQLite is used automatically when `DATABASE_URL` is not set.
+SQLite is used automatically when `DATABASE_URL` is not set.
 
 | Variable | Purpose |
 |----------|---------|
 | `DATABASE_PATH` | SQLite file path (default: `diaricore.local.db`) |
-| `DATABASE_URL` | PostgreSQL connection string (production) |
+| `DATABASE_URL` | PostgreSQL connection string (production / Railway) |
 | `SECRET_KEY` | Flask session secret (required in production) |
 | `SPACE_URL` | HF Space URL (default: `https://sseia-diaricore-inference.hf.space`) |
-| `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | Email OTP (optional locally) |
-| `HF_API_TOKEN` or `HF_TOKEN` | Voice transcription only (optional) |
+| `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | Email OTP (optional locally; codes may be logged instead) |
+| `HF_API_TOKEN` or `HF_TOKEN` | Voice transcription via HF Inference (optional) |
+| `UPLOADS_DIR` | Persistent image directory (set to a Railway volume in production) |
+| `DIARI_ADMIN_EMAIL` | Allow-list for `/admin` |
+| `ENTRY_WORD_MAX` | Journal word cap (default `300`) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_CLAIM_EMAIL` | Web Push |
+| `PUSH_CRON_SECRET` | Authorizes optional external cron dispatch |
 
-See `LOCAL_DEV.md` and `ML_SETUP.md` for more detail.
+See `LOCAL_DEV.md` and `ML_SETUP.md` for more detail. Do not commit API keys or connection strings.
 
 ### 4. Run locally
 
@@ -119,31 +133,36 @@ python app.py
 
 Open **http://127.0.0.1:5000** and verify **http://127.0.0.1:5000/api/health**.
 
-Mood analysis uses the same hosted Hugging Face Space as production (internet required).
+Mood analysis uses the hosted Hugging Face Space even locally (internet required). The first analyze after a Space sleep can take tens of seconds.
 
-### Production deploy (summary)
+### Production deploy (Railway)
 
-- **Railway:** Connect repo, add PostgreSQL plugin, set env vars, start via `Procfile` (`gunicorn app:app -c gunicorn.conf.py`).
-- **AWS EC2:** Install Python, PostgreSQL, Nginx; set `DATABASE_URL`, `SECRET_KEY`, `UPLOADS_DIR`, and Brevo keys; run under systemd.
+1. Connect [https://github.com/lproject012125/diari-core](https://github.com/lproject012125/diari-core) to a Railway project.
+2. Add the PostgreSQL plugin (`DATABASE_URL` is injected).
+3. Mount a volume and set `UPLOADS_DIR` so photos survive redeploys.
+4. Set the environment variables above in Railway Variables (never in git).
+5. Start via `Procfile`: `gunicorn app:app -c gunicorn.conf.py` (binds `0.0.0.0:$PORT`).
+
+Live app: **https://diari-core.up.railway.app/**
 
 ---
 
-## Project Members
+## Author
 
-- Tolentino, Lawrence Dave P.
-- Tolentino, Cathlene A.
-- Valenzuela, John Oliver R.
+Tolentino, Lawrence Dave P.
+
+Special mention: Jen Issa Mari B. Dimayacyac, for substantial assistance on the machine-learning side of the project.
 
 ---
 
 ## Project Links
 
-- **Live Deployment (Railway):** https://diaricore.up.railway.app/
-- **Live Deployment (AWS EC2):** http://16.176.11.240/login.html
+- **Live Deployment (Railway):** https://diari-core.up.railway.app/
+- **GitHub Repository:** https://github.com/lproject012125/diari-core.git
 - **Project Presentation (Google Slides):** https://docs.google.com/presentation/d/1jjBY2dVFIcDi_pvSQWGnR9x67_0Z5t7hMupsNOQbkPk/edit?usp=sharing
-- **ML Model (Hugging Face Hub):** https://huggingface.co/sseia/diari-core-mood/tree/main
-- **ML Inference Space:** https://huggingface.co/spaces/sseia/diaricore-inference/tree/main
-- **GitHub Repository:** https://github.com/0323-3621-cell/diaricore
+- **ML Model (Hugging Face Hub):** https://huggingface.co/sseia/diari-core-mood
+- **ML Inference Space:** https://huggingface.co/spaces/sseia/diaricore-inference
+- **System documentation (PDF):** `DiariCore_System_Documentation.pdf`
 
 ---
 
@@ -157,7 +176,7 @@ Mood analysis uses the same hosted Hugging Face Space as production (internet re
 | `hf_space/` | Source for the inference Space deployment |
 | `FinalProject_Resources/` | Training notebook and dataset |
 | `static/`, `templates/` | Frontend assets and HTML |
-| `docs/` | Project documentation (ITST 303 / 304) |
+| `docs/project-documentation/` | PDF documentation generator and figures |
 
 ---
 
